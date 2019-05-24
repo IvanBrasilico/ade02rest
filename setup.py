@@ -15,6 +15,7 @@ VERSION = "0.9"
 
 REQUIRES = ["connexion[swagger-ui]",
             "dateutils",
+            "gunicorn",
             "requests",
             "sqlalchemy",
             "marshmallow"]
