@@ -66,13 +66,46 @@ class PosicaoConteiner(EventoBase):
         self.solicitante = kwargs.get('solicitante')
 
 
+class PesagemMaritimo(EventoBase):
+    __tablename__ = 'pesagensmaritimo'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    documentotransporte = Column(String(20))
+    tipodocumentotransporte = Column(String(10))
+    conteiner = Column(String(11))
+    placa = Column(String(11))
+    placasemireboque = Column(String(11))
+    pesobrutodeclarado = Column(Integer())
+    taraconjunto = Column(Integer())
+    pesobalanca = Column(Integer())
+    capturaautomatica = Column(Boolean())
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(Evento).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.ID = kwargs.get('IDEvento')
+        self.documentotransporte = kwargs.get('documentotransporte')
+        self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
+        self.conteiner = kwargs.get('conteiner')
+        self.placa = kwargs.get('placa')
+        self.placasemireboque = kwargs.get('placasemireboque')
+        self.pesobrutodeclarado = kwargs.get('pesobrutodeclarado')
+        self.taraconjunto = kwargs.get('taraconjunto')
+        self.pesobalanca = kwargs.get('pesobalanca')
+        self.capturaautomatica = kwargs.get('capturaautomatica') == 'True'
+
+
 class AcessoVeiculo(EventoBase):
     __tablename__ = 'acessosveiculo'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
-    conteineres = relationship('ConteineresGate')
     placa = Column(String(7))
     IDGate = Column(String(20))
+    cpfmotorista = Column(String(11))
+    conteineres = relationship('ConteineresGate')
+    reboques = relationship('ReboquesGate')
 
     def __init__(self, **kwargs):
         superkwargs = dict([
@@ -84,7 +117,15 @@ class AcessoVeiculo(EventoBase):
         self.IDGate = kwargs.get('IDGate')
 
 
-class ConteineresGate(Base):
+class Gate(Base):
+    __abstract__ = True
+    id = Column(Integer, primary_key=True)
+    avarias = Column(String(50))
+    lacres = Column(String(50))
+    vazio = Column(Boolean())
+
+
+class ConteineresGate(Gate):
     __tablename__ = 'conteineresgate'
     id = Column(Integer, primary_key=True)
     numero = Column(String(11))
@@ -93,9 +134,29 @@ class ConteineresGate(Base):
         'AcessoVeiculo'
     )
 
-    def __init__(self, parent, numero):
+    def __init__(self, parent, numero, avarias, lacres, vazio):
         self.acessoveiculo_id = parent.ID
         self.numero = numero
+        self.avarias = avarias
+        self.lacres = lacres
+        self.vazio = vazio
+
+
+class ReboquesGate(Gate):
+    __tablename__ = 'reboquesgate'
+    id = Column(Integer, primary_key=True)
+    placa = Column(String(7))
+    acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
+    acessoveiculo = relationship(
+        'AcessoVeiculo'
+    )
+
+    def __init__(self, parent, placa, avarias, lacres, vazio):
+        self.acessoveiculo_id = parent.ID
+        self.placa = placa
+        self.avarias = avarias
+        self.lacres = lacres
+        self.vazio = vazio
 
 
 # SCHEMAS
@@ -106,9 +167,20 @@ def must_not_be_blank(data):
         raise ValidationError('Data not provided.')
 
 
-class ConteineresGateSchema(Schema):
+class GateSchema(Schema):
+    ID = fields.Int(dump_only=True)
+    avarias = fields.Str()
+    lacres = fields.Str()
+    vazio = fields.Boolean()
+
+
+class ConteineresGateSchema(GateSchema):
     ID = fields.Int(dump_only=True)
     numero = fields.Str()
+
+
+class ReboquesGateSchema(GateSchema):
+    placa = fields.Str()
 
 
 class AcessoVeiculoSchema(Schema):
@@ -121,6 +193,7 @@ class AcessoVeiculoSchema(Schema):
     dataregistro = fields.DateTime()
     operadorregistro = fields.Str()
     conteineres = fields.Nested('ConteineresGateSchema', many=True)
+    reboques = fields.Nested('ReboquesGateSchema', many=True)
 
 
 # conteinergate_schema = ConteineresGateSchema()

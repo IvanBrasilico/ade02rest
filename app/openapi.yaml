@@ -16,6 +16,7 @@ paths:
         content:
           application/json:
             schema:
+              x-body-name: evento
               $ref: '#/components/schemas/PosicaoConteiner'
         required: true
       responses:
@@ -42,6 +43,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PosicaoConteiner'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /pesagemmaritimo:
+    post:
+      operationId: app.pesagemmaritimo
+      requestBody:
+        description: Controle de pesagem no modal maritimo
+        content:
+          application/json:
+            schema:
+              x-body-name: evento
+              $ref: '#/components/schemas/PesagemMaritimo'
+        required: true
+      responses:
+        200:
+          description: Evento incluido
+          content: {}
+        405:
+          description: Evento invalido
+          content: {}
+  /pesagemmaritimo/{IDEvento}:
+    get:
+      operationId: app.get_pesagemmaritimo
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PesagemMaritimo'
         400:
           description: ID inválido
           content: {}
@@ -195,6 +240,16 @@ components:
       enum:
       - RFB
       - MAPA
+    TipoDocumentoTransporte:
+      type: string
+      description: Sigla que identifica o tipo de documento de transporte que ampara a entrada ou saida da carga
+      enum:
+      - CE
+      - NFE
+      - DUE
+      - DA
+      - DTA
+      - DI
     CredenciamentoPessoa:
       allOf:
       - $ref: '#/components/schemas/Evento'
@@ -393,3 +448,34 @@ components:
             description: Posicao propria para desunitizacao ou conferencia
           solicitante:
             $ref: '#/components/schemas/Autoridade'
+    PesagemMaritimo:
+      allOf:
+      - $ref: '#/components/schemas/Evento'
+      - type: object
+        properties:
+          documentotransporte:
+            type: string
+            description: Numero do conteiner
+          tipodocumentotransporte:
+            $ref: '#/components/schemas/TipoDocumentoTransporte'
+          numero:
+            type: string
+            description: Numero do conteiner
+          placa:
+            type: string
+            description: Placa do caminhao/truck/cavalo
+          placasemireboque:
+            type: string
+            description: Placa semireboque em caso de carregamento
+          pesobrutodeclarado:
+            type: integer
+            description: Peso bruto declarado nos documentos de transporte em kg
+          taraconjunto:
+            type: integer
+            description: Peso do conjunto cavalo-carreta retirado da balanca e cadastrado no Recinto
+          pesobalanca:
+            type: integer
+            description: Peso do conjunto cavalo-carreta-carga retirado da balanca
+          capturaautomatica:
+            type: boolean
+            description: Captura realizada automaticamente pela balanca, sem intervencao manual ou digitacao
