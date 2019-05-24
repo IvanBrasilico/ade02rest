@@ -209,7 +209,7 @@ db_session = None
 def init_db(uri):
     global db_session
     if db_session is None:
-        engine = create_engine(uri, convert_unicode=True)
+        engine = create_engine(uri)
         db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
         Base.query = db_session.query_property()
         Base.metadata.drop_all(bind=engine)

@@ -3,6 +3,7 @@ import sys
 
 import connexion
 from connexion import NoContent
+from flask import render_template
 
 from apiserver.models import orm
 
@@ -119,6 +120,12 @@ def main():
 
 
 app = create_app()
+
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
 
 if __name__ == '__main__':
     main()
