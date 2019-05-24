@@ -29,10 +29,10 @@ setup(
     keywords=["Swagger", "APIRecintos"],
     install_requires=REQUIRES,
     packages=find_packages(),
-    package_data={'OpenAPI3.0.1': ['api_server/openapi.yaml']},
+    package_data={'OpenAPI3.0.1': ['apiserver/openapi.yaml']},
     include_package_data=True,
     entry_points={
-        'console_scripts': ['apirecintos=api_server.main:main']},
+        'console_scripts': ['apirecintos=apiserver.main:main']},
     long_description="""\
     API para prestação de informações sobre eventos de controle aduaneiro a cargo dos Redex, Recintos, Operadores Portuários e demais intervenientes em carga sobre controle aduaneiro.
     """

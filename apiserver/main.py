@@ -1,10 +1,12 @@
 import logging
+import sys
 
 import connexion
 from connexion import NoContent
 
-from api_server.models import orm
+from apiserver.models import orm
 
+sys.path.insert(0, './apiserver/')
 db_session = None
 db_session = orm.init_db('sqlite:///test.db')
 logging.basicConfig(level=logging.INFO)

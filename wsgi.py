@@ -1,4 +1,4 @@
-from api_server.main import app
+from apiserver.main import app
 
 if __name__ == '__main__':
     app.run(port=8000)
