@@ -1,0 +1,395 @@
+openapi: 3.0.1
+info:
+  title: APIRecintos
+  description: API para prestação de informações sobre eventos de controle aduaneiro
+    a cargo dos Redex, Recintos, Operadores Portuários e demais intervenientes em
+    carga sobre controle aduaneiro.
+  version: "0.9"
+servers:
+- url: /
+paths:
+  /posicaoconteiner:
+    post:
+      operationId: app.posicaoconteiner
+      requestBody:
+        description: Controle de posição dos Contëineres no Pátio
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PosicaoConteiner'
+        required: true
+      responses:
+        200:
+          description: Evento incluido
+          content: {}
+        405:
+          description: Evento invalido
+          content: {}
+  /posicaoconteiner/{IDEvento}:
+    get:
+      operationId: app.get_posicaoconteiner
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PosicaoConteiner'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /acessoveiculo:
+    post:
+      operationId: app.acessoveiculo
+      requestBody:
+        description: Controle de passagem em ponto de controle / entrada e saida de
+          veiculos em area
+        content:
+          application/json:
+            schema:
+              x-body-name: evento
+              $ref: '#/components/schemas/AcessoVeiculo'
+        required: true
+      responses:
+        200:
+          description: Evento incluido
+          content: {}
+        405:
+          description: Evento invalido
+          content: {}
+  /acessoveiculo/{IDEvento}:
+    get:
+      operationId: app.get_acessoveiculo
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcessoVeiculo'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+components:
+  schemas:
+    CredenciamentoVeiculo:
+      allOf:
+      - $ref: '#/components/schemas/Evento'
+      - type: object
+        properties:
+          placa:
+            type: string
+            description: Placa Cavalo-trator/truck/automóvel
+          marca:
+            type: string
+            description: Marca
+          modelo:
+            type: string
+            description: Modelo
+          ano:
+            type: string
+            description: Ano
+          iniciovalidade:
+            type: string
+            description: Início Período de validade do credenciamento
+            format: date-time
+          fimvalidade:
+            type: string
+            description: Fim Período de validade do credenciamento
+            format: date-time
+          permissao:
+            type: string
+            description: Areas permitidas acesso
+          geolocalizacao:
+            type: boolean
+            description: Verdadeiro para veículo com monitoramento de posição via
+              satélite ou similar
+    AgendamentoVeiculo:
+      allOf:
+      - $ref: '#/components/schemas/Evento'
+      - type: object
+        properties:
+          Placa:
+            type: string
+            description: Placa Cavalo-trator/truck/automóvel
+          tipooperacao:
+            $ref: '#/components/schemas/EntradaSaida'
+          reboques:
+            type: array
+            items:
+              type: object
+              properties:
+                vazio:
+                  type: boolean
+                placa:
+                  type: string
+          containers:
+            type: array
+            items:
+              type: object
+              properties:
+                numero:
+                  type: string
+                vazio:
+                  type: boolean
+          manifesto:
+            type: string
+            description: Manifesto
+          cpfcnpjtransportador:
+            type: string
+            description: CPF ou CNPJ do Transportador responsável
+          nometransportador:
+            type: string
+            description: Nome do Transportador responsável
+          cpfmotorista:
+            type: string
+            description: CPF do Motorista
+          nomemotorista:
+            type: string
+            description: Nome do Motorista
+          cpfcnpjcliente:
+            type: string
+            description: CPF ou CNPJ do Cliente
+          nomecliente:
+            type: string
+            description: Nome Cliente
+          dataagendamento:
+            type: string
+            description: Data e Hora agendada
+            format: date-time
+          paisdestino:
+            type: string
+            description: Pais destino da carga
+          navioembarque:
+            type: string
+            description: Navio de embarque programado
+    Autoridade:
+      type: string
+      description: Sigla da autoridade
+      enum:
+      - RFB
+      - MAPA
+    CredenciamentoPessoa:
+      allOf:
+      - $ref: '#/components/schemas/Evento'
+      - type: object
+        properties:
+          nome:
+            type: string
+            description: Nome da Pessoa credenciada
+          cpf:
+            type: string
+            description: CPF da Pessoa credenciada
+          cnh:
+            type: string
+            description: Numero do CNH (para motoristas)
+          identidade:
+            type: string
+            description: RG ou Identidade do estrangeiro
+          datanascimento:
+            type: string
+            description: Data de nascimento
+            format: date
+          representado:
+            type: string
+            description: CNPJ/CPF representado
+          nomerepresentado:
+            type: string
+            description: Nome representado
+          funcao:
+            type: string
+            description: Função na empresa representada
+          iniciovalidade:
+            type: string
+            description: Início Período de validade do credenciamento
+            format: date-time
+          fimvalidade:
+            type: string
+            description: Fim Período de validade do credenciamento
+            format: date-time
+          permissao:
+            type: string
+            description: Areas permitidas acesso
+          materiais:
+            type: string
+            description: Lista materiais/ferramentas de trabalho
+          motivacao:
+            type: string
+            description: Motivacao de acesso ao terminal
+    AcessoPessoa:
+      allOf:
+      - $ref: '#/components/schemas/Evento'
+      - type: object
+        properties:
+          cpf:
+            type: string
+            description: CPF da Pessoa credenciada
+          identidade:
+            type: string
+            description: RG ou Identidade do estrangeiro
+          formaidentificacao:
+            type: string
+            description: Identificação (cartão-C, biométrico-B, facial-F ou manual-M)
+          portaoacesso:
+            type: string
+            description: Codigo do portao utilizado para entrada
+    Evento:
+      type: object
+      properties:
+        IDEvento:
+          type: integer
+          description: ID do Evento no sistema original, para referencia e consulta
+        dataevento:
+          type: string
+          description: Data de ocorrência física do evento
+          format: date-time
+        operadorevento:
+          type: string
+          description: CPF do Operador que realizou o evento fisicamente/presencialmente
+        dataregistro:
+          type: string
+          description: Data de registro do evento no Sistema
+          format: date-time
+        operadorregistro:
+          type: string
+          description: CPF do Operador que registrou o evento no Sistema
+    AcessoVeiculo:
+      allOf:
+      - $ref: '#/components/schemas/Evento'
+      - type: object
+        properties:
+          IDAgendamento:
+            type: integer
+            description: ID do Agendamento desta operação, se houver
+          IDGate:
+            type: string
+            description: Identificador do Portao de ocorrencia do Evento
+          placa:
+            type: string
+            description: Placa Cavalo-trator/truck/automóvel
+          Chassi:
+            type: string
+            description: Chassi do veículo em caso do veículo ser a carga
+          tipooperacao:
+            $ref: '#/components/schemas/EntradaSaida'
+          reboques:
+            type: array
+            items:
+              type: object
+              properties:
+                avarias:
+                  type: string
+                lacres:
+                  type: string
+                vazio:
+                  type: boolean
+                placa:
+                  type: string
+          conteineres:
+            type: array
+            items:
+              type: object
+              properties:
+                avarias:
+                  type: string
+                lacres:
+                  type: string
+                numero:
+                  type: string
+                vazio:
+                  type: boolean
+          CTE:
+            type: string
+            description: CTE Conhecimento de Transporte Eletrônico)
+          DTC:
+            type: string
+            description: DTC (Declaração de Trânsito de Contêiner)
+          manifesto:
+            type: string
+            description: Manifesto
+          cpfcnpjtransportador:
+            type: string
+            description: CPF ou CNPJ do Transportador responsável
+          nometransportador:
+            type: string
+            description: Nome do Transportador responsável
+          cpfmotorista:
+            type: string
+            description: CPF do Motorista
+          nomemotorista:
+            type: string
+            description: Nome do Motorista
+          cpfcnpjcliente:
+            type: string
+            description: CPF ou CNPJ do Cliente
+          nomecliente:
+            type: string
+            description: Nome Cliente
+          ocr:
+            type: boolean
+            description: Captura automática de placa (OCR)
+          dataliberacao:
+            type: string
+            description: Data e hora da comunicação de liberação da carga pelo recinto
+              (apenas na saída)
+            format: date-time
+          paisdestino:
+            type: string
+            description: Pais destino da carga
+          navioembarque:
+            type: string
+            description: Navio de embarque programado
+    EntradaSaida:
+      type: string
+      description: Operação de entrada ou de saída de carga
+      enum:
+      - Entrada
+      - Saida
+    PosicaoConteiner:
+      allOf:
+      - $ref: '#/components/schemas/Evento'
+      - type: object
+        properties:
+          numero:
+            type: string
+            description: Numero do conteiner
+          placa:
+            type: string
+            description: Placa semireboque em caso de carregamento
+          posicao:
+            type: string
+            description: Codigo que identifica a pilha no recinto
+          altura:
+            type: integer
+            description: Altura do conteiner na pilha (0-chao até 6)
+          emconferencia:
+            type: boolean
+            description: Posicao propria para desunitizacao ou conferencia
+          solicitante:
+            $ref: '#/components/schemas/Autoridade'
