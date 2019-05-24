@@ -1,12 +1,12 @@
 import pytest
 
-from api_server.app import create_app
+from api_server.main import create_app
 
-flask_app = create_app()
+app = create_app()
 
 @pytest.fixture(scope='module')
 def client():
-    with flask_app.test_client() as c:
+    with app.test_client() as c:
         yield c
 
 
