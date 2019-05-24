@@ -1,3 +1,5 @@
+import logging
+
 from dateutil.parser import parse
 from marshmallow import Schema, fields, ValidationError
 from sqlalchemy import Boolean, Column, DateTime, Integer, \
@@ -212,7 +214,10 @@ def init_db(uri):
         engine = create_engine(uri)
         db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
         Base.query = db_session.query_property()
-        Base.metadata.drop_all(bind=engine)
-        Base.metadata.create_all(bind=engine)
+        try:
+            Base.metadata.drop_all(bind=engine)
+            Base.metadata.create_all(bind=engine)
+        except Exception as err:
+            logging.error(err, exc_info=True)
         print('Criou Banco!!!')
     return db_session
