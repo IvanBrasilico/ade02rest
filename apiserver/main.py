@@ -2,7 +2,6 @@ import logging
 import sys
 
 import connexion
-from connexion import NoContent
 from flask import render_template
 
 from apiserver.models import orm
@@ -12,6 +11,13 @@ db_session = None
 db_session = orm.init_db('sqlite:///test.db')
 logging.basicConfig(level=logging.INFO)
 
+TOKEN = 'Evento incluido'
+
+
+def get_token(evento):
+    # TODO: Calcular TOKEN (recibo) do Evento
+    return TOKEN
+
 
 def get_evento(IDEvento, aclass):
     try:
@@ -19,20 +25,29 @@ def get_evento(IDEvento, aclass):
             aclass.IDEvento == IDEvento
         ).one_or_none()
         # print(evento.dump() if evento is not None else 'None')
-        return evento.dump() if evento is not None else ('Not found', 404)
+        return evento.dump(), 200 if evento is not None else ('Not found', 404)
     except Exception as err:
         logging.error(err, exc_info=True)
-        return err.msg, 400
+        return str(err), 400
 
+
+def _commit(object):
+    try:
+        db_session.commit()
+    except Exception as err:
+        db_session.rollback()
+        logging.error(err, exc_info=True)
+        return str(err), 405
+    return get_token(object), 200
 
 def add_evento(aclass, evento):
     logging.info('Creating evento %s %s..' %
                  (aclass.__name__,
                   evento.get('IDEvento'))
                  )
-    db_session.add(aclass(**evento))
-    db_session.commit()
-    return NoContent, 200
+    novo_evento = aclass(**evento)
+    db_session.add(novo_evento)
+    return _commit(novo_evento)
 
 
 def posicaoconteiner(evento):
@@ -62,7 +77,7 @@ def get_acessoveiculo(IDEvento):
     if acessoveiculo is None:
         return {'message': 'Evento não encontrado.'}, 404
     acessoveiculo_schema = orm.AcessoVeiculoSchema()
-    data = acessoveiculo_schema.dump(acessoveiculo)
+    data = acessoveiculo_schema.dump(acessoveiculo).data
 
     # conteineresgate_result = orm.conteineresgate_schema.dump(acessoveiculo.conteineres)
     # acessoveiculo_result.conteineres = conteineresgate_result
@@ -72,7 +87,7 @@ def get_acessoveiculo(IDEvento):
 def acessoveiculo(evento):
     logging.info('Creating acessoveiculo %s..', evento.get('IDEvento'))
     acessoveiculo = orm.AcessoVeiculo(**evento)
-    db_session.add(orm.AcessoVeiculo(**evento))
+    db_session.add(acessoveiculo)
     conteineres = evento.get('conteineres')
     if conteineres:
         for conteiner in conteineres:
@@ -93,8 +108,7 @@ def acessoveiculo(evento):
                                            lacres=reboque.get('lacres'),
                                            vazio=reboque.get('vazio'))
             db_session.add(reboquegate)
-    db_session.commit()
-    return 'Evento incluido', 200
+    return _commit(acessoveiculo)
 
 
 '''
