@@ -1,12 +1,13 @@
-import connexion
 import logging
 
+import connexion
 from connexion import NoContent
-from models import orm
 
+from api_server.models import orm
 
 db_session = None
 db_session = orm.init_db('sqlite:///test.db')
+logging.basicConfig(level=logging.INFO)
 
 
 def get_evento(IDEvento, aclass):
@@ -20,6 +21,7 @@ def get_evento(IDEvento, aclass):
         logging.error(err, exc_info=True)
         return err.msg, 400
 
+
 def add_evento(aclass, evento):
     logging.info('Creating evento %s %s..' %
                  (aclass.__name__,
@@ -29,20 +31,26 @@ def add_evento(aclass, evento):
     db_session.commit()
     return NoContent, 200
 
+
 def posicaoconteiner(evento):
     return add_evento(orm.PosicaoConteiner, evento)
+
 
 def get_posicaoconteiner(IDEvento):
     return get_evento(IDEvento, orm.PosicaoConteiner)
 
+
 def pesagemmaritimo(evento):
     return add_evento(orm.PesagemMaritimo, evento)
+
 
 def get_pesagemmaritimo(IDEvento):
     return get_evento(IDEvento, orm.PesagemMaritimo)
 
+
 def get_acessoveiculo(IDEvento):
     return get_evento(IDEvento, orm.AcessoVeiculo)
+
 
 def get_acessoveiculo(IDEvento):
     acessoveiculo = orm.AcessoVeiculo.query.filter(
@@ -51,11 +59,12 @@ def get_acessoveiculo(IDEvento):
     if acessoveiculo is None:
         return {'message': 'Evento não encontrado.'}, 404
     acessoveiculo_schema = orm.AcessoVeiculoSchema()
-    data = acessoveiculo_schema.dump(acessoveiculo).data
+    data = acessoveiculo_schema.dump(acessoveiculo)
 
     # conteineresgate_result = orm.conteineresgate_schema.dump(acessoveiculo.conteineres)
     # acessoveiculo_result.conteineres = conteineresgate_result
     return data
+
 
 def acessoveiculo(evento):
     logging.info('Creating acessoveiculo %s..', evento.get('IDEvento'))
@@ -76,14 +85,13 @@ def acessoveiculo(evento):
         for reboque in reboques:
             logging.info('Creating reboque %s..', reboque.get('placa'))
             reboquegate = orm.ReboquesGate(acessoveiculo,
-                                                placa=reboque.get('placa'),
-                                                avarias=reboque.get('avarias'),
-                                                lacres=reboque.get('lacres'),
-                                                vazio=reboque.get('vazio'))
+                                           placa=reboque.get('placa'),
+                                           avarias=reboque.get('avarias'),
+                                           lacres=reboque.get('lacres'),
+                                           vazio=reboque.get('vazio'))
             db_session.add(reboquegate)
     db_session.commit()
     return 'Evento incluido', 200
-
 
 
 '''
@@ -93,9 +101,9 @@ def get_eventos(limit, animal_type=None):
         q = q.filter(orm.Pet.animal_type == animal_type)
     return [p.dump() for p in q][:limit]
 '''
-# If we're running in stand alone mode, run the application
 
-logging.basicConfig(level=logging.INFO)
+
+# If we're running in stand alone mode, run the application
 
 
 def create_app():
@@ -103,9 +111,12 @@ def create_app():
     app.add_api('openapi.yaml')
     return app
 
+
 def main():
-    app = create_app()
     app.run(debug=True, port=8000, threaded=False)
+
+
+app = create_app()
 
 if __name__ == '__main__':
     main()

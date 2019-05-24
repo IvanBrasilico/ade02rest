@@ -26,7 +26,9 @@ class EventoBase(Base):
         self.operadorregistro = operadorregistro
 
     def dump(self):
-        return dict([(k, v) for k, v in vars(self).items() if not k.startswith('_')])
+        dump = dict([(k, v) for k, v in vars(self).items() if not k.startswith('_')])
+        dump.pop('ID')
+        return dump
 
 
 class Evento(EventoBase):

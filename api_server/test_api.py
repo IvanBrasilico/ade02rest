@@ -1,6 +1,6 @@
 import pytest
 
-from app.app import create_app
+from api_server.app import create_app
 
 flask_app = create_app()
 
@@ -13,3 +13,5 @@ def client():
 def test_health(client):
     response = client.get('/health')
     assert response.status_code == 200
+
+

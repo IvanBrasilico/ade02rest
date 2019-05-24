@@ -10,7 +10,7 @@ servers:
 paths:
   /posicaoconteiner:
     post:
-      operationId: app.posicaoconteiner
+      operationId: main.posicaoconteiner
       requestBody:
         description: Controle de posição dos Contëineres no Pátio
         content:
@@ -28,7 +28,7 @@ paths:
           content: {}
   /posicaoconteiner/{IDEvento}:
     get:
-      operationId: app.get_posicaoconteiner
+      operationId: main.get_posicaoconteiner
       parameters:
       - name: IDEvento
         in: path
@@ -54,7 +54,7 @@ paths:
           content: {}
   /pesagemmaritimo:
     post:
-      operationId: app.pesagemmaritimo
+      operationId: main.pesagemmaritimo
       requestBody:
         description: Controle de pesagem no modal maritimo
         content:
@@ -72,7 +72,7 @@ paths:
           content: {}
   /pesagemmaritimo/{IDEvento}:
     get:
-      operationId: app.get_pesagemmaritimo
+      operationId: main.get_pesagemmaritimo
       parameters:
       - name: IDEvento
         in: path
@@ -98,7 +98,7 @@ paths:
           content: {}
   /acessoveiculo:
     post:
-      operationId: app.acessoveiculo
+      operationId: main.acessoveiculo
       requestBody:
         description: Controle de passagem em ponto de controle / entrada e saida de
           veiculos em area
@@ -117,7 +117,7 @@ paths:
           content: {}
   /acessoveiculo/{IDEvento}:
     get:
-      operationId: app.get_acessoveiculo
+      operationId: main.get_acessoveiculo
       parameters:
       - name: IDEvento
         in: path
