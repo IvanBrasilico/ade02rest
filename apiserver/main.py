@@ -7,8 +7,6 @@ from flask import render_template
 from apiserver.models import orm
 
 sys.path.insert(0, './apiserver/')
-db_session = None
-db_session = orm.init_db('sqlite:///test.db')
 logging.basicConfig(level=logging.INFO)
 
 TOKEN = 'Evento incluido'
@@ -39,6 +37,7 @@ def _commit(object):
         logging.error(err, exc_info=True)
         return str(err), 405
     return get_token(object), 200
+
 
 def add_evento(aclass, evento):
     logging.info('Creating evento %s %s..' %
@@ -73,14 +72,14 @@ def get_acessoveiculo(IDEvento):
 def get_acessoveiculo(IDEvento):
     acessoveiculo = orm.AcessoVeiculo.query.filter(
         orm.AcessoVeiculo.IDEvento == IDEvento
-    ).join(orm.ConteineresGate).one_or_none()
+    ).outerjoin(
+        orm.ConteineresGate
+    ).outerjoin(
+        orm.ReboquesGate).one_or_none()
     if acessoveiculo is None:
         return {'message': 'Evento não encontrado.'}, 404
     acessoveiculo_schema = orm.AcessoVeiculoSchema()
     data = acessoveiculo_schema.dump(acessoveiculo).data
-
-    # conteineresgate_result = orm.conteineresgate_schema.dump(acessoveiculo.conteineres)
-    # acessoveiculo_result.conteineres = conteineresgate_result
     return data
 
 
@@ -111,15 +110,6 @@ def acessoveiculo(evento):
     return _commit(acessoveiculo)
 
 
-'''
-def get_eventos(limit, animal_type=None):
-    q = db_session.query(orm.Pet)
-    if animal_type:
-        q = q.filter(orm.Pet.animal_type == animal_type)
-    return [p.dump() for p in q][:limit]
-'''
-
-
 # If we're running in stand alone mode, run the application
 
 
@@ -134,6 +124,7 @@ def main():
 
 
 app = create_app()
+db_session, engine = orm.init_db()
 
 
 @app.route('/')

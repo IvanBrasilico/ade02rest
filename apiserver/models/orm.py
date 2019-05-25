@@ -2,6 +2,7 @@ import logging
 
 from dateutil.parser import parse
 from marshmallow import Schema, fields, ValidationError
+from marshmallow_sqlalchemy import ModelSchema
 from sqlalchemy import Boolean, Column, DateTime, Integer, \
     String, create_engine, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
@@ -12,7 +13,7 @@ Base = declarative_base()
 
 class EventoBase(Base):
     __abstract__ = True
-    IDEvento = Column(Integer, primary_key=True)
+    IDEvento = Column(Integer)
     dataevento = Column(DateTime())
     operadorevento = Column(String(14))
     dataregistro = Column(DateTime())
@@ -20,8 +21,8 @@ class EventoBase(Base):
 
     def __init__(self, IDEvento, dataevento, operadorevento, dataregistro, operadorregistro):
         self.IDEvento = IDEvento
-        print(dataevento)
-        print(parse(dataevento))
+        # print(dataevento)
+        # print(parse(dataevento))
         self.dataevento = parse(dataevento)
         self.operadorevento = operadorevento
         self.dataregistro = parse(dataregistro)
@@ -29,20 +30,8 @@ class EventoBase(Base):
 
     def dump(self):
         dump = dict([(k, v) for k, v in vars(self).items() if not k.startswith('_')])
-        dump.pop('ID')
+        # dump.pop('ID')
         return dump
-
-
-class Evento(EventoBase):
-    __tablename__ = 'eventos'
-    __table_args__ = {'sqlite_autoincrement': True}
-    ID = Column(Integer, primary_key=True)
-
-    def __init__(self, IDEvento, dataevento, operadorevento,
-                 dataregistro, operadorregistro):
-        super().__init__(IDEvento, dataevento, operadorevento,
-                         dataregistro, operadorregistro)
-        self.ID = IDEvento
 
 
 class PosicaoConteiner(EventoBase):
@@ -58,7 +47,7 @@ class PosicaoConteiner(EventoBase):
 
     def __init__(self, **kwargs):
         superkwargs = dict([
-            (k, v) for k, v in kwargs.items() if k in vars(Evento).keys()
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
         ])
         super().__init__(**superkwargs)
         self.ID = kwargs.get('IDEvento')
@@ -86,10 +75,10 @@ class PesagemMaritimo(EventoBase):
 
     def __init__(self, **kwargs):
         superkwargs = dict([
-            (k, v) for k, v in kwargs.items() if k in vars(Evento).keys()
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
         ])
         super().__init__(**superkwargs)
-        self.ID = kwargs.get('IDEvento')
+        # self.ID = kwargs.get('IDEvento')
         self.documentotransporte = kwargs.get('documentotransporte')
         self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
         self.conteiner = kwargs.get('conteiner')
@@ -113,17 +102,16 @@ class AcessoVeiculo(EventoBase):
 
     def __init__(self, **kwargs):
         superkwargs = dict([
-            (k, v) for k, v in kwargs.items() if k in vars(Evento).keys()
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
         ])
         super().__init__(**superkwargs)
-        self.ID = kwargs.get('IDEvento')
         self.placa = kwargs.get('placa')
         self.IDGate = kwargs.get('IDGate')
+        self.cpfmotorista = kwargs.get('cpfmotorista')
 
 
 class Gate(Base):
     __abstract__ = True
-    id = Column(Integer, primary_key=True)
     avarias = Column(String(50))
     lacres = Column(String(50))
     vazio = Column(Boolean())
@@ -131,15 +119,16 @@ class Gate(Base):
 
 class ConteineresGate(Gate):
     __tablename__ = 'conteineresgate'
-    id = Column(Integer, primary_key=True)
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
     numero = Column(String(11))
-    acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
+    acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.IDEvento'))
     acessoveiculo = relationship(
         'AcessoVeiculo'
     )
 
     def __init__(self, parent, numero, avarias, lacres, vazio):
-        self.acessoveiculo_id = parent.ID
+        self.acessoveiculo_id = parent.IDEvento
         self.numero = numero
         self.avarias = avarias
         self.lacres = lacres
@@ -148,15 +137,16 @@ class ConteineresGate(Gate):
 
 class ReboquesGate(Gate):
     __tablename__ = 'reboquesgate'
-    id = Column(Integer, primary_key=True)
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
     placa = Column(String(7))
-    acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
+    acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.IDEvento'))
     acessoveiculo = relationship(
         'AcessoVeiculo'
     )
 
     def __init__(self, parent, placa, avarias, lacres, vazio):
-        self.acessoveiculo_id = parent.ID
+        self.acessoveiculo_id = parent.IDEvento
         self.placa = placa
         self.avarias = avarias
         self.lacres = lacres
@@ -179,7 +169,6 @@ class GateSchema(Schema):
 
 
 class ConteineresGateSchema(GateSchema):
-    ID = fields.Int(dump_only=True)
     numero = fields.Str()
 
 
@@ -200,24 +189,36 @@ class AcessoVeiculoSchema(Schema):
     reboques = fields.Nested('ReboquesGateSchema', many=True)
 
 
+class AcessoVeiculoSchema2(ModelSchema):
+    class Meta:
+        model = AcessoVeiculo
+        # sqla_session = session
+
+
 # conteinergate_schema = ConteineresGateSchema()
 # conteineresgate_schema = ConteineresGateSchema(many=True)
 # acessoveiculo_schema = AcessoVeiculoSchema()
 # acessosveiculo_schema = AcessoVeiculoSchema(many=True, only=('IDEvento'))
 
 db_session = None
+engine = None
 
 
-def init_db(uri):
+def init_db(uri='sqlite:///test.db'):
     global db_session
+    global engine
     if db_session is None:
         engine = create_engine(uri)
         db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
         Base.query = db_session.query_property()
-        try:
-            Base.metadata.drop_all(bind=engine)
-            Base.metadata.create_all(bind=engine)
-        except Exception as err:
-            logging.error(err, exc_info=True)
+    return db_session, engine
+
+
+if __name__ == '__main__':
+    db, engine = init_db()
+    try:
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
         print('Criou Banco!!!')
-    return db_session
+    except Exception as err:
+        logging.error(err, exc_info=True)
