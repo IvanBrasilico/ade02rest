@@ -1,0 +1,44 @@
+  /DTSC:
+    post:
+      operationId: api.DTSC
+      requestBody:
+        description: Controle de posição dos lotes nos armazens
+        content:
+          application/json:
+            schema:
+              x-body-name: evento
+              $ref: '#/components/schemas/DTSC'
+        required: true
+      responses:
+        200:
+          description: Evento incluido
+          content: {}
+        405:
+          description: Evento invalido
+          content: {}
+  /DTSC/{IDEvento}:
+    get:
+      operationId: api.get_DTSC
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DTSC'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}

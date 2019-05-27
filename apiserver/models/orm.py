@@ -56,6 +56,42 @@ class EventoBase(Base):
         return ohash
 
 
+class AcessoPessoa(EventoBase):
+    __tablename__ = 'acessospessoas'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+
+
+class PesagemVeiculoVazio(EventoBase):
+    __tablename__ = 'pesagensveiculosvazios'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+
+
+class PesagemTerrestre(EventoBase):
+    __tablename__ = 'pesagensterrestres'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+
+
 class PosicaoConteiner(EventoBase):
     __tablename__ = 'posicoesconteiner'
     __table_args__ = {'sqlite_autoincrement': True}
@@ -128,6 +164,78 @@ class InspecaonaoInvasiva(EventoBase):
         self.numero = kwargs.get('numero')
         self.placa = kwargs.get('placa')
         self.capturaautomatica = kwargs.get('capturaautomatica') == 'True'
+
+
+class Desunitizacao(EventoBase):
+    __tablename__ = 'desunitizacoes'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+
+
+class PosicaoLote(EventoBase):
+    __tablename__ = 'posicoeslote'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+
+
+class Unitizacao(EventoBase):
+    __tablename__ = 'unitizacoes'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+
+
+class AvariaLote(EventoBase):
+    __tablename__ = 'avariaslote'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+
+
+class OperacaoNavio(EventoBase):
+    __tablename__ = 'operacoesnavios'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+
+
+class DTSC(EventoBase):
+    __tablename__ = 'DTSC'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
 
 
 class AcessoVeiculo(EventoBase):

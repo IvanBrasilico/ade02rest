@@ -73,31 +73,73 @@ def get_posicaoconteiner(IDEvento):
     return get_evento(IDEvento, orm.PosicaoConteiner)
 
 
-def list_posicaoconteiner(filtro):
-    try:
-        try:
-            recinto = filtro.get('recinto')
-            datainicial = filtro.get('datainicial')
-            datafinal = filtro.get('datafinal')
-            altura = filtro.get('altura')
-            filters = [orm.PosicaoConteiner.dataevento.between(datainicial, datafinal),
-                       orm.PosicaoConteiner.recinto.like(recinto)]
-            if altura is not None:
-                filters.append(orm.PosicaoConteiner.altura.__eq__(int(altura)))
-        except  Exception as err:
-            logging.error(err, exc_info=True)
-            return 'Erro nos filtros passados: %s' % str(err), 400
-        eventos = db_session.query(
-            orm.PosicaoConteiner
-        ).filter(and_(*filters)).all()
-        if eventos is None or len(eventos) == 0:
-            return 'Sem eventos posicaoconteiner entre datas %s a %s.' % \
-                   (datainicial, datafinal), 404
-        return dump_eventos(eventos)
-    except Exception as err:
-        logging.error(err, exc_info=True)
-        return str(err), 405
+def acessopessoa(evento):
+    return add_evento(orm.AcessoPessoa, evento)
 
+
+def get_acessopessoa(IDEvento):
+    return get_evento(IDEvento, orm.AcessoPessoa)
+
+
+def posicaoveiculo(evento):
+    return add_evento(orm.PosicaoVeiculo, evento)
+
+
+def get_posicaoveiculo(IDEvento):
+    return get_evento(IDEvento, orm.PosicaoVeiculo)
+
+
+def posicaolote(evento):
+    return add_evento(orm.PosicaoLote, evento)
+
+
+def get_posicaolote(IDEvento):
+    return get_evento(IDEvento, orm.PosicaoLote)
+
+def avarialote(evento):
+    return add_evento(orm.AvariaLote, evento)
+
+
+def get_avarialote(IDEvento):
+    return get_evento(IDEvento, orm.AvariaLote)
+
+
+def unitizacao(evento):
+    return add_evento(orm.Unitizacao, evento)
+
+
+def get_unitizacao(IDEvento):
+    return get_evento(IDEvento, orm.Unitizacao)
+
+def desunitizacao(evento):
+    return add_evento(orm.Desunitizacao, evento)
+
+
+def get_desunitizacao(IDEvento):
+    return get_evento(IDEvento, orm.Desunitizacao)
+
+def DTSC(evento):
+    return add_evento(orm.DTSC, evento)
+
+
+def get_DTSC(IDEvento):
+    return get_evento(IDEvento, orm.DTSC)
+
+
+def pesagemveiculovazio(evento):
+    return add_evento(orm.PesagemVeiculoVazio, evento)
+
+
+def get_pesagemveiculovazio(IDEvento):
+    return get_evento(IDEvento, orm.PesagemVeiculoVazio)
+
+
+def pesagemterrestre(evento):
+    return add_evento(orm.PesagemTerrestre, evento)
+
+
+def get_pesagemterrestre(IDEvento):
+    return get_evento(IDEvento, orm.PesagemTerrestre)
 
 def pesagemmaritimo(evento):
     return add_evento(orm.PesagemMaritimo, evento)
@@ -105,7 +147,6 @@ def pesagemmaritimo(evento):
 
 def get_pesagemmaritimo(IDEvento):
     return get_evento(IDEvento, orm.PesagemMaritimo)
-
 
 def inspecaonaoinvasiva(evento):
     return add_evento(orm.InspecaonaoInvasiva, evento)
@@ -160,6 +201,32 @@ def acessoveiculo(evento):
                                            vazio=reboque.get('vazio'))
             db_session.add(reboquegate)
     return _commit(acessoveiculo)
+
+
+def list_posicaoconteiner(filtro):
+    try:
+        try:
+            recinto = filtro.get('recinto')
+            datainicial = filtro.get('datainicial')
+            datafinal = filtro.get('datafinal')
+            altura = filtro.get('altura')
+            filters = [orm.PosicaoConteiner.dataevento.between(datainicial, datafinal),
+                       orm.PosicaoConteiner.recinto.like(recinto)]
+            if altura is not None:
+                filters.append(orm.PosicaoConteiner.altura.__eq__(int(altura)))
+        except  Exception as err:
+            logging.error(err, exc_info=True)
+            return 'Erro nos filtros passados: %s' % str(err), 400
+        eventos = db_session.query(
+            orm.PosicaoConteiner
+        ).filter(and_(*filters)).all()
+        if eventos is None or len(eventos) == 0:
+            return 'Sem eventos posicaoconteiner entre datas %s a %s.' % \
+                   (datainicial, datafinal), 404
+        return dump_eventos(eventos)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 405
 
 
 def create_app():
