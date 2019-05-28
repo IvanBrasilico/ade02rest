@@ -8,6 +8,33 @@ info:
 servers:
 - url: /
 paths:
+  /eventosnovos/list:
+    post:
+      operationId: api.get_eventosnovos
+      requestBody:
+        description: Lista de eventos maiores que um ID ou Data
+        content:
+          application/json:
+            schema:
+              x-body-name: filtro
+              $ref: '#/components/schemas/FiltroNovoEvento'
+        required: true
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayEventoBase'
+        400:
+          description: Erro
+          content: {}
+        404:
+          description: Eventos não encontrados para filtro atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
   /acessopessoa:
     post:
       operationId: api.acessopessoa
@@ -89,6 +116,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AcessoVeiculo'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /artefatorecinto:
+    post:
+      operationId: api.artefatorecinto
+      requestBody:
+        description: Controle de areas, gates, cameras, etc por geolocalizacao
+        content:
+          application/json:
+            schema:
+              x-body-name: evento
+              $ref: '#/components/schemas/ArtefatoRecinto'
+        required: true
+      responses:
+        200:
+          description: Evento incluido
+          content: {}
+        405:
+          description: Evento invalido
+          content: {}
+  /artefatorecinto/{IDEvento}:
+    get:
+      operationId: api.get_artefatorecinto
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtefatoRecinto'
         400:
           description: ID inválido
           content: {}
@@ -686,6 +757,15 @@ components:
       - B
       - F
       - M
+    TipoArtefato:
+      type: string
+      description: Designacao do tipo de artefato
+      enum:
+      - Area (poligono)
+      - Camera
+      - Gate
+      - Balanca
+      - Escaner
     TipoModal:
       type: string
       description: Sigla do modal
@@ -699,7 +779,17 @@ components:
       properties:
         caminhoarquivo:
           type: string
-        conteudoarquivo:
+        datacriacao:
+          type: string
+          description: Data e Hora da criacao do arquivo
+          format: date-time
+        datamodificacao:
+          type: string
+          description: Data e Hora da ultima modificacao do arquivo
+          format: date-time
+        contentType:
+          type: string
+        content:
           type: string
     Evento:
       type: object
@@ -1023,13 +1113,13 @@ components:
                   type: string
                 nomeestadia:
                   type: string
-                lacresverificado:
+                lacresverificados:
                   type: string
-                lacressifverificado:
+                lacressifverificados:
                   type: string
                 avarias:
                   type: string
-          containers:
+          conteineres:
             type: array
             items:
               type: object
@@ -1057,9 +1147,9 @@ components:
                   type: string
                 numerobooking:
                   type: string
-                lacresverificado:
+                lacresverificados:
                   type: string
-                lacressifverificado:
+                lacressifverificados:
                   type: string
                 avarias:
                   type: string
@@ -1089,6 +1179,37 @@ components:
             description: Data e hora da comunicação de liberação da carga pelo recinto
               (apenas na saída)
             format: date-time
+    CoordenadaArtefato:
+      type: object
+      properties:
+        lat:
+          type: number
+          description: Latitude
+        long:
+          type: number
+          description: Longitude
+    ArtefatoRecinto:
+      allOf:
+      - $ref: '#/components/schemas/Evento'
+      - type: object
+        properties:
+          codigo:
+            type: string
+            description: Codigo que identifica o artefato no Recinto
+          tipoartefato:
+            $ref: '#/components/schemas/TipoArtefato'
+          placa:
+            type: string
+            description: Placa do caminhao/truck/cavalo
+          coordenadas:
+            type: array
+            items:
+              type: object
+              properties:
+                lat:
+                  type: number
+                long:
+                  type: number
     PesagemVeiculoVazio:
       allOf:
       - $ref: '#/components/schemas/Evento'
@@ -1207,28 +1328,12 @@ components:
           placasemireboque:
             type: string
             description: Placa semireboque em caso de carregamento
-          dataacriacao:
-            type: string
-            description: Data e Hora da criacao do arquivo
-            format: date-time
-          dataamodificacao:
-            type: string
-            description: Data e Hora da ultima modificacao do arquivo
-            format: date-time
-          nomearquivo:
-            type: string
-            description: Nome e caminho do arquivo original de imagem
           capturaautomatica:
             type: boolean
-            description: Captura realizada automaticamente pela balanca, sem intervencao manual ou digitacao
-          imagens:
+            description: Captura realizada automaticamente pelo OCR, sem intervencao manual ou digitacao
+          anexos:
             type: array
-            description: Arquivos de imagem de inspecao nao invasiva
-            items:
-              $ref: '#/components/schemas/Anexos'
-          dados:
-            type: array
-            description: Arquivos texto (XML, JSON, etc) gerados pelo equipamento
+            description: Arquivos de imagem de inspecao nao invasiva ou arquivos texto (XML, JSON, etc) gerados pelo equipamento
             items:
               $ref: '#/components/schemas/Anexos'
     PosicaoVeiculoPatio:
@@ -1297,6 +1402,19 @@ components:
             description: Posicao propria para desunitizacao ou conferencia
           solicitante:
             $ref: '#/components/schemas/Autoridade'
+    FiltroNovoEvento:
+      type: object
+      properties:
+        IDEvento:
+          type: integer
+          description: IDEvento a partir do qual pesquisar (maior que) OU
+        dataevento:
+          type: string
+          description: Data de ocorrência do evento - inicio de pesquisa
+          format: date-time
+        tipoevento:
+          type: string
+          description: Nome da classe de Evento
     FiltroPosicaoConteiner:
       type: object
       properties:
@@ -1314,6 +1432,10 @@ components:
         altura:
           type: integer
           description: Altura do conteiner na pilha
+    ArrayEventoBase:
+      type: array
+      items:
+        $ref: '#/components/schemas/Evento'
     ArrayPosicaoConteiner:
       type: array
       items:
@@ -1467,7 +1589,7 @@ components:
           dataoperacao:
             type: string
             description: Data e hora prevista da atracacao
-            format: datetime
+            format: date-time
           imonavio:
             type: string
             description: IMO Navio

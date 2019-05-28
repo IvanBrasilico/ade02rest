@@ -11,6 +11,8 @@ from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.sql import func
 
 Base = declarative_base()
+db_session = None
+engine = None
 
 
 class EventoBase(Base):
@@ -25,8 +27,11 @@ class EventoBase(Base):
                           server_default=func.now())
     recinto = Column(String(10), index=True)
     request_IP = Column(String(21), index=True)
+    # TODO: Ver como tratar retificação (viola índice único)
+    retificador = Column(Boolean)
 
-    def __init__(self, IDEvento, dataevento, operadorevento, dataregistro, operadorregistro,
+    def __init__(self, IDEvento, dataevento, operadorevento, dataregistro,
+                 operadorregistro, retificador,
                  time_created=None, recinto=None, request_IP=None):
         self.IDEvento = IDEvento
         # print(dataevento)
@@ -35,6 +40,11 @@ class EventoBase(Base):
         self.operadorevento = operadorevento
         self.dataregistro = parse(dataregistro)
         self.operadorregistro = operadorregistro
+        self.retificador = retificador
+        if recinto is not None:
+            self.recinto = recinto
+        if request_IP is not None:
+            self.request_IP = request_IP
 
     def dump(self):
         dump = dict([(k, v) for k, v in vars(self).items() if not k.startswith('_')])
@@ -76,20 +86,22 @@ class PosicaoConteiner(EventoBase):
         self.placa = kwargs.get('placa')
         self.posicao = kwargs.get('posicao')
         self.altura = kwargs.get('altura')
-        self.emconferencia = kwargs.get('emconferencia') == 'True'
+        self.emconferencia = kwargs.get('emconferencia')
         self.solicitante = kwargs.get('solicitante')
+
 
 class AcessoPessoa(EventoBase):
     __tablename__ = 'acessospessoas'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
-    direcao  = Column(String(10))
-    formaidentificacao  = Column(String(10))
+    direcao = Column(String(10))
+    formaidentificacao = Column(String(10))
     cpf = Column(String(11))
     identidade = Column(String(15))
     portaoacesso = Column(String(10))
     numerovoo = Column(String(20))
     reserva = Column(String(20))
+
     def __init__(self, **kwargs):
         superkwargs = dict([
             (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
@@ -104,7 +116,6 @@ class AcessoPessoa(EventoBase):
         self.reserva = kwargs.get('reserva')
 
 
-
 class PesagemTerrestre(EventoBase):
     __tablename__ = 'pesagensterrestres'
     __table_args__ = {'sqlite_autoincrement': True}
@@ -112,6 +123,7 @@ class PesagemTerrestre(EventoBase):
     documentotransporte = Column(String(20))
     tipodocumentotransporte = Column(String(10))
     placa = Column(String(11))
+    tara = Column(Integer())
     pesobrutodeclarado = Column(Integer())
     pesobalanca = Column(Integer())
     capturaautomatica = Column(Boolean())
@@ -126,6 +138,7 @@ class PesagemTerrestre(EventoBase):
         self.documentotransporte = kwargs.get('documentotransporte')
         self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
         self.placa = kwargs.get('placa')
+        self.tara = kwargs.get('tara')
         self.pesobrutodeclarado = kwargs.get('pesobrutodeclarado')
         self.pesobalanca = kwargs.get('pesobalanca')
         self.capturaautomatica = kwargs.get('capturaautomatica') == 'True'
@@ -143,28 +156,43 @@ class ReboquesPesagemTerrestre(Base):
     )
 
     def __init__(self, **kwargs):
-        superkwargs = dict([
-            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
-        ])
-        super().__init__(**superkwargs)
         self.placa = kwargs.get('placa')
         self.tara = kwargs.get('tara')
 
 
+class ConteineresPesagemTerrestre(Base):
+    __tablename__ = 'conteinerespesagemterrestre'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    numero = Column(String(11))
+    tara = Column(Integer)
+    pesagem_id = Column(Integer, ForeignKey('pesagensterrestres.ID'))
+    pesagem = relationship(
+        'PesagemTerrestre'
+    )
 
-class ArtefatoRecinto(Base):
+    def __init__(self, **kwargs):
+        self.numero = kwargs.get('numero')
+        self.tara = kwargs.get('tara')
+
+
+class ArtefatoRecinto(EventoBase):
     __tablename__ = 'artefatosrecinto'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
-    recinto = Column(String(20))
     tipoartefato = Column(String(10))
-    codigoartefato = Column(String(10))
+    codigo = Column(String(10))
     coordenadas = relationship('CoordenadaArtefato')
 
-    def __init__(self, recinto, tipoartefato, codigoartefato):
-        self.recinto = recinto
-        self.codigoartefato = codigoartefato
-        self.tipoartefato = tipoartefato
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.recinto = kwargs.get('recinto')
+        self.codigo = kwargs.get('codigoartefato')
+        self.tipoartefato = kwargs.get('tipoartefato')
+
 
 class CoordenadaArtefato(Base):
     __tablename__ = 'coordenadasartefato'
@@ -182,25 +210,18 @@ class CoordenadaArtefato(Base):
         self.lat = lat
         self.long = long
 
-class ConteineresPesagemTerrestre(Base):
-    __tablename__ = 'conteinerespesagemterrestre'
-    __table_args__ = {'sqlite_autoincrement': True}
-    ID = Column(Integer, primary_key=True)
-    numero = Column(String(11))
-    tara = Column(Integer)
-    pesagem_id = Column(Integer, ForeignKey('pesagensterrestres.ID'))
-    pesagem = relationship(
-        'PesagemTerrestre'
-    )
 
-    def __init__(self, **kwargs):
-        superkwargs = dict([
-            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
-        ])
-        super().__init__(**superkwargs)
-        self.numero = kwargs.get('numero')
-        self.tara = kwargs.get('tara')
+class ArtefatoRecintoSchema(ModelSchema):
+    class Meta:
+        model = ArtefatoRecinto
 
+
+class CoordenadaArtefatoSchema(ModelSchema):
+    class Meta:
+        model = CoordenadaArtefato
+        # optionally attach a Session
+        # to use for deserialization
+        sqla_session = db_session
 
 
 class PesagemVeiculoVazio(EventoBase):
@@ -218,6 +239,7 @@ class PesagemVeiculoVazio(EventoBase):
         super().__init__(**superkwargs)
         self.placa = kwargs.get('placa')
         self.pesobalanca = kwargs.get('pesobalanca')
+
 
 class ReboquesPesagem(Base):
     __tablename__ = 'reboquespesagem'
@@ -264,26 +286,55 @@ class PesagemMaritimo(EventoBase):
         self.pesobrutodeclarado = kwargs.get('pesobrutodeclarado')
         self.taraconjunto = kwargs.get('taraconjunto')
         self.pesobalanca = kwargs.get('pesobalanca')
-        self.capturaautomatica = kwargs.get('capturaautomatica') == 'True'
+        self.capturaautomatica = kwargs.get('capturaautomatica')
 
 
 class InspecaonaoInvasiva(EventoBase):
     __tablename__ = 'inspecoesnaoinvasivas'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
+    documentotransporte = Column(String(20))
+    tipodocumentotransporte = Column(String(20))
     numero = Column(String(11))
-    placa = Column(String(11))
-    nomearquivo = Column(String(50))
-    capturaautomatica = Column(Boolean())
+    placa = Column(String(8))
+    placasemireboque = Column(String(8))
+    nomearquivo = Column(String(100))
+    capturaautomatica = Column(Boolean)
+    anexos = relationship('AnexosInspecao')
 
     def __init__(self, **kwargs):
         superkwargs = dict([
             (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
         ])
         super().__init__(**superkwargs)
+        self.documentotranporte = kwargs.get('documentotransporte')
+        self.tipodocumentotranporte = kwargs.get('tipodocumentotransporte')
         self.numero = kwargs.get('numero')
         self.placa = kwargs.get('placa')
-        self.capturaautomatica = kwargs.get('capturaautomatica') == 'True'
+        self.placasemireboque = kwargs.get('placasemireboque')
+        self.capturaautomatica = kwargs.get('capturaautomatica')
+
+
+class AnexosInspecao(Base):
+    __tablename__ = 'anexosinspecao'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    caminhoarquivo = Column(String(100))
+    datacriacao = Column(DateTime())
+    datamodificacao = Column(DateTime())
+    contentType = Column(String(40))
+    inspecao_id = Column(Integer, ForeignKey('inspecoesnaoinvasivas.ID'))
+    inspecao = relationship(
+        'InspecaonaoInvasiva'
+    )
+
+    def __init__(self, parent, caminhoarquivo, datacriacao,
+                 datamodificacao, contentType, content=None):
+        self.inspecao_id = parent.ID
+        self.caminhoarquivo = caminhoarquivo
+        self.datacriacao = datacriacao
+        self.datamodificacao = datamodificacao
+        self.contentType = contentType
 
 
 class PosicaoLote(EventoBase):
@@ -387,7 +438,7 @@ class DTSC(EventoBase):
         super().__init__(**superkwargs)
         self.imonavio = kwargs.get('imonavio')
         self.viagem = kwargs.get('viagem')
-        self.dataoperacao = kwargs.get('dataoperacao')
+        self.dataoperacao = parse(kwargs.get('dataoperacao'))
 
 
 class CargasDTSC(Base):
@@ -482,6 +533,72 @@ class ReboquesGate(Gate):
         self.vazio = vazio
 
 
+class PosicaoVeiculo(EventoBase):
+    __tablename__ = 'posicoesveiculo'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    placa = Column(String(7))
+    conteineres = relationship('ConteineresPosicao')
+    reboques = relationship('ReboquesPosicao')
+    box = Column(String(20))
+    camera = Column(String(20))
+    divergencia = Column(Boolean)
+    emconferencia = Column(Boolean)
+    observacaodivergencia = Column(String(100))
+    solicitante = Column(String(20))
+    documentotransporte = Column(String(20))
+    tipodocumentotransporte = Column(String(20))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.placa = kwargs.get('placa')
+        self.box = kwargs.get('box')
+        self.camera = kwargs.get('camera')
+        self.divergencia = kwargs.get('divergencia')
+        self.emconferencia = kwargs.get('emconferencia')
+        self.observacaodivergencia = kwargs.get('observacaodivergencia')
+        self.solicitante = kwargs.get('solicitante')
+        self.documentotransporte = kwargs.get('documentotransporte')
+        self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
+
+
+class ConteineresPosicao(Base):
+    __tablename__ = 'conteineresposicao'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    numero = Column(String(11))
+    vazio = Column(Boolean)
+    posicaoveiculo_id = Column(Integer, ForeignKey('posicoesveiculo.ID'))
+    posicaoveiculo = relationship(
+        'PosicaoVeiculo'
+    )
+
+    def __init__(self, parent, numero, vazio):
+        self.posicaoveiculo_id = parent.IDEvento
+        self.numero = numero
+        self.vazio = vazio
+
+
+class ReboquesPosicao(Base):
+    __tablename__ = 'reboquesposicao'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    placa = Column(String(7))
+    vazio = Column(Boolean)
+    posicaoveiculo_id = Column(Integer, ForeignKey('posicoesveiculo.ID'))
+    posicaoveiculo = relationship(
+        'PosicaoVeiculo'
+    )
+
+    def __init__(self, parent, placa, vazio):
+        self.posicaoveiculo_id = parent.IDEvento
+        self.placa = placa
+        self.vazio = vazio
+
+
 class Desunitizacao(EventoBase):
     __tablename__ = 'desunitizacoes'
     __table_args__ = {'sqlite_autoincrement': True}
@@ -505,6 +622,7 @@ class Desunitizacao(EventoBase):
         self.placa = kwargs.get('placa')
         self.placasemireboque = kwargs.get('placasemireboque')
 
+
 class ImagemDesunitizacao(Base):
     __tablename__ = 'imagensdesunitizacao'
     __table_args__ = {'sqlite_autoincrement': True}
@@ -514,6 +632,7 @@ class ImagemDesunitizacao(Base):
     acessoveiculo = relationship(
         'Desunitizacao'
     )
+
     def __init__(self, parent, caminhoarquivo):
         self.acessoveiculo_id = parent.ID
         self.caminhoarquivo = caminhoarquivo
@@ -609,8 +728,6 @@ class AcessoVeiculoSchema2(ModelSchema):
 # acessoveiculo_schema = AcessoVeiculoSchema()
 # acessosveiculo_schema = AcessoVeiculoSchema(many=True, only=('IDEvento'))
 
-db_session = None
-engine = None
 
 
 def init_db(uri='sqlite:///test.db'):

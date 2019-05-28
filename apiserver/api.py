@@ -38,7 +38,7 @@ def _commit(evento):
         db_session.rollback()
         logging.error(err, exc_info=True)
         return 'Erro inesperado: %s ' % err, 405
-    return ohash, 200
+    return ohash, 201
 
 
 def get_evento(IDEvento, aclass):
@@ -48,8 +48,10 @@ def get_evento(IDEvento, aclass):
         ).one_or_none()
         # print(evento.dump() if evento is not None else 'None')
         # print(hash(evento) if evento is not None else 'None')
+        if evento is None:
+            return 'Not found', 404
         evento.hash = hash(evento)
-        return (evento.dump(), 200) if evento is not None else ('Not found', 404)
+        return evento.dump(), 200
     except Exception as err:
         logging.error(err, exc_info=True)
         return str(err), 400
@@ -60,8 +62,12 @@ def add_evento(aclass, evento):
                  (aclass.__name__,
                   evento.get('IDEvento'))
                  )
-    novo_evento = aclass(**evento)
-    db_session.add(novo_evento)
+    try:
+        novo_evento = aclass(**evento)
+        db_session.add(novo_evento)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 405
     return _commit(novo_evento)
 
 
@@ -96,6 +102,7 @@ def posicaolote(evento):
 def get_posicaolote(IDEvento):
     return get_evento(IDEvento, orm.PosicaoLote)
 
+
 def avarialote(evento):
     return add_evento(orm.AvariaLote, evento)
 
@@ -111,12 +118,14 @@ def unitizacao(evento):
 def get_unitizacao(IDEvento):
     return get_evento(IDEvento, orm.Unitizacao)
 
+
 def desunitizacao(evento):
     return add_evento(orm.Desunitizacao, evento)
 
 
 def get_desunitizacao(IDEvento):
     return get_evento(IDEvento, orm.Desunitizacao)
+
 
 def DTSC(evento):
     return add_evento(orm.DTSC, evento)
@@ -141,12 +150,14 @@ def pesagemterrestre(evento):
 def get_pesagemterrestre(IDEvento):
     return get_evento(IDEvento, orm.PesagemTerrestre)
 
+
 def pesagemmaritimo(evento):
     return add_evento(orm.PesagemMaritimo, evento)
 
 
 def get_pesagemmaritimo(IDEvento):
     return get_evento(IDEvento, orm.PesagemMaritimo)
+
 
 def inspecaonaoinvasiva(evento):
     return add_evento(orm.InspecaonaoInvasiva, evento)
@@ -168,9 +179,8 @@ def get_acessoveiculo(IDEvento):
             return {'message': 'Evento não encontrado.'}, 404
         acessoveiculo_schema = orm.AcessoVeiculoSchema()
         data = acessoveiculo_schema.dump(acessoveiculo).data
-        ohash = hash(acessoveiculo)
-        data['hash'] = ohash
-        return data
+        data['hash'] = hash(acessoveiculo)
+        return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
         return str(err), 400
@@ -178,29 +188,70 @@ def get_acessoveiculo(IDEvento):
 
 def acessoveiculo(evento):
     logging.info('Creating acessoveiculo %s..', evento.get('IDEvento'))
-    acessoveiculo = orm.AcessoVeiculo(**evento)
-    db_session.add(acessoveiculo)
-    conteineres = evento.get('conteineres')
-    if conteineres:
-        for conteiner in conteineres:
-            logging.info('Creating conteiner %s..', conteiner.get('numero'))
-            conteinergate = orm.ConteineresGate(acessoveiculo,
-                                                numero=conteiner.get('numero'),
-                                                avarias=conteiner.get('avarias'),
-                                                lacres=conteiner.get('lacres'),
-                                                vazio=conteiner.get('vazio'))
-            db_session.add(conteinergate)
-    reboques = evento.get('reboques')
-    if reboques:
-        for reboque in reboques:
-            logging.info('Creating reboque %s..', reboque.get('placa'))
-            reboquegate = orm.ReboquesGate(acessoveiculo,
-                                           placa=reboque.get('placa'),
-                                           avarias=reboque.get('avarias'),
-                                           lacres=reboque.get('lacres'),
-                                           vazio=reboque.get('vazio'))
+    try:
+        acessoveiculo = orm.AcessoVeiculo(**evento)
+        db_session.add(acessoveiculo)
+        conteineres = evento.get('conteineres')
+        if conteineres:
+            for conteiner in conteineres:
+                logging.info('Creating conteiner %s..', conteiner.get('numero'))
+                conteinergate = orm.ConteineresGate(acessoveiculo,
+                                                    numero=conteiner.get('numero'),
+                                                    avarias=conteiner.get('avarias'),
+                                                    lacres=conteiner.get('lacres'),
+                                                    vazio=conteiner.get('vazio'))
+                db_session.add(conteinergate)
+        reboques = evento.get('reboques')
+        if reboques:
+            for reboque in reboques:
+                logging.info('Creating reboque %s..', reboque.get('placa'))
+                reboquegate = orm.ReboquesGate(acessoveiculo,
+                                               placa=reboque.get('placa'),
+                                               avarias=reboque.get('avarias'),
+                                               lacres=reboque.get('lacres'),
+                                               vazio=reboque.get('vazio'))
             db_session.add(reboquegate)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
     return _commit(acessoveiculo)
+
+
+def get_artefatorecinto(IDEvento):
+    try:
+        artefatorecinto = orm.ArtefatoRecinto.query.filter(
+            orm.ArtefatoRecinto.IDEvento == IDEvento
+        ).outerjoin(
+            orm.CoordenadaArtefato).one_or_none()
+        if acessoveiculo is None:
+            return {'message': 'Evento não encontrado.'}, 404
+        artefatorecinto_schema = orm.ArtefatoRecintoSchema()
+        data = artefatorecinto_schema.dump(artefatorecinto).data
+        data['hash'] = hash(artefatorecinto)
+        return data, 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+
+
+def artefatorecinto(evento):
+    logging.info('Creating artefatorecinto %s..', evento.get('IDEvento'))
+    try:
+        artefatorecinto = orm.ArtefatoRecinto(**evento)
+        db_session.add(artefatorecinto)
+        coordenadas = evento.get('coordenadas')
+        if coordenadas:
+            for coordenada in coordenadas:
+                logging.info('Creating coordenada %s..', coordenada.get('numero'))
+                coordenadaarteafato = orm.CoordenadaArtefato(artefatorecinto,
+                                                          lat=coordenada.get('lat'),
+                                                          long=coordenada.get('long')
+                                                          )
+                db_session.add(coordenadaarteafato)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+    return _commit(artefatorecinto)
 
 
 def list_posicaoconteiner(filtro):
@@ -223,6 +274,31 @@ def list_posicaoconteiner(filtro):
         if eventos is None or len(eventos) == 0:
             return 'Sem eventos posicaoconteiner entre datas %s a %s.' % \
                    (datainicial, datafinal), 404
+        return dump_eventos(eventos)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 405
+
+
+def get_eventosnovos(filtro):
+    try:
+        print(filtro)
+        IDEvento = filtro.get('IDEvento')
+        dataevento = filtro.get('dataevento')
+        tipoevento = filtro.get('tipoevento')
+        aclass = getattr(orm, tipoevento)
+        if dataevento is None:
+            eventos = db_session.query(aclass).filter(
+                aclass.IDEvento > IDEvento
+            ).all()
+        else:
+            eventos = db_session.query(aclass).filter(
+                aclass.dataevento > dataevento
+            ).all()
+        if eventos is None or len(eventos) == 0:
+            if dataevento is None:
+                return 'Sem eventos com ID maior que %d.' % IDEvento, 404
+            return 'Sem eventos com dataevento maior que %s.' % dataevento, 404
         return dump_eventos(eventos)
     except Exception as err:
         logging.error(err, exc_info=True)

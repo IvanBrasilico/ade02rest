@@ -5,7 +5,7 @@ import os
 from dateutil.parser import parse
 from flask import request, render_template, Response, jsonify
 
-from apiserver.api import app, db_session, engine, dump_eventos
+from apiserver.api import app, db_session, engine, dump_eventos, RECINTO
 from apiserver.logconf import logger
 from apiserver.models import orm
 
@@ -40,7 +40,7 @@ def save_file_evento(file, IDEvento, tipoevento, campoevento):
         filepath = get_caminho_arquivo(evento)
         file.save(os.path.join(filepath, file.filename))
         db_session.commit()
-        return 'Arquivo salvo', 200
+        return 'Arquivo salvo', 201
     except Exception as err:
         logging.error(err, exc_info=True)
         return str(err), 400
@@ -170,7 +170,7 @@ def seteventosnovos():
                 try:
                     evento['request_IP'] = request.environ.get('HTTP_X_REAL_IP',
                                                                request.remote_addr)
-                    evento['recinto'] = '81600'
+                    evento['recinto'] = RECINTO
                     novo_evento = aclass(**evento)
                     db_session.add(novo_evento)
                 except Exception as err:  # Ignora exceções porque vai comparar no Banco de Dados
@@ -199,7 +199,7 @@ def seteventosnovos():
     except Exception as err:
         logging.error(err, exc_info=True)
         return str(err), 405
-    return jsonify(result), 200
+    return jsonify(result), 201
 
 
 def recriatedb():
