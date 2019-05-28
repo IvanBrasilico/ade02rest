@@ -1366,7 +1366,7 @@ components:
             description: Numero do documento de transporte
           tipodocumentotransporte:
             $ref: '#/components/schemas/TipoDocumentoTransporte'
-          declaracaoaduneira:
+          declaracaoaduaneira:
             type: string
             description: Numero da declaracao aduaneira, se houver
           tipodeclaracaoaduaneira:
