@@ -137,7 +137,7 @@ class ReboquesPesagemTerrestre(Base):
     ID = Column(Integer, primary_key=True)
     placa = Column(String(11))
     tara = Column(Integer)
-    pesagem_id = Column(Integer, ForeignKey('PesagemTerrestre.ID'))
+    pesagem_id = Column(Integer, ForeignKey('pesagensterrestres.ID'))
     pesagem = relationship(
         'PesagemTerrestre'
     )
@@ -156,7 +156,7 @@ class ConteineresPesagemTerrestre(Base):
     ID = Column(Integer, primary_key=True)
     numero = Column(String(11))
     tara = Column(Integer)
-    pesagem_id = Column(Integer, ForeignKey('PesagemTerrestre.ID'))
+    pesagem_id = Column(Integer, ForeignKey('pesagensterrestres.ID'))
     pesagem = relationship(
         'PesagemTerrestre'
     )
@@ -192,7 +192,7 @@ class ReboquesPesagem(Base):
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     placa = Column(String(11))
-    pesagem_id = Column(Integer, ForeignKey('PesagemVeiculoVazio.ID'))
+    pesagem_id = Column(Integer, ForeignKey('pesagensveiculosvazios.ID'))
     pesagem = relationship(
         'PesagemVeiculoVazio'
     )
@@ -459,7 +459,7 @@ class Desunitizacao(EventoBase):
     numero = Column(String(11))
     placa = Column(String(11))
     placasemireboque = Column(String(11))
-    imagens = relationship('ImagensDesunitizacao')
+    imagens = relationship('ImagemDesunitizacao')
     lotes = relationship('Lote')
 
     def __init__(self, **kwargs):
@@ -472,6 +472,19 @@ class Desunitizacao(EventoBase):
         self.numero = kwargs.get('numero')
         self.placa = kwargs.get('placa')
         self.placasemireboque = kwargs.get('placasemireboque')
+
+class ImagemDesunitizacao(Base):
+    __tablename__ = 'imagensdesunitizacao'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    caminhoarquivo = Column(String(100))
+    acessoveiculo_id = Column(Integer, ForeignKey('desunitizacoes.ID'))
+    acessoveiculo = relationship(
+        'Desunitizacao'
+    )
+    def __init__(self, parent, caminhoarquivo):
+        self.acessoveiculo_id = parent.ID
+        self.caminhoarquivo = caminhoarquivo
 
 
 class Lote(Base):
