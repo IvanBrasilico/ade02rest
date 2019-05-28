@@ -5,7 +5,7 @@ from dateutil.parser import parse
 from marshmallow import Schema, fields, ValidationError
 from marshmallow_sqlalchemy import ModelSchema
 from sqlalchemy import Boolean, Column, DateTime, Integer, \
-    String, create_engine, ForeignKey, Index, Table
+    String, create_engine, ForeignKey, Index, Table, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.sql import func
@@ -149,6 +149,38 @@ class ReboquesPesagemTerrestre(Base):
         super().__init__(**superkwargs)
         self.placa = kwargs.get('placa')
         self.tara = kwargs.get('tara')
+
+
+
+class ArtefatoRecinto(Base):
+    __tablename__ = 'artefatosrecinto'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    recinto = Column(String(20))
+    tipoartefato = Column(String(10))
+    codigoartefato = Column(String(10))
+    coordenadas = relationship('CoordenadaArtefato')
+
+    def __init__(self, recinto, tipoartefato, codigoartefato):
+        self.recinto = recinto
+        self.codigoartefato = codigoartefato
+        self.tipoartefato = tipoartefato
+
+class CoordenadaArtefato(Base):
+    __tablename__ = 'coordenadasartefato'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    long = Column(Float)
+    lat = Column(Float)
+    artefato_id = Column(Integer, ForeignKey('artefatosrecinto.ID'))
+    artefato = relationship(
+        'ArtefatoRecinto'
+    )
+
+    def __init__(self, artefato, lat, long):
+        self.artefato_id = artefato.ID
+        self.lat = lat
+        self.long = long
 
 class ConteineresPesagemTerrestre(Base):
     __tablename__ = 'conteinerespesagemterrestre'
