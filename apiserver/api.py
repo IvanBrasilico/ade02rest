@@ -119,12 +119,6 @@ def get_unitizacao(IDEvento):
     return get_evento(IDEvento, orm.Unitizacao)
 
 
-def desunitizacao(evento):
-    return add_evento(orm.Desunitizacao, evento)
-
-
-def get_desunitizacao(IDEvento):
-    return get_evento(IDEvento, orm.Desunitizacao)
 
 
 def DTSC(evento):
@@ -141,14 +135,6 @@ def pesagemveiculovazio(evento):
 
 def get_pesagemveiculovazio(IDEvento):
     return get_evento(IDEvento, orm.PesagemVeiculoVazio)
-
-
-def pesagemterrestre(evento):
-    return add_evento(orm.PesagemTerrestre, evento)
-
-
-def get_pesagemterrestre(IDEvento):
-    return get_evento(IDEvento, orm.PesagemTerrestre)
 
 
 def pesagemmaritimo(evento):
@@ -216,6 +202,100 @@ def acessoveiculo(evento):
         return str(err), 400
     return _commit(acessoveiculo)
 
+def desunitizacao(evento):
+    logging.info('Creating desunitizacao %s..', evento.get('IDEvento'))
+    try:
+        desunitizacao = orm.Desunitizacao(**evento)
+        db_session.add(desunitizacao)
+        lotes = evento.get('lotes')
+        if lotes:
+            for lote in lotes:
+                logging.info('Creating lotedesunitizacao %s..', lote.get('numerolote'))
+                campos = ['numerolote', 'acrescimo',
+                'documentodesconsolidacao', 'documentopapel',
+                'falta', 'marca', 'observacoes', 'pesolote', 'qtdefalta',
+                'qtdevolumes', 'tipodocumentodesconsolidacao',
+                'tipodocumentopapel', 'tipovolume']
+                olote = orm.Lote(desunitizacao=desunitizacao, **lote)
+                db_session.add(olote)
+        imagensdesunitizacao = evento.get('imagensdesunitizacao')
+        if imagensdesunitizacao:
+            for imagemdesunitizacao in imagensdesunitizacao:
+                logging.info('Creating imagemdesunitizacao %s..', imagemdesunitizacao.get('caminhoarquivo'))
+                aimagemdesunitizacao = orm.ImagemDesunitizacao(desunitizacao=desunitizacao,
+                                                       caminhoarquivo=imagemdesunitizacao.get('caminhoarquivo'))
+            db_session.add(aimagemdesunitizacao)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+    return _commit(desunitizacao)
+
+
+def get_desunitizacao(IDEvento):
+    try:
+        desunitizacao = orm.desunitizacao.query.filter(
+            orm.desunitizacao.IDEvento == IDEvento
+        ).outerjoin(
+            orm.Lote
+        ).outerjoin(
+            orm.ImagemDesunitizacao
+        ).one_or_none()
+        if desunitizacao is None:
+            return {'message': 'Evento não encontrado.'}, 404
+        desunitizacao_schema = orm.DesunitizacaoSchema()
+        data = desunitizacao_schema.dump(desunitizacao).data
+        data['hash'] = hash(desunitizacao)
+        return data, 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+
+def pesagemterrestre(evento):
+    logging.info('Creating pesagemterrestre %s..', evento.get('IDEvento'))
+    try:
+        pesagemterrestre = orm.PesagemTerrestre(**evento)
+        db_session.add(pesagemterrestre)
+        conteineres = evento.get('conteineres')
+        if conteineres:
+            for conteiner in conteineres:
+                logging.info('Creating conteinerpesagemterrestre %s..', conteiner.get('numero'))
+                oconteiner = orm.ConteinerPesagemTerrestre(pesagem=pesagemterrestre,
+                                                 numero=conteiner.get('numero'),
+                                                 tara=conteiner.get('tara'))
+                db_session.add(oconteiner)
+        reboques = evento.get('reboques')
+        if reboques:
+            for reboque in reboques:
+                logging.info('Creating reboque %s..', reboque.get('placa'))
+                oreboque = orm.ReboquePesagemTerrestre(pesagem=pesagemterrestre,
+                                                       placa=reboque.get('placa'),
+                                                       tara=reboque.get('tara'))
+            db_session.add(oreboque)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+    return _commit(pesagemterrestre)
+
+
+def get_pesagemterrestre(IDEvento):
+    try:
+        pesagemterrestre = orm.PesagemTerrestre.query.filter(
+            orm.PesagemTerrestre.IDEvento == IDEvento
+        ).outerjoin(
+            orm.ReboquePesagemTerrestre
+        ).outerjoin(
+            orm.ConteinerPesagemTerrestre
+        ).one_or_none()
+        if pesagemterrestre is None:
+            return {'message': 'Evento não encontrado.'}, 404
+        pesagemterrestre_schema = orm.PesagemTerrestreSchema()
+        data = pesagemterrestre_schema.dump(pesagemterrestre).data
+        data['hash'] = hash(pesagemterrestre)
+        return data, 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+
 
 def get_artefatorecinto(IDEvento):
     try:
@@ -223,7 +303,7 @@ def get_artefatorecinto(IDEvento):
             orm.ArtefatoRecinto.IDEvento == IDEvento
         ).outerjoin(
             orm.CoordenadaArtefato).one_or_none()
-        if acessoveiculo is None:
+        if artefatorecinto is None:
             return {'message': 'Evento não encontrado.'}, 404
         artefatorecinto_schema = orm.ArtefatoRecintoSchema()
         data = artefatorecinto_schema.dump(artefatorecinto).data

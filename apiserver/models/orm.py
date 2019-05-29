@@ -127,8 +127,8 @@ class PesagemTerrestre(EventoBase):
     pesobrutodeclarado = Column(Integer())
     pesobalanca = Column(Integer())
     capturaautomatica = Column(Boolean())
-    reboques = relationship('ReboquesPesagemTerrestre')
-    conteineres = relationship('ConteineresPesagemTerrestre')
+    # reboques = relationship('ReboquePesagemTerrestre')
+    conteineres = relationship('ConteinerPesagemTerrestre')
 
     def __init__(self, **kwargs):
         superkwargs = dict([
@@ -141,10 +141,10 @@ class PesagemTerrestre(EventoBase):
         self.tara = kwargs.get('tara')
         self.pesobrutodeclarado = kwargs.get('pesobrutodeclarado')
         self.pesobalanca = kwargs.get('pesobalanca')
-        self.capturaautomatica = kwargs.get('capturaautomatica') == 'True'
+        self.capturaautomatica = kwargs.get('capturaautomatica')
 
 
-class ReboquesPesagemTerrestre(Base):
+class ReboquePesagemTerrestre(Base):
     __tablename__ = 'reboquespesagemterrestre'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -152,15 +152,15 @@ class ReboquesPesagemTerrestre(Base):
     tara = Column(Integer)
     pesagem_id = Column(Integer, ForeignKey('pesagensterrestres.ID'))
     pesagem = relationship(
-        'PesagemTerrestre'
+        'PesagemTerrestre', backref=backref("reboques")
     )
 
-    def __init__(self, **kwargs):
-        self.placa = kwargs.get('placa')
-        self.tara = kwargs.get('tara')
+    # def __init__(self, **kwargs):
+    #    self.placa = kwargs.get('placa')
+    #    self.tara = kwargs.get('tara')
 
 
-class ConteineresPesagemTerrestre(Base):
+class ConteinerPesagemTerrestre(Base):
     __tablename__ = 'conteinerespesagemterrestre'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -171,9 +171,29 @@ class ConteineresPesagemTerrestre(Base):
         'PesagemTerrestre'
     )
 
-    def __init__(self, **kwargs):
-        self.numero = kwargs.get('numero')
-        self.tara = kwargs.get('tara')
+    # def __init__(self, **kwargs):
+    #    self.numero = kwargs.get('numero')
+    #    self.tara = kwargs.get('tara')
+
+
+class PesagemTerrestreSchema(ModelSchema):
+    conteineres = fields.Nested('ConteinerPesagemTerrestreSchema', many=True,
+                                exclude=('ID', 'pesagem_id', 'pesagem'))
+    reboques = fields.Nested('ReboquePesagemTerrestreSchema', many=True,
+                             exclude=('ID', 'pesagem_id', 'pesagem'))
+
+    class Meta:
+        model = PesagemTerrestre
+
+
+class ConteinerPesagemTerrestreSchema(ModelSchema):
+    class Meta:
+        model = ConteinerPesagemTerrestre
+
+
+class ReboquePesagemTerrestreSchema(ModelSchema):
+    class Meta:
+        model = ReboquePesagemTerrestre
 
 
 class ArtefatoRecinto(EventoBase):
@@ -305,7 +325,7 @@ class InspecaonaoInvasiva(EventoBase):
         ])
         super().__init__(**superkwargs)
         self.documentotranporte = kwargs.get('documentotransporte')
-        self.tipodocumentotranporte = kwargs.get('tipodocumentotransporte')
+        self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
         self.numero = kwargs.get('numero')
         self.placa = kwargs.get('placa')
         self.placasemireboque = kwargs.get('placasemireboque')
@@ -499,13 +519,13 @@ class ConteineresGate(Gate):
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     numero = Column(String(11))
-    acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.IDEvento'))
+    acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
         'AcessoVeiculo'
     )
 
     def __init__(self, parent, numero, avarias, lacres, vazio):
-        self.acessoveiculo_id = parent.IDEvento
+        self.acessoveiculo_id = parent.ID
         self.numero = numero
         self.avarias = avarias
         self.lacres = lacres
@@ -517,13 +537,13 @@ class ReboquesGate(Gate):
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     placa = Column(String(7))
-    acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.IDEvento'))
+    acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
         'AcessoVeiculo'
     )
 
     def __init__(self, parent, placa, avarias, lacres, vazio):
-        self.acessoveiculo_id = parent.IDEvento
+        self.acessoveiculo_id = parent.ID
         self.placa = placa
         self.avarias = avarias
         self.lacres = lacres
@@ -574,7 +594,7 @@ class ConteineresPosicao(Base):
     )
 
     def __init__(self, parent, numero, vazio):
-        self.posicaoveiculo_id = parent.IDEvento
+        self.posicaoveiculo_id = parent.ID
         self.numero = numero
         self.vazio = vazio
 
@@ -591,7 +611,7 @@ class ReboquesPosicao(Base):
     )
 
     def __init__(self, parent, placa, vazio):
-        self.posicaoveiculo_id = parent.IDEvento
+        self.posicaoveiculo_id = parent.ID
         self.placa = placa
         self.vazio = vazio
 
@@ -605,8 +625,8 @@ class Desunitizacao(EventoBase):
     numero = Column(String(11))
     placa = Column(String(11))
     placasemireboque = Column(String(11))
-    imagens = relationship('ImagemDesunitizacao')
-    lotes = relationship('Lote')
+    # imagens = relationship('ImagemDesunitizacao')
+    # lotes = relationship('Lote')
 
     def __init__(self, **kwargs):
         superkwargs = dict([
@@ -627,7 +647,7 @@ class ImagemDesunitizacao(Base):
     caminhoarquivo = Column(String(100))
     acessoveiculo_id = Column(Integer, ForeignKey('desunitizacoes.ID'))
     acessoveiculo = relationship(
-        'Desunitizacao'
+        'Desunitizacao', backref=backref("imagens")
     )
 
     def __init__(self, parent, caminhoarquivo):
@@ -654,9 +674,10 @@ class Lote(Base):
     tipovolume = Column(String(20))
     desunitizacao_id = Column(Integer, ForeignKey('desunitizacoes.ID'))
     desunitizacao = relationship(
-        'Desunitizacao'
+        'Desunitizacao', backref=backref("lotes")
     )
 
+'''
     def __init__(self, parent, numerolote, acrescimo,
                  documentodesconsolidacao, documentopapel,
                  falta, marca, observacoes, pesolote, qtdefalta,
@@ -676,7 +697,26 @@ class Lote(Base):
         self.tipodocumentodesconsolidacao = tipodocumentodesconsolidacao
         self.tipodocumentopapel = tipodocumentopapel
         self.tipovolume = tipovolume
+'''
 
+class DesunitizacaoSchema(ModelSchema):
+    lotes = fields.Nested('Lote', many=True,
+                                exclude=('ID', 'desunitizacao_id', 'desunitizacao'))
+    imagens = fields.Nested('ImagemDesunitizacao', many=True,
+                             exclude=('ID', 'desunitizacao_id', 'desunitizacao'))
+
+    class Meta:
+        model = PesagemTerrestre
+
+
+class LoteSchema(ModelSchema):
+    class Meta:
+        model = Lote
+
+
+class ImagemDesunitizacaoSchema(ModelSchema):
+    class Meta:
+        model = ImagemDesunitizacao
 
 # SCHEMAS
 

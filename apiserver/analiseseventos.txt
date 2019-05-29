@@ -1,0 +1,52 @@
+Mapa Instantâneo do Pátio de Contêineres
+
+Lista de Pessoas Cadastradas
+
+Lista de Veículos Cadastrados
+
+Lista de Atracações / Voos Cadastrados
+
+Lista de Representantes Cadastrados
+
+Polígono da área alfandegada, localizacao cameras, gates, etc
+
+
+
+04.1 – Credenciamento de Entrada / Saída de Pessoas
+
+04.3 – Credenciamento de Veículos
+
+Troca de Navio
+	- Contêiner
+	- Navio
+	- Viagem
+	- Porto de desembarque
+
+04.18 – Desembarque/Embarque Navio
+	- Desembarque/Embarque
+	- Contêiner
+	- Peso
+	- Navio
+	- Viagem
+	- Porto Carregamento/Descarregamento
+	- Posição
+
+04.19 - AGENDA NAVIOS / VOOS
+
+04.20 - Representantes
+	- CPF Representante
+	- CNPJ Representado
+	- DATA Inicio representação
+	- DATA Fim representação
+
+04.21 - Ocorrências
+	- Tipo de equipamento
+	- Disponível [S/N]
+	- Localização do equipamento
+	- Data e hora previsão da disponibilidade
+	- Motivo da indisponibilidade
+
+04.22 – Agendamento de Conferência Física
+
+
+Informação Bloqueio / Desbloqueio de Veículo / Carga
