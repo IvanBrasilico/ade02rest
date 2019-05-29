@@ -1182,6 +1182,9 @@ components:
     CoordenadaArtefato:
       type: object
       properties:
+        ordem:
+          type: integer
+          description: Sequencia para desenhar poligono
         lat:
           type: number
           description: Latitude
@@ -1198,18 +1201,11 @@ components:
             description: Codigo que identifica o artefato no Recinto
           tipoartefato:
             $ref: '#/components/schemas/TipoArtefato'
-          placa:
-            type: string
-            description: Placa do caminhao/truck/cavalo
-          coordenadas:
+          coordenadasartefato:
             type: array
             items:
-              type: object
-              properties:
-                lat:
-                  type: number
-                long:
-                  type: number
+              $ref: '#/components/schemas/CoordenadaArtefato'
+
     PesagemVeiculoVazio:
       allOf:
       - $ref: '#/components/schemas/Evento'

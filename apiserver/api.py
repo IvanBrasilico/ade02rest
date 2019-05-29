@@ -239,14 +239,15 @@ def artefatorecinto(evento):
     try:
         artefatorecinto = orm.ArtefatoRecinto(**evento)
         db_session.add(artefatorecinto)
-        coordenadas = evento.get('coordenadas')
+        coordenadas = evento.get('coordenadasartefato')
         if coordenadas:
             for coordenada in coordenadas:
-                logging.info('Creating coordenada %s..', coordenada.get('numero'))
-                coordenadaarteafato = orm.CoordenadaArtefato(artefatorecinto,
-                                                          lat=coordenada.get('lat'),
-                                                          long=coordenada.get('long')
-                                                          )
+                logging.info('Creating coordenada %s..', coordenada.get('ordem'))
+                coordenadaarteafato = orm.CoordenadaArtefato(artefato=artefatorecinto,
+                                                             ordem=coordenada.get('ordem'),
+                                                             lat=coordenada.get('lat'),
+                                                             long=coordenada.get('long')
+                                                             )
                 db_session.add(coordenadaarteafato)
     except Exception as err:
         logging.error(err, exc_info=True)

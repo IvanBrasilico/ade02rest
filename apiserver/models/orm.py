@@ -7,7 +7,7 @@ from marshmallow_sqlalchemy import ModelSchema
 from sqlalchemy import Boolean, Column, DateTime, Integer, \
     String, create_engine, ForeignKey, Index, Table, Float
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -182,7 +182,8 @@ class ArtefatoRecinto(EventoBase):
     ID = Column(Integer, primary_key=True)
     tipoartefato = Column(String(10))
     codigo = Column(String(10))
-    coordenadas = relationship('CoordenadaArtefato')
+
+    # coordenadas = relationship('CoordenadaArtefato')
 
     def __init__(self, **kwargs):
         superkwargs = dict([
@@ -190,7 +191,7 @@ class ArtefatoRecinto(EventoBase):
         ])
         super().__init__(**superkwargs)
         self.recinto = kwargs.get('recinto')
-        self.codigo = kwargs.get('codigoartefato')
+        self.codigo = kwargs.get('codigo')
         self.tipoartefato = kwargs.get('tipoartefato')
 
 
@@ -198,20 +199,19 @@ class CoordenadaArtefato(Base):
     __tablename__ = 'coordenadasartefato'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
+    ordem = Column(Integer)
     long = Column(Float)
     lat = Column(Float)
     artefato_id = Column(Integer, ForeignKey('artefatosrecinto.ID'))
     artefato = relationship(
-        'ArtefatoRecinto'
+        'ArtefatoRecinto', backref=backref("coordenadasartefato")
     )
-
-    def __init__(self, artefato, lat, long):
-        self.artefato_id = artefato.ID
-        self.lat = lat
-        self.long = long
 
 
 class ArtefatoRecintoSchema(ModelSchema):
+    coordenadasartefato = fields.Nested('CoordenadaArtefatoSchema', many=True,
+                                        exclude=('ID', 'artefato_id', 'artefato'))
+
     class Meta:
         model = ArtefatoRecinto
 
@@ -219,9 +219,6 @@ class ArtefatoRecintoSchema(ModelSchema):
 class CoordenadaArtefatoSchema(ModelSchema):
     class Meta:
         model = CoordenadaArtefato
-        # optionally attach a Session
-        # to use for deserialization
-        sqla_session = db_session
 
 
 class PesagemVeiculoVazio(EventoBase):
@@ -727,7 +724,6 @@ class AcessoVeiculoSchema2(ModelSchema):
 # conteineresgate_schema = ConteineresGateSchema(many=True)
 # acessoveiculo_schema = AcessoVeiculoSchema()
 # acessosveiculo_schema = AcessoVeiculoSchema(many=True, only=('IDEvento'))
-
 
 
 def init_db(uri='sqlite:///test.db'):
