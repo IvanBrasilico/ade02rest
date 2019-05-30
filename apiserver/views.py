@@ -3,9 +3,9 @@ import logging
 import os
 
 from dateutil.parser import parse
-from flask import request, render_template, Response, jsonify
+from flask import current_app, request, render_template, Response, jsonify
 
-from apiserver.api import app, db_session, engine, dump_eventos, RECINTO
+from apiserver.api import dump_eventos, RECINTO
 from apiserver.logconf import logger
 from apiserver.models import orm
 
@@ -15,7 +15,7 @@ def home():
 
 
 def get_caminho_arquivo(evento):
-    filepath = app.app.config.get('UPLOAD_FOLDER')
+    filepath = current_app.config.get('UPLOAD_FOLDER')
     # print(filepath)
     for caminho in [evento.recinto,
                     evento.dataevento.year,
@@ -28,6 +28,7 @@ def get_caminho_arquivo(evento):
 
 
 def save_file_evento(file, IDEvento, tipoevento, campoevento):
+    db_session = current_app.config['db_session']
     try:
         aclass = getattr(orm, tipoevento)
         evento = db_session.query(aclass).filter(
@@ -68,6 +69,7 @@ def valid_file(file, extensions=['jpg', 'xml', 'json']):
 
 
 def getfile():
+    db_session = current_app.config['db_session']
     try:
         IDEvento = request.form.get('IDEvento')
         tipoevento = request.form.get('tipoevento')
@@ -104,6 +106,7 @@ def uploadfile():
 
 
 def geteventosnovos():
+    db_session = current_app.config['db_session']
     try:
         try:
             IDEvento = int(request.form.get('IDEvento'))
@@ -137,6 +140,7 @@ def geteventosnovos():
 
 
 def geteventosintervalo():
+    db_session = current_app.config['db_session']
     try:
         tipoevento = request.form.get('tipoevento')
         datainicial = parse(request.form.get('datainicial'))
@@ -155,6 +159,7 @@ def geteventosintervalo():
 
 
 def seteventosnovos():
+    db_session = current_app.config['db_session']
     try:
         file = request.files.get('file')
         validfile, mensagem = valid_file(file,
@@ -203,6 +208,7 @@ def seteventosnovos():
 
 
 def recriatedb():
+    db_session = current_app.config['db_session']
     try:
         orm.Base.metadata.drop_all(bind=engine)
         orm.Base.metadata.create_all(bind=engine)

@@ -1,7 +1,7 @@
 import logging
 
 import connexion
-from flask import request, jsonify
+from flask import current_app, request, jsonify
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 
@@ -20,6 +20,7 @@ def dump_eventos(eventos):
 
 
 def _commit(evento):
+    db_session = current_app.config['db_session']
     try:
         evento.request_IP = request.environ.get('HTTP_X_REAL_IP',
                                                 request.remote_addr)
@@ -42,6 +43,7 @@ def _commit(evento):
 
 
 def get_evento(IDEvento, aclass):
+    db_session = current_app.config['db_session']
     try:
         evento = db_session.query(aclass).filter(
             aclass.IDEvento == IDEvento
@@ -58,6 +60,7 @@ def get_evento(IDEvento, aclass):
 
 
 def add_evento(aclass, evento):
+    db_session = current_app.config['db_session']
     logging.info('Creating evento %s %s' %
                  (aclass.__name__,
                   evento.get('IDEvento'))
@@ -119,8 +122,6 @@ def get_unitizacao(IDEvento):
     return get_evento(IDEvento, orm.Unitizacao)
 
 
-
-
 def DTSC(evento):
     return add_evento(orm.DTSC, evento)
 
@@ -151,6 +152,7 @@ def inspecaonaoinvasiva(evento):
 
 def get_inspecaonaoinvasiva(IDEvento):
     return get_evento(IDEvento, orm.InspecaonaoInvasiva)
+
 
 def operacaonavio(evento):
     return add_evento(orm.OperacaoNavio, evento)
@@ -188,6 +190,7 @@ def get_acessoveiculo(IDEvento):
 
 
 def acessoveiculo(evento):
+    db_session = current_app.config['db_session']
     logging.info('Creating acessoveiculo %s..', evento.get('IDEvento'))
     try:
         acessoveiculo = orm.AcessoVeiculo(**evento)
@@ -217,7 +220,9 @@ def acessoveiculo(evento):
         return str(err), 400
     return _commit(acessoveiculo)
 
+
 def desunitizacao(evento):
+    db_session = current_app.config['db_session']
     logging.info('Creating desunitizacao %s..', evento.get('IDEvento'))
     try:
         desunitizacao = orm.Desunitizacao(**evento)
@@ -227,10 +232,10 @@ def desunitizacao(evento):
             for lote in lotes:
                 logging.info('Creating lotedesunitizacao %s..', lote.get('numerolote'))
                 campos = ['numerolote', 'acrescimo',
-                'documentodesconsolidacao', 'documentopapel',
-                'falta', 'marca', 'observacoes', 'pesolote', 'qtdefalta',
-                'qtdevolumes', 'tipodocumentodesconsolidacao',
-                'tipodocumentopapel', 'tipovolume']
+                          'documentodesconsolidacao', 'documentopapel',
+                          'falta', 'marca', 'observacoes', 'pesolote', 'qtdefalta',
+                          'qtdevolumes', 'tipodocumentodesconsolidacao',
+                          'tipodocumentopapel', 'tipovolume']
                 olote = orm.Lote(desunitizacao=desunitizacao, **lote)
                 db_session.add(olote)
         imagensdesunitizacao = evento.get('imagensdesunitizacao')
@@ -238,7 +243,7 @@ def desunitizacao(evento):
             for imagemdesunitizacao in imagensdesunitizacao:
                 logging.info('Creating imagemdesunitizacao %s..', imagemdesunitizacao.get('caminhoarquivo'))
                 aimagemdesunitizacao = orm.ImagemDesunitizacao(desunitizacao=desunitizacao,
-                                                       caminhoarquivo=imagemdesunitizacao.get('caminhoarquivo'))
+                                                               caminhoarquivo=imagemdesunitizacao.get('caminhoarquivo'))
             db_session.add(aimagemdesunitizacao)
     except Exception as err:
         logging.error(err, exc_info=True)
@@ -265,7 +270,9 @@ def get_desunitizacao(IDEvento):
         logging.error(err, exc_info=True)
         return str(err), 400
 
+
 def pesagemterrestre(evento):
+    db_session = current_app.config['db_session']
     logging.info('Creating pesagemterrestre %s..', evento.get('IDEvento'))
     try:
         pesagemterrestre = orm.PesagemTerrestre(**evento)
@@ -275,8 +282,8 @@ def pesagemterrestre(evento):
             for conteiner in conteineres:
                 logging.info('Creating conteinerpesagemterrestre %s..', conteiner.get('numero'))
                 oconteiner = orm.ConteinerPesagemTerrestre(pesagem=pesagemterrestre,
-                                                 numero=conteiner.get('numero'),
-                                                 tara=conteiner.get('tara'))
+                                                           numero=conteiner.get('numero'),
+                                                           tara=conteiner.get('tara'))
                 db_session.add(oconteiner)
         reboques = evento.get('reboques')
         if reboques:
@@ -330,6 +337,7 @@ def get_artefatorecinto(IDEvento):
 
 
 def artefatorecinto(evento):
+    db_session = current_app.config['db_session']
     logging.info('Creating artefatorecinto %s..', evento.get('IDEvento'))
     try:
         artefatorecinto = orm.ArtefatoRecinto(**evento)
@@ -351,6 +359,7 @@ def artefatorecinto(evento):
 
 
 def list_posicaoconteiner(filtro):
+    db_session = current_app.config['db_session']
     try:
         try:
             recinto = filtro.get('recinto')
@@ -377,6 +386,7 @@ def list_posicaoconteiner(filtro):
 
 
 def get_eventosnovos(filtro):
+    db_session = current_app.config['db_session']
     try:
         print(filtro)
         IDEvento = filtro.get('IDEvento')
@@ -399,13 +409,3 @@ def get_eventosnovos(filtro):
     except Exception as err:
         logging.error(err, exc_info=True)
         return str(err), 405
-
-
-def create_app():
-    app = connexion.FlaskApp(__name__)
-    app.add_api('openapi.yaml')
-    return app
-
-
-app = create_app()
-db_session, engine = orm.init_db()

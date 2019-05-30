@@ -724,7 +724,7 @@ paths:
         default:
           description: Erro inesperado
           content: {}
-  /DTSC:
+  /dtsc:
     post:
       operationId: api.DTSC
       requestBody:
@@ -742,7 +742,7 @@ paths:
         405:
           description: Evento invalido
           content: {}
-  /DTSC/{IDEvento}:
+  /dtsc/{IDEvento}:
     get:
       operationId: api.get_DTSC
       parameters:
