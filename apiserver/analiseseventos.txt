@@ -15,7 +15,10 @@ Eventos a receber lista:
 04.3 – Credenciamento de Veículos
 04.19 - AGENDA NAVIOS / VOOS
 04.20 - Representantes
-
+	- CPF Representante
+	- CNPJ Representado
+	- DATA Inicio representação
+	- DATA Fim representação
 Troca de Navio
 
 
