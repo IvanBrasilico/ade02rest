@@ -439,6 +439,27 @@ class OperacaoNavio(EventoBase):
         self.posicao = kwargs.get('posicao')
 
 
+
+
+class Ocorrencias(EventoBase):
+    __tablename__ = 'ocorrencias'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    tipoartefato = Column(String(10), index=True)
+    codigo = Column(String(10), index=True)
+    disponivel = Column(Boolean, index=True)
+    motivo = Column(String(100))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.tipoartefato = kwargs.get('tipoartefato')
+        self.codigo = kwargs.get('codigo')
+        self.disponivel = kwargs.get('disponivel')
+        self.motivo = kwargs.get('motivo')
+
 class DTSC(EventoBase):
     __tablename__ = 'DTSC'
     __table_args__ = {'sqlite_autoincrement': True}

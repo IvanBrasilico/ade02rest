@@ -152,6 +152,21 @@ def inspecaonaoinvasiva(evento):
 def get_inspecaonaoinvasiva(IDEvento):
     return get_evento(IDEvento, orm.InspecaonaoInvasiva)
 
+def operacaonavio(evento):
+    return add_evento(orm.OperacaoNavio, evento)
+
+
+def get_operacaonavio(IDEvento):
+    return get_evento(IDEvento, orm.OperacaoNavio)
+
+
+def ocorrencia(evento):
+    return add_evento(orm.Ocorrencias, evento)
+
+
+def get_ocorrencia(IDEvento):
+    return get_evento(IDEvento, orm.Ocorrencias)
+
 
 def get_acessoveiculo(IDEvento):
     try:
