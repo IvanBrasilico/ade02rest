@@ -4,18 +4,15 @@ import sys
 from unittest import TestCase
 
 sys.path.insert(0, 'apiserver')
-from apiserver.api import create_app
+from apiserver.main import create_app
 from apiserver.models import orm
-from apiserver.views import create_views
-
-session, engine = orm.init_db('sqlite:///memory:')
-app = create_app(session, engine)
-app = create_views(app)
-
 
 class APITestCase(TestCase):
 
     def setUp(self):
+        session, engine = orm.init_db('sqlite:///memory:')
+        orm.Base.metadata.create_all(bind=engine)
+        app = create_app(session, engine)
         self.client = app.app.test_client()
         with open(os.path.join(os.path.dirname(__file__),
                                'testes.json'), 'r') as json_in:

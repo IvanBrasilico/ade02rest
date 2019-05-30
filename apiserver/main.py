@@ -5,7 +5,7 @@ from apiserver.models import orm
 from views import create_views
 
 
-def configure_app(session, engine):
+def create_app(session, engine):
     app = connexion.FlaskApp(__name__)
     app.add_api('openapi.yaml')
     app.app.config['db_session'] = session
@@ -20,7 +20,7 @@ def configure_app(session, engine):
 
 def main():
     session, engine = orm.init_db()
-    app = configure_app(session, engine)
+    app = create_app(session, engine)
     print(app.app.config['db_session'])
     app.run(debug=True, port=8000, threaded=False)
 

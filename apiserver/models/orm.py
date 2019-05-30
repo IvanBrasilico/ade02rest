@@ -791,6 +791,7 @@ def init_db(uri='sqlite:///test.db'):
     global db_session
     global engine
     if db_session is None:
+        print('Conectando banco %s' % uri)
         engine = create_engine(uri)
         db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False,
                                                  bind=engine))
