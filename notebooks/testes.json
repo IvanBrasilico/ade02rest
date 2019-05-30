@@ -1,0 +1,82 @@
+{
+"DTSC": {
+  "IDEvento": 0,
+  "dataevento": "2019-05-28T11:01:40.071Z",
+  "dataregistro": "2019-05-28T11:01:40.071Z",
+  "operadorevento": "string",
+  "operadorregistro": "string",
+  "retificador": false,
+  "cargas": [
+    {
+      "codigorecinto": "string",
+      "cpfcnpjproprietario": "string",
+      "cpfcnpjtransportador": "string",
+      "documentotransporte": "string",
+      "numero": "string",
+      "placa": "string",
+      "placasemireboque": "string",
+      "tipodocumentotransporte": "CE"
+    }
+  ],
+  "dataoperacao": "2019-05-28T11:01:40.071Z",
+  "imonavio": "string",
+  "viagem": "string"
+},
+"AcessoPessoa": {
+  "IDEvento": 0,
+  "dataevento": "2019-05-28T11:05:54.208Z",
+  "dataregistro": "2019-05-28T11:05:54.208Z",
+  "operadorevento": "string",
+  "operadorregistro": "string",
+  "retificador": false,
+  "cpf": "string",
+  "direcao": "Entrada",
+  "formaidentificacao": "C",
+  "identidade": "string",
+  "numerovoo": "string",
+  "portaoacesso": "string",
+  "reserva": "string"
+},
+"PesagemMaritimo": {
+  "IDEvento": 0,
+  "dataevento": "2019-05-28T11:45:43.499Z",
+  "dataregistro": "2019-05-28T11:45:43.499Z",
+  "operadorevento": "string",
+  "operadorregistro": "string",
+  "retificador": false,
+  "capturaautomatica": true,
+  "documentotransporte": "string",
+  "numero": "string",
+  "pesobalanca": 0,
+  "pesobrutodeclarado": 0,
+  "placa": "string",
+  "placasemireboque": "string",
+  "taraconjunto": 0,
+  "tipodocumentotransporte": "CE"
+},
+"PosicaoConteiner": {
+  "IDEvento": 0,
+  "dataevento": "2019-05-24T16:48:21.245Z",
+  "dataregistro": "2019-05-24T16:48:21.245Z",
+  "operadorevento": "string",
+  "operadorregistro": "string",
+  "retificador": false,
+  "altura": 0,
+  "emconferencia": true,
+  "numero": "string",
+  "placa": "string",
+  "posicao": "string",
+  "solicitante": "RFB"
+},
+"AvariaLote": {
+  "IDEvento": 0,
+  "dataevento": "2019-05-28T11:10:07.161Z",
+  "dataregistro": "2019-05-28T11:10:07.161Z",
+  "operadorevento": "string",
+  "operadorregistro": "string",
+  "retificador": false,
+  "descricaoavaria": "string",
+  "numerolote": "string",
+  "qtdevolumes": 0
+}
+}
