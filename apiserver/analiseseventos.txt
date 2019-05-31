@@ -1,7 +1,4 @@
 
-
-
-
 Eventos a receber lista:
 
 -> Mapa Instantâneo do Pátio de Contêineres
