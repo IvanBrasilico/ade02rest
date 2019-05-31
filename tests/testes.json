@@ -81,44 +81,63 @@
   },
 "AcessoVeiculo": {
   "IDEvento": 0,
-  "dataevento": "2019-05-24T16:49:17.917Z",
-  "dataregistro": "2019-05-24T16:49:17.917Z",
+  "dataevento": "2019-05-31T12:10:45.083Z",
+  "dataregistro": "2019-05-31T12:10:45.083Z",
   "operadorevento": "string",
   "operadorregistro": "string",
-  "retificador": false,
-  "CTE": "string",
-  "Chassi": "string",
-  "DTC": "string",
+  "retificador": true,
   "IDAgendamento": 0,
   "IDGate": "string",
   "conteineres": [
     {
       "avarias": "string",
+      "cpfcnpjcliente": "string",
       "lacres": "string",
+      "lacressif": "string",
+      "lacressifverificados": "string",
+      "lacresverificados": "string",
+      "localsif": "string",
+      "navioembarque": "string",
+      "nomecliente": "string",
       "numero": "string",
-      "vazio": false
+      "numerobooking": "string",
+      "paisdestino": "string",
+      "portodescarga": "string",
+      "vazio": true
     }
   ],
-  "cpfcnpjcliente": "string",
   "cpfcnpjtransportador": "string",
   "cpfmotorista": "string",
-  "dataliberacao": "2019-05-24T16:49:17.917Z",
-  "manifesto": "string",
-  "navioembarque": "string",
-  "nomecliente": "string",
+  "dataliberacao": "2019-05-31T12:10:45.083Z",
+  "dataagendamento": "2019-05-31T12:10:45.083Z",
+  "dimensaoespecial": true,
+  "documentotransporte": "string",
+  "listanfe": [
+    {
+      "chavenfe": "string"
+    }
+  ],
+  "modal": "Ferroviario",
   "nomemotorista": "string",
   "nometransportador": "string",
   "ocr": true,
-  "paisdestino": "string",
+  "pesoespecial": true,
   "placa": "string",
   "reboques": [
     {
       "avarias": "string",
+      "cnpjestadia": "string",
       "lacres": "string",
+      "lacressif": "string",
+      "lacressifverificados": "string",
+      "lacresverificados": "string",
+      "localsif": "string",
+      "nomeestadia": "string",
       "placa": "string",
       "vazio": true
     }
   ],
+  "tipodocumentotransporte": "CE",
   "tipooperacao": "Entrada"
 },
 

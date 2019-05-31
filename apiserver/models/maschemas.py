@@ -95,8 +95,9 @@ class AnexoInspecao(ModelSchema):
 class AcessoVeiculo(ModelSchema):
     conteineres = fields.Nested('ConteineresGate', many=True,
                                 exclude=('ID', 'acessoveiculo_id', 'acessoveiculo'))
-
     reboques = fields.Nested('ReboquesGate', many=True,
+                             exclude=('ID', 'acessoveiculo_id', 'acessoveiculo'))
+    listanfe = fields.Nested('ListaNfeGate', many=True,
                              exclude=('ID', 'acessoveiculo_id', 'acessoveiculo'))
 
     class Meta:
@@ -111,3 +112,8 @@ class ConteineresGate(ModelSchema):
 class ReboquesGate(ModelSchema):
     class Meta:
         model = orm.ReboquesGate
+
+
+class ListaNfeGate(ModelSchema):
+    class Meta:
+        model = orm.ListaNfeGate

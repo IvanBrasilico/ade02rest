@@ -1253,10 +1253,6 @@ components:
           nomemotorista:
             type: string
             description: Nome do Motorista
-          dataagendamento:
-            type: string
-            description: Data e Hora agendada
-            format: date-time
           modal:
             $ref: '#/components/schemas/TipoModal'
           ocr:

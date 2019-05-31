@@ -2,7 +2,7 @@ import collections
 import logging
 
 from dateutil.parser import parse
-from marshmallow import Schema, fields, ValidationError
+from marshmallow import fields, ValidationError
 from marshmallow_sqlalchemy import ModelSchema
 from sqlalchemy import Boolean, Column, DateTime, Integer, \
     String, create_engine, ForeignKey, Index, Table, Float
@@ -522,18 +522,46 @@ class AcessoVeiculo(EventoBase):
     __tablename__ = 'acessosveiculo'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
-    placa = Column(String(7))
+    IDAgendamento = Column(Integer)
     IDGate = Column(String(20))
+    tipodocumentotransporte = Column(String(20))
+    documentotransporte = Column(String(20))
+    placa = Column(String(7))
+    ocr = Column(Boolean)
+    chassi = Column(String(30))
     cpfmotorista = Column(String(11))
+    nomemotorista = Column(String(50))
+    cpfcnpjtransportador = Column(String(14))
+    nometransportador = Column(String(50))
+    modal = Column(String(20))
+    pesoespecial = Column(Boolean)
+    dimensaoespecial = Column(Boolean)
+    tipooperacao = Column(String(10))
+    dataliberacao = Column(DateTime)
+    dataagendamento = Column(DateTime)
 
     def __init__(self, **kwargs):
         superkwargs = dict([
             (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
         ])
         super().__init__(**superkwargs)
-        self.placa = kwargs.get('placa')
+        self.IDAgendamento = kwargs.get('IDAgendamento')
         self.IDGate = kwargs.get('IDGate')
+        self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
+        self.documentotransporte = kwargs.get('documentotransporte')
+        self.placa = kwargs.get('placa')
+        self.ocr = kwargs.get('ocr')
+        self.chassi = kwargs.get('chassi')
         self.cpfmotorista = kwargs.get('cpfmotorista')
+        self.nomemotorista = kwargs.get('nomemotorista')
+        self.cpfcnpjtransportador = kwargs.get('cpfcnpjtransportador')
+        self.nometransportador = kwargs.get('nometransportador')
+        self.modal = kwargs.get('modal')
+        self.pesoespecial = kwargs.get('pesoespecial')
+        self.dimensaoespecial = kwargs.get('dimensaoespecial')
+        self.tipooperacao = kwargs.get('tipooperacao')
+        self.dataliberacao = parse(kwargs.get('dataliberacao'))
+        self.dataagendamento = parse(kwargs.get('dataagendamento'))
 
 
 class Gate(Base):
@@ -548,20 +576,23 @@ class ConteineresGate(Gate):
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     numero = Column(String(11))
+    vazio = Column(Boolean)
+    lacres = Column(String(30))
+    lacresverificados = Column(String(30))
+    localsif = Column(String(20))
+    lacressif = Column(String(30))
+    lacressifverificados = Column(String(30))
+    portodescarga = Column(String(30))
+    paisdestino = Column(String(30))
+    navioembarque = Column(String(30))
+    numerobooking = Column(String(30))
+    avarias = Column(String(100))
+    cpfcnpjcliente = Column(String(14))
+    nomecliente = Column(String(30))
     acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
         'AcessoVeiculo', backref=backref("conteineres")
     )
-
-
-'''
-    def __init__(self, parent, numero, avarias, lacres, vazio):
-        self.acessoveiculo_id = parent.ID
-        self.numero = numero
-        self.avarias = avarias
-        self.lacres = lacres
-        self.vazio = vazio
-'''
 
 
 class ReboquesGate(Gate):
@@ -569,21 +600,30 @@ class ReboquesGate(Gate):
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     placa = Column(String(7))
+    vazio = Column(Boolean)
+    lacres = Column(String(30))
+    lacresverificados = Column(String(30))
+    localsif = Column(String(20))
+    lacressif = Column(String(30))
+    lacressifverificados = Column(String(30))
+    cnpjestadia = Column(String(14))
+    nomeestadia = Column(String(50))
+    avarias = Column(String(100))
     acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
         'AcessoVeiculo', backref=backref("reboques")
     )
 
 
-'''
-    def __init__(self, parent, placa, avarias, lacres, vazio):
-        self.acessoveiculo_id = parent.ID
-        self.placa = placa
-        self.avarias = avarias
-        self.lacres = lacres
-        self.vazio = vazio
-'''
-
+class ListaNfeGate(Base):
+    __tablename__ = 'listanfegate'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    chavenfe = Column(String(30))
+    acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
+    acessoveiculo = relationship(
+        'AcessoVeiculo', backref=backref("listanfe")
+    )
 
 class PosicaoVeiculo(EventoBase):
     __tablename__ = 'posicoesveiculo'
@@ -598,7 +638,6 @@ class PosicaoVeiculo(EventoBase):
     solicitante = Column(String(20))
     documentotransporte = Column(String(20))
     tipodocumentotransporte = Column(String(20))
-
     def __init__(self, **kwargs):
         superkwargs = dict([
             (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
@@ -751,50 +790,6 @@ class ImagemDesunitizacaoSchema(ModelSchema):
 def must_not_be_blank(data):
     if not data:
         raise ValidationError('Data not provided.')
-
-
-class GateSchema(Schema):
-    ID = fields.Int(dump_only=True)
-    avarias = fields.Str()
-    lacres = fields.Str()
-    vazio = fields.Boolean()
-
-
-class ConteineresGateSchema(GateSchema):
-    numero = fields.Str()
-
-
-class ReboquesGateSchema(GateSchema):
-    placa = fields.Str()
-
-
-class AcessoVeiculoSchema(Schema):
-    ID = fields.Int(dump_only=True)
-    IDEvento = fields.Int()
-    placa = fields.Str()
-    IDGate = fields.Str()
-    dataevento = fields.DateTime()
-    operadorevento = fields.Str()
-    dataregistro = fields.DateTime()
-    operadorregistro = fields.Str()
-
-    conteineres = fields.Nested('ConteineresGateSchema', many=True,
-                                exclude=('ID', 'acessoveiculo_id', 'acessoveiculo'))
-
-    reboques = fields.Nested('ReboquesGateSchema', many=True,
-                             exclude=('ID', 'acessoveiculo_id', 'acessoveiculo'))
-
-
-class AcessoVeiculoSchema2(ModelSchema):
-    class Meta:
-        model = AcessoVeiculo
-        # sqla_session = session
-
-
-# conteinergate_schema = ConteineresGateSchema()
-# conteineresgate_schema = ConteineresGateSchema(many=True)
-# acessoveiculo_schema = AcessoVeiculoSchema()
-# acessosveiculo_schema = AcessoVeiculoSchema(many=True, only=('IDEvento'))
 
 
 def init_db(uri='sqlite:///test.db'):

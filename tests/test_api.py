@@ -43,11 +43,13 @@ class APITestCase(TestCase):
             assert rv.status_code == 200
             assert rv.is_json is True
             response_json = rv.json
-            for data in ['dataevento', 'dataregistro']:
-                teste.pop(data)
-                response_json.pop(data)
+            for data in ['dataevento', 'dataregistro', 'dataoperacao', 'dataliberacao', 'dataagendamento']:
+                if teste.get(data) is not None:
+                    teste.pop(data)
+                if response_json.get(data) is not None:
+                    response_json.pop(data)
             sub_response = extractDictAFromB(teste, response_json)
-            sub_teste = extractDictAFromB(response_json, teste)
             self.maxDiff = None
-            self.assertEqual(teste, sub_response)
+            # self.assertEqual(teste, sub_response)
+            self.assertDictContainsSubset(teste, sub_response)
             # self.assertEqual(response_json, sub_teste)

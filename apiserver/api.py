@@ -192,6 +192,8 @@ def get_acessoveiculo(IDEvento):
         acessoveiculo = orm.AcessoVeiculo.query.filter(
             orm.AcessoVeiculo.IDEvento == IDEvento
         ).outerjoin(
+            orm.ListaNfeGate
+        ).outerjoin(
             orm.ConteineresGate
         ).outerjoin(
             orm.ReboquesGate).one_or_none()
@@ -217,21 +219,29 @@ def acessoveiculo(evento):
             for conteiner in conteineres:
                 logging.info('Creating conteiner %s..', conteiner.get('numero'))
                 conteinergate = orm.ConteineresGate(acessoveiculo=acessoveiculo,
-                                                    numero=conteiner.get('numero'),
-                                                    avarias=conteiner.get('avarias'),
-                                                    lacres=conteiner.get('lacres'),
-                                                    vazio=conteiner.get('vazio'))
+                                                    **conteiner)
+                                                    # numero=conteiner.get('numero'),
+                                                    #avarias=conteiner.get('avarias'),
+                                                    #l acres=conteiner.get('lacres'),
+                                                    #vazio=conteiner.get('vazio'))
                 db_session.add(conteinergate)
         reboques = evento.get('reboques')
         if reboques:
             for reboque in reboques:
                 logging.info('Creating reboque %s..', reboque.get('placa'))
-                reboquegate = orm.ReboquesGate(acessoveiculo=acessoveiculo,
-                                               placa=reboque.get('placa'),
-                                               avarias=reboque.get('avarias'),
-                                               lacres=reboque.get('lacres'),
-                                               vazio=reboque.get('vazio'))
+                reboquegate = orm.ReboquesGate(acessoveiculo=acessoveiculo, **reboque)
+
+                #                               placa=reboque.get('placa'),
+                #                               avarias=reboque.get('avarias'),
+                 #                              lacres=reboque.get('lacres'),
+                  #                             vazio=reboque.get('vazio'))
             db_session.add(reboquegate)
+        listanfe = evento.get('listanfe')
+        if listanfe:
+            for chavenfe in listanfe:
+                logging.info('Creating reboque %s..', chavenfe.get('chavenfe'))
+                achavenfe = orm.ListaNfeGate(acessoveiculo=acessoveiculo, **chavenfe)
+            db_session.add(achavenfe)
     except Exception as err:
         logging.error(err, exc_info=True)
         db_session.rollback()
