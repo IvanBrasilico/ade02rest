@@ -18,7 +18,7 @@ REQUIRES = ["connexion[swagger-ui]",
             "gunicorn",
             "requests",
             "sqlalchemy",
-            "marshmallow"]
+            "marshmallow-sqlalchemy"]
 
 setup(
     name=NAME,
@@ -28,6 +28,14 @@ setup(
     url="",
     keywords=["Swagger", "APIRecintos"],
     install_requires=REQUIRES,
+    extras_require={
+        'dev': [
+            'jupyter',
+            'pytest',
+            'pytest-pep8',
+            'pytest-cov'
+        ]
+    },
     packages=find_packages(),
     package_data={'OpenAPI3.0.1': ['apiserver/openapi.yaml']},
     include_package_data=True,
