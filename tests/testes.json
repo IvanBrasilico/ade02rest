@@ -159,12 +159,14 @@
   "operadorevento": "string",
   "operadorregistro": "string",
   "retificador": false,
-  "declaracaoaduaneira": "string",
   "documentotransporte": "string",
   "imagens": [
     {
       "caminhoarquivo": "string",
-      "conteudoarquivo": "string"
+      "content": "0",
+      "contentType": "string",
+      "datacriacao": "2019-05-31T02:55:50.300000+00:00",
+      "datamodificacao": "2019-05-31T02:55:50.300000+00:00"
     }
   ],
   "lotes": [
@@ -177,7 +179,7 @@
       "numerolote": "string",
       "observacoes": "string",
       "pesolote": 0,
-      "qtdefalta": "string",
+      "qtdefalta": 0,
       "qtdevolumes": 0,
       "tipodocumentodesconsolidacao": "CE",
       "tipodocumentopapel": "BL",
@@ -187,7 +189,6 @@
   "numero": "string",
   "placa": "string",
   "placasemireboque": "string",
-  "tipodeclaracaoaduaneira": "DUE",
   "tipodocumentotransporte": "CE"
 },
 
@@ -285,12 +286,14 @@
   "operadorevento": "string",
   "operadorregistro": "string",
   "retificador": false,
-  "declaracaoaduaneira": "string",
   "documentotransporte": "string",
   "imagens": [
     {
       "caminhoarquivo": "string",
-      "conteudoarquivo": "string"
+      "content": "0",
+      "contentType": "string",
+      "datacriacao": "2019-05-31T02:55:50.300000+00:00",
+      "datamodificacao": "2019-05-31T02:55:50.300000+00:00"
     }
   ],
   "lotes": [
@@ -302,7 +305,6 @@
   "numero": "string",
   "placa": "string",
   "placasemireboque": "string",
-  "tipodeclaracaoaduaneira": "DUE",
   "tipodocumentotransporte": "CE"
 },
 
@@ -365,7 +367,7 @@
   "operadorregistro": "string",
   "retificador": true,
   "codigo": "string",
-  "disponial": true,
+  "disponivel": true,
   "motivo": "string",
   "tipoartefato": "Gate"
 },

@@ -58,11 +58,11 @@ class EventoBase(Base):
             if isinstance(v, collections.Hashable):
                 clean_dump[k] = v
         _sorted = sorted([(k, v) for k, v in clean_dump.items()])
-        print('Sorted dump:', _sorted)
+        # print('Sorted dump:', _sorted)
         ovalues = tuple([s[1] for s in _sorted])
-        print('Sorted ovalues:', ovalues)
+        # print('Sorted ovalues:', ovalues)
         ohash = hash(ovalues)
-        print(ohash)
+        # print(ohash)
         return ohash
 
 
@@ -247,7 +247,6 @@ class PesagemVeiculoVazio(EventoBase):
     ID = Column(Integer, primary_key=True)
     placa = Column(String(11))
     pesobalanca = Column(Integer())
-    reboques = relationship('ReboquesPesagem')
 
     def __init__(self, **kwargs):
         superkwargs = dict([
@@ -265,15 +264,8 @@ class ReboquesPesagem(Base):
     placa = Column(String(11))
     pesagem_id = Column(Integer, ForeignKey('pesagensveiculosvazios.ID'))
     pesagem = relationship(
-        'PesagemVeiculoVazio'
+        'PesagemVeiculoVazio', backref=backref("reboques")
     )
-
-    def __init__(self, **kwargs):
-        superkwargs = dict([
-            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
-        ])
-        super().__init__(**superkwargs)
-        self.placa = kwargs.get('placa')
 
 
 class PesagemMaritimo(EventoBase):
@@ -324,7 +316,7 @@ class InspecaonaoInvasiva(EventoBase):
             (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
         ])
         super().__init__(**superkwargs)
-        self.documentotranporte = kwargs.get('documentotransporte')
+        self.documentotransporte = kwargs.get('documentotransporte')
         self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
         self.numero = kwargs.get('numero')
         self.placa = kwargs.get('placa')
@@ -395,6 +387,32 @@ class Unitizacao(EventoBase):
         self.placasemireboque = kwargs.get('placasemireboque')
 
 
+class ImagemUnitizacao(Base):
+    __tablename__ = 'imagensunitizacao'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    caminhoarquivo = Column(String(100))
+    content = Column(String(1))
+    contentType  = Column(String(40))
+    datacriacao = Column(DateTime())
+    datamodificacao = Column(DateTime())
+    unitizacao_id = Column(Integer, ForeignKey('unitizacoes.ID'))
+    unitizacao = relationship(
+        'Unitizacao', backref=backref('imagens')
+    )
+
+class LoteUnitizacao(Base):
+    __tablename__ = 'lotesunitizacao'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    numerolote = Column(String(10))
+    qtdevolumes = Column(Integer)
+    unitizacao_id = Column(Integer, ForeignKey('unitizacoes.ID'))
+    unitizacao = relationship(
+        'Unitizacao', backref=backref('lotes')
+    )
+
+
 class AvariaLote(EventoBase):
     __tablename__ = 'avariaslote'
     __table_args__ = {'sqlite_autoincrement': True}
@@ -430,6 +448,7 @@ class OperacaoNavio(EventoBase):
             (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
         ])
         super().__init__(**superkwargs)
+        self.direcao = kwargs.get('direcao')
         self.imonavio = kwargs.get('imonavio')
         self.viagem = kwargs.get('viagem')
         self.numero = kwargs.get('numero')
@@ -437,8 +456,6 @@ class OperacaoNavio(EventoBase):
         self.imonavio = kwargs.get('imonavio')
         self.porto = kwargs.get('porto')
         self.posicao = kwargs.get('posicao')
-
-
 
 
 class Ocorrencias(EventoBase):
@@ -460,6 +477,7 @@ class Ocorrencias(EventoBase):
         self.disponivel = kwargs.get('disponivel')
         self.motivo = kwargs.get('motivo')
 
+
 class DTSC(EventoBase):
     __tablename__ = 'DTSC'
     __table_args__ = {'sqlite_autoincrement': True}
@@ -467,7 +485,6 @@ class DTSC(EventoBase):
     imonavio = Column(String(7), index=True)
     viagem = Column(String(7))
     dataoperacao = Column(DateTime(), index=True)
-    cargasdtsc = relationship('CargasDTSC')
 
     def __init__(self, **kwargs):
         superkwargs = dict([
@@ -515,8 +532,6 @@ class AcessoVeiculo(EventoBase):
     placa = Column(String(7))
     IDGate = Column(String(20))
     cpfmotorista = Column(String(11))
-    conteineres = relationship('ConteineresGate')
-    reboques = relationship('ReboquesGate')
 
     def __init__(self, **kwargs):
         superkwargs = dict([
@@ -542,15 +557,18 @@ class ConteineresGate(Gate):
     numero = Column(String(11))
     acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
-        'AcessoVeiculo'
+        'AcessoVeiculo', backref=backref("conteineres")
     )
 
+
+'''
     def __init__(self, parent, numero, avarias, lacres, vazio):
         self.acessoveiculo_id = parent.ID
         self.numero = numero
         self.avarias = avarias
         self.lacres = lacres
         self.vazio = vazio
+'''
 
 
 class ReboquesGate(Gate):
@@ -560,15 +578,18 @@ class ReboquesGate(Gate):
     placa = Column(String(7))
     acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
-        'AcessoVeiculo'
+        'AcessoVeiculo', backref=backref("reboques")
     )
 
+
+'''
     def __init__(self, parent, placa, avarias, lacres, vazio):
         self.acessoveiculo_id = parent.ID
         self.placa = placa
         self.avarias = avarias
         self.lacres = lacres
         self.vazio = vazio
+'''
 
 
 class PosicaoVeiculo(EventoBase):
@@ -576,8 +597,6 @@ class PosicaoVeiculo(EventoBase):
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     placa = Column(String(7))
-    conteineres = relationship('ConteineresPosicao')
-    reboques = relationship('ReboquesPosicao')
     box = Column(String(20))
     camera = Column(String(20))
     divergencia = Column(Boolean)
@@ -603,7 +622,7 @@ class PosicaoVeiculo(EventoBase):
         self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
 
 
-class ConteineresPosicao(Base):
+class ConteinerPosicao(Base):
     __tablename__ = 'conteineresposicao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -611,16 +630,11 @@ class ConteineresPosicao(Base):
     vazio = Column(Boolean)
     posicaoveiculo_id = Column(Integer, ForeignKey('posicoesveiculo.ID'))
     posicaoveiculo = relationship(
-        'PosicaoVeiculo'
+        'PosicaoVeiculo', backref=backref('conteineres')
     )
 
-    def __init__(self, parent, numero, vazio):
-        self.posicaoveiculo_id = parent.ID
-        self.numero = numero
-        self.vazio = vazio
 
-
-class ReboquesPosicao(Base):
+class ReboquePosicao(Base):
     __tablename__ = 'reboquesposicao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -628,13 +642,8 @@ class ReboquesPosicao(Base):
     vazio = Column(Boolean)
     posicaoveiculo_id = Column(Integer, ForeignKey('posicoesveiculo.ID'))
     posicaoveiculo = relationship(
-        'PosicaoVeiculo'
+        'PosicaoVeiculo', backref=backref('reboques')
     )
-
-    def __init__(self, parent, placa, vazio):
-        self.posicaoveiculo_id = parent.ID
-        self.placa = placa
-        self.vazio = vazio
 
 
 class Desunitizacao(EventoBase):
@@ -646,6 +655,7 @@ class Desunitizacao(EventoBase):
     numero = Column(String(11))
     placa = Column(String(11))
     placasemireboque = Column(String(11))
+
     # imagens = relationship('ImagemDesunitizacao')
     # lotes = relationship('Lote')
 
@@ -666,15 +676,14 @@ class ImagemDesunitizacao(Base):
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     caminhoarquivo = Column(String(100))
-    acessoveiculo_id = Column(Integer, ForeignKey('desunitizacoes.ID'))
-    acessoveiculo = relationship(
-        'Desunitizacao', backref=backref("imagens")
+    content = Column(String(1))
+    contentType  = Column(String(40))
+    datacriacao = Column(DateTime())
+    datamodificacao = Column(DateTime())
+    desunitizacao_id = Column(Integer, ForeignKey('desunitizacoes.ID'))
+    desunitizacao = relationship(
+        'Desunitizacao', backref=backref('imagens')
     )
-
-    def __init__(self, parent, caminhoarquivo):
-        self.acessoveiculo_id = parent.ID
-        self.caminhoarquivo = caminhoarquivo
-
 
 class Lote(Base):
     __tablename__ = 'lotes'
@@ -698,6 +707,7 @@ class Lote(Base):
         'Desunitizacao', backref=backref("lotes")
     )
 
+
 '''
     def __init__(self, parent, numerolote, acrescimo,
                  documentodesconsolidacao, documentopapel,
@@ -720,14 +730,15 @@ class Lote(Base):
         self.tipovolume = tipovolume
 '''
 
+
 class DesunitizacaoSchema(ModelSchema):
-    lotes = fields.Nested('Lote', many=True,
-                                exclude=('ID', 'desunitizacao_id', 'desunitizacao'))
-    imagens = fields.Nested('ImagemDesunitizacao', many=True,
-                             exclude=('ID', 'desunitizacao_id', 'desunitizacao'))
+    lotes = fields.Nested('LoteSchema', many=True,
+                          exclude=('ID', 'desunitizacao_id', 'desunitizacao'))
+    imagens = fields.Nested('ImagemDesunitizacaoSchema', many=True,
+                            exclude=('ID', 'desunitizacao_id', 'desunitizacao'))
 
     class Meta:
-        model = PesagemTerrestre
+        model = Desunitizacao
 
 
 class LoteSchema(ModelSchema):
@@ -738,6 +749,7 @@ class LoteSchema(ModelSchema):
 class ImagemDesunitizacaoSchema(ModelSchema):
     class Meta:
         model = ImagemDesunitizacao
+
 
 # SCHEMAS
 
@@ -771,8 +783,11 @@ class AcessoVeiculoSchema(Schema):
     operadorevento = fields.Str()
     dataregistro = fields.DateTime()
     operadorregistro = fields.Str()
-    conteineres = fields.Nested('ConteineresGateSchema', many=True)
-    reboques = fields.Nested('ReboquesGateSchema', many=True)
+    conteineres = fields.Nested('ConteineresGateSchema', many=True,
+                                exclude=('ID', 'acessoveiculo_id', 'acessoveiculo'))
+
+    reboques = fields.Nested('ReboquesGateSchema', many=True,
+                             exclude=('ID', 'acessoveiculo_id', 'acessoveiculo'))
 
 
 class AcessoVeiculoSchema2(ModelSchema):
@@ -799,39 +814,23 @@ def init_db(uri='sqlite:///test.db'):
     return db_session, engine
 
 
+for table in ['DTSC', 'acessospessoas', 'avariaslote', 'desunitizacoes', 'pesagensterrestres',
+              'pesagensveiculosvazios', 'posicoeslote', 'posicoesveiculo', 'unitizacoes',
+              'acessosveiculo', 'pesagensmaritimo', 'posicoesconteiner', 'inspecoesnaoinvasivas',
+              'artefatosrecinto', 'ocorrencias', 'operacoesnavios']:
+    print(table)
+    Table(table, Base.metadata,
+          Index(table + '_ideventorecinto_idx',
+                'recinto', 'IDEvento',
+                unique=True,
+                ),
+          extend_existing=True
+          )
+
 if __name__ == '__main__':
     db, engine = init_db()
     try:
         Base.metadata.drop_all(bind=engine)
-        # recinto_idevento_index.create(bind=engine)
-        Table('acessosveiculo', Base.metadata,
-              Index('acessosveiculo_ideventorecinto_idx',
-                    'recinto', 'IDEvento',
-                    unique=True,
-                    ),
-              extend_existing=True
-              )
-        Table('pesagensmaritimo', Base.metadata,
-              Index('pesagensmaritimo_ideventorecinto_idx',
-                    'recinto', 'IDEvento',
-                    unique=True,
-                    ),
-              extend_existing=True
-              )
-        Table('posicoesconteiner', Base.metadata,
-              Index('posicoesconteiner_ideventorecinto_idx',
-                    'recinto', 'IDEvento',
-                    unique=True,
-                    ),
-              extend_existing=True
-              )
-        Table('inspecoesnaoinvasivas', Base.metadata,
-              Index('inspecoesnaoinvasivas_ideventorecinto_idx',
-                    'recinto', 'IDEvento',
-                    unique=True,
-                    ),
-              extend_existing=True
-              )
         Base.metadata.create_all(bind=engine)
         print('Criou Banco!!!')
     except Exception as err:

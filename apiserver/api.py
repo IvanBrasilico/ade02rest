@@ -1,12 +1,12 @@
 import logging
 
-import connexion
+from dateutil.parser import parse
 from flask import current_app, request, jsonify
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 
 from apiserver.logconf import logger
-from apiserver.models import orm
+from apiserver.models import maschemas, orm
 
 RECINTO = '00001'
 
@@ -90,12 +90,6 @@ def get_acessopessoa(IDEvento):
     return get_evento(IDEvento, orm.AcessoPessoa)
 
 
-def posicaoveiculo(evento):
-    return add_evento(orm.PosicaoVeiculo, evento)
-
-
-def get_posicaoveiculo(IDEvento):
-    return get_evento(IDEvento, orm.PosicaoVeiculo)
 
 
 def posicaolote(evento):
@@ -114,28 +108,12 @@ def get_avarialote(IDEvento):
     return get_evento(IDEvento, orm.AvariaLote)
 
 
-def unitizacao(evento):
-    return add_evento(orm.Unitizacao, evento)
-
-
-def get_unitizacao(IDEvento):
-    return get_evento(IDEvento, orm.Unitizacao)
-
-
 def DTSC(evento):
     return add_evento(orm.DTSC, evento)
 
 
 def get_DTSC(IDEvento):
     return get_evento(IDEvento, orm.DTSC)
-
-
-def pesagemveiculovazio(evento):
-    return add_evento(orm.PesagemVeiculoVazio, evento)
-
-
-def get_pesagemveiculovazio(IDEvento):
-    return get_evento(IDEvento, orm.PesagemVeiculoVazio)
 
 
 def pesagemmaritimo(evento):
@@ -199,7 +177,7 @@ def acessoveiculo(evento):
         if conteineres:
             for conteiner in conteineres:
                 logging.info('Creating conteiner %s..', conteiner.get('numero'))
-                conteinergate = orm.ConteineresGate(acessoveiculo,
+                conteinergate = orm.ConteineresGate(acessoveiculo=acessoveiculo,
                                                     numero=conteiner.get('numero'),
                                                     avarias=conteiner.get('avarias'),
                                                     lacres=conteiner.get('lacres'),
@@ -209,7 +187,7 @@ def acessoveiculo(evento):
         if reboques:
             for reboque in reboques:
                 logging.info('Creating reboque %s..', reboque.get('placa'))
-                reboquegate = orm.ReboquesGate(acessoveiculo,
+                reboquegate = orm.ReboquesGate(acessoveiculo=acessoveiculo,
                                                placa=reboque.get('placa'),
                                                avarias=reboque.get('avarias'),
                                                lacres=reboque.get('lacres'),
@@ -221,6 +199,147 @@ def acessoveiculo(evento):
     return _commit(acessoveiculo)
 
 
+def pesagemveiculovazio(evento):
+    db_session = current_app.config['db_session']
+    logging.info('Creating pesagemveiculovazio %s..', evento.get('IDEvento'))
+    try:
+        pesagemveiculovazio = orm.PesagemVeiculoVazio(**evento)
+        db_session.add(pesagemveiculovazio)
+        reboques = evento.get('reboques')
+        if reboques:
+            for reboque in reboques:
+                logging.info('Creating lotepesagemveiculovazio %s..',
+                             reboque.get('placa'))
+                olote = orm.ReboquesPesagem(
+                    pesagem=pesagemveiculovazio,
+                    placa=reboque.get('placa')
+                )
+                db_session.add(olote)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+    return _commit(pesagemveiculovazio)
+
+
+def get_pesagemveiculovazio(IDEvento):
+    try:
+        pesagemveiculovazio = orm.PesagemVeiculoVazio.query.filter(
+            orm.PesagemVeiculoVazio.IDEvento == IDEvento
+        ).outerjoin(
+            orm.ReboquesPesagem
+        ).one_or_none()
+        if pesagemveiculovazio is None:
+            return {'message': 'Evento não encontrado.'}, 404
+        pesagemveiculovazio_schema = maschemas.PesagemVeiculoVazio()
+        data = pesagemveiculovazio_schema.dump(pesagemveiculovazio).data
+        data['hash'] = hash(pesagemveiculovazio)
+        return data, 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+
+def posicaoveiculo(evento):
+    db_session = current_app.config['db_session']
+    logging.info('Creating posicaoveiculo %s..', evento.get('IDEvento'))
+    try:
+        posicaoveiculo = orm.PosicaoVeiculo(**evento)
+        db_session.add(posicaoveiculo)
+        conteineres = evento.get('conteineres')
+        if conteineres:
+            for conteiner in conteineres:
+                logging.info('Creating conteinerpesagemterrestre %s..', conteiner.get('numero'))
+                oconteiner = orm.ConteinerPosicao(posicaoveiculo=posicaoveiculo,
+                                                           numero=conteiner.get('numero'),
+                                                           vazio=conteiner.get('vazio'))
+                db_session.add(oconteiner)
+        reboques = evento.get('reboques')
+        if reboques:
+            for reboque in reboques:
+                logging.info('Creating reboque %s..', reboque.get('placa'))
+                oreboque = orm.ReboquePosicao(posicaoveiculo=posicaoveiculo,
+                                                       placa=reboque.get('placa'),
+                                                       vazio=reboque.get('vazio'))
+            db_session.add(oreboque)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+    return _commit(posicaoveiculo)
+
+
+def get_posicaoveiculo(IDEvento):
+    try:
+        posicaoveiculo = orm.PosicaoVeiculo.query.filter(
+            orm.PosicaoVeiculo.IDEvento == IDEvento
+        ).outerjoin(
+            orm.ConteinerPosicao
+        ).outerjoin(
+            orm.ReboquePosicao
+        ).one_or_none()
+        if posicaoveiculo is None:
+            return {'message': 'Evento não encontrado.'}, 404
+        posicaoveiculo_schema = maschemas.PosicaoVeiculo()
+        data = posicaoveiculo_schema.dump(posicaoveiculo).data
+        data['hash'] = hash(posicaoveiculo)
+        return data, 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+
+
+
+def unitizacao(evento):
+    db_session = current_app.config['db_session']
+    logging.info('Creating unitizacao %s..', evento.get('IDEvento'))
+    try:
+        unitizacao = orm.Unitizacao(**evento)
+        db_session.add(unitizacao)
+        lotes = evento.get('lotes')
+        if lotes:
+            for lote in lotes:
+                logging.info('Creating loteunitizacao %s..',
+                             lote.get('numerolote'))
+                olote = orm.LoteUnitizacao(unitizacao=unitizacao, **lote)
+                db_session.add(olote)
+        imagensunitizacao = evento.get('imagens')
+        if imagensunitizacao:
+            for imagemunitizacao in imagensunitizacao:
+                logging.info('Creating imagemunitizacao %s..',
+                             imagemunitizacao.get('caminhoarquivo'))
+                aimagemunitizacao = orm.ImagemUnitizacao(
+                    unitizacao=unitizacao,
+                    caminhoarquivo=imagemunitizacao.get('caminhoarquivo'),
+                    content=imagemunitizacao.get('content'),
+                    contentType=imagemunitizacao.get('contentType'),
+                    datacriacao=parse(imagemunitizacao.get('datacriacao')),
+                    datamodificacao=parse(imagemunitizacao.get('datamodificacao'))
+                )
+            db_session.add(aimagemunitizacao)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+    return _commit(unitizacao)
+
+
+def get_unitizacao(IDEvento):
+    try:
+        unitizacao = orm.Unitizacao.query.filter(
+            orm.Unitizacao.IDEvento == IDEvento
+        ).outerjoin(
+            orm.LoteUnitizacao
+        ).outerjoin(
+            orm.ImagemUnitizacao
+        ).one_or_none()
+        if unitizacao is None:
+            return {'message': 'Evento não encontrado.'}, 404
+        unitizacao_schema = maschemas.Unitizacao()
+        data = unitizacao_schema.dump(unitizacao).data
+        data['hash'] = hash(unitizacao)
+        return data, 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
+
+
 def desunitizacao(evento):
     db_session = current_app.config['db_session']
     logging.info('Creating desunitizacao %s..', evento.get('IDEvento'))
@@ -230,21 +349,24 @@ def desunitizacao(evento):
         lotes = evento.get('lotes')
         if lotes:
             for lote in lotes:
-                logging.info('Creating lotedesunitizacao %s..', lote.get('numerolote'))
-                campos = ['numerolote', 'acrescimo',
-                          'documentodesconsolidacao', 'documentopapel',
-                          'falta', 'marca', 'observacoes', 'pesolote', 'qtdefalta',
-                          'qtdevolumes', 'tipodocumentodesconsolidacao',
-                          'tipodocumentopapel', 'tipovolume']
+                logging.info('Creating lotedesunitizacao %s..',
+                             lote.get('numerolote'))
                 olote = orm.Lote(desunitizacao=desunitizacao, **lote)
                 db_session.add(olote)
-        imagensdesunitizacao = evento.get('imagensdesunitizacao')
+        imagensdesunitizacao = evento.get('imagens')
         if imagensdesunitizacao:
             for imagemdesunitizacao in imagensdesunitizacao:
-                logging.info('Creating imagemdesunitizacao %s..', imagemdesunitizacao.get('caminhoarquivo'))
-                aimagemdesunitizacao = orm.ImagemDesunitizacao(desunitizacao=desunitizacao,
-                                                               caminhoarquivo=imagemdesunitizacao.get('caminhoarquivo'))
-            db_session.add(aimagemdesunitizacao)
+                logging.info('Creating imagemdesunitizacao %s..',
+                             imagemdesunitizacao.get('caminhoarquivo'))
+                aimagemdesunitizacao = orm.ImagemDesunitizacao(
+                    desunitizacao=desunitizacao,
+                    caminhoarquivo=imagemdesunitizacao.get('caminhoarquivo'),
+                    content=imagemdesunitizacao.get('content'),
+                    contentType=imagemdesunitizacao.get('contentType'),
+                    datacriacao=parse(imagemdesunitizacao.get('datacriacao')),
+                    datamodificacao=parse(imagemdesunitizacao.get('datamodificacao'))
+                )
+                db_session.add(aimagemdesunitizacao)
     except Exception as err:
         logging.error(err, exc_info=True)
         return str(err), 400
@@ -253,8 +375,8 @@ def desunitizacao(evento):
 
 def get_desunitizacao(IDEvento):
     try:
-        desunitizacao = orm.desunitizacao.query.filter(
-            orm.desunitizacao.IDEvento == IDEvento
+        desunitizacao = orm.Desunitizacao.query.filter(
+            orm.Desunitizacao.IDEvento == IDEvento
         ).outerjoin(
             orm.Lote
         ).outerjoin(

@@ -1572,7 +1572,7 @@ components:
           type: boolean
           description: Indica se foi identificada falta de volumes
         qtdefalta:
-          type: string
+          type: integer
           description: Quantidade de volumes faltantes
         observacoes:
           type: string
@@ -1587,11 +1587,6 @@ components:
             description: Numero do documento de transporte
           tipodocumentotransporte:
             $ref: '#/components/schemas/TipoDocumentoTransporte'
-          declaracaoaduaneira:
-            type: string
-            description: Numero da declaracao aduaneira, se houver
-          tipodeclaracaoaduaneira:
-            $ref: '#/components/schemas/TipoDeclaracaoAduaneira'
           numero:
             type: string
             description: Numero do conteiner
@@ -1635,11 +1630,6 @@ components:
             description: Numero do documento de transporte
           tipodocumentotransporte:
             $ref: '#/components/schemas/TipoDocumentoTransporte'
-          declaracaoaduaneira:
-            type: string
-            description: Numero da declaracao aduaneira, se houver
-          tipodeclaracaoaduaneira:
-            $ref: '#/components/schemas/TipoDeclaracaoAduaneira'
           placa:
             type: string
             description: Placa do caminhao/truck/cavalo

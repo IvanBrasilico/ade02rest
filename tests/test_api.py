@@ -5,12 +5,18 @@ from unittest import TestCase
 
 sys.path.insert(0, 'apiserver')
 from apiserver.main import create_app
+
 from apiserver.models import orm
+
+
+def extractDictAFromB(A, B):
+    return dict([(k, B[k]) for k in A.keys() if k in B.keys()])
+
 
 class APITestCase(TestCase):
 
     def setUp(self):
-        session, engine = orm.init_db('sqlite:///memory:')
+        session, engine = orm.init_db('sqlite:///:memory:')
         orm.Base.metadata.create_all(bind=engine)
         app = create_app(session, engine)
         self.client = app.app.test_client()
@@ -31,3 +37,17 @@ class APITestCase(TestCase):
             print(classe)
             rv = self.client.post(classe.lower(), json=teste)
             assert rv.status_code == 201
+            assert rv.is_json is True
+            response_token = rv.json
+            rv = self.client.get(classe.lower() + '/' + str(teste['IDEvento']))
+            assert rv.status_code == 200
+            assert rv.is_json is True
+            response_json = rv.json
+            for data in ['dataevento', 'dataregistro']:
+                teste.pop(data)
+                response_json.pop(data)
+            sub_response = extractDictAFromB(teste, response_json)
+            sub_teste = extractDictAFromB(response_json, teste)
+            self.maxDiff = None
+            self.assertEqual(teste, sub_response)
+            # self.assertEqual(response_json, sub_teste)
