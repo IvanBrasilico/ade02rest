@@ -71,7 +71,7 @@ class PosicaoConteiner(EventoBase):
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     numero = Column(String(11))
-    placa = Column(String(11))
+    placa = Column(String(7))
     posicao = Column(String(20))
     altura = Column(Integer())
     emconferencia = Column(Boolean())
@@ -122,7 +122,7 @@ class PesagemTerrestre(EventoBase):
     ID = Column(Integer, primary_key=True)
     documentotransporte = Column(String(20))
     tipodocumentotransporte = Column(String(10))
-    placa = Column(String(11))
+    placa = Column(String(7))
     tara = Column(Integer())
     pesobrutodeclarado = Column(Integer())
     pesobalanca = Column(Integer())
@@ -148,7 +148,7 @@ class ReboquePesagemTerrestre(Base):
     __tablename__ = 'reboquespesagemterrestre'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
-    placa = Column(String(11))
+    placa = Column(String(7))
     tara = Column(Integer)
     pesagem_id = Column(Integer, ForeignKey('pesagensterrestres.ID'))
     pesagem = relationship(
@@ -245,7 +245,7 @@ class PesagemVeiculoVazio(EventoBase):
     __tablename__ = 'pesagensveiculosvazios'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
-    placa = Column(String(11))
+    placa = Column(String(7))
     pesobalanca = Column(Integer())
 
     def __init__(self, **kwargs):
@@ -261,7 +261,7 @@ class ReboquesPesagem(Base):
     __tablename__ = 'reboquespesagem'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
-    placa = Column(String(11))
+    placa = Column(String(7))
     pesagem_id = Column(Integer, ForeignKey('pesagensveiculosvazios.ID'))
     pesagem = relationship(
         'PesagemVeiculoVazio', backref=backref("reboques")
@@ -275,7 +275,7 @@ class PesagemMaritimo(EventoBase):
     documentotransporte = Column(String(20))
     tipodocumentotransporte = Column(String(10))
     numero = Column(String(11))
-    placa = Column(String(11))
+    placa = Column(String(7))
     placasemireboque = Column(String(11))
     pesobrutodeclarado = Column(Integer())
     taraconjunto = Column(Integer())
@@ -309,7 +309,6 @@ class InspecaonaoInvasiva(EventoBase):
     placasemireboque = Column(String(8))
     nomearquivo = Column(String(100))
     capturaautomatica = Column(Boolean)
-    anexos = relationship('AnexosInspecao')
 
     def __init__(self, **kwargs):
         superkwargs = dict([
@@ -324,26 +323,30 @@ class InspecaonaoInvasiva(EventoBase):
         self.capturaautomatica = kwargs.get('capturaautomatica')
 
 
-class AnexosInspecao(Base):
+class AnexoInspecao(Base):
     __tablename__ = 'anexosinspecao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     caminhoarquivo = Column(String(100))
     datacriacao = Column(DateTime())
+    content = Column(String(1))
     datamodificacao = Column(DateTime())
     contentType = Column(String(40))
     inspecao_id = Column(Integer, ForeignKey('inspecoesnaoinvasivas.ID'))
     inspecao = relationship(
-        'InspecaonaoInvasiva'
+        'InspecaonaoInvasiva', backref=backref('anexos')
     )
 
-    def __init__(self, parent, caminhoarquivo, datacriacao,
-                 datamodificacao, contentType, content=None):
-        self.inspecao_id = parent.ID
-        self.caminhoarquivo = caminhoarquivo
-        self.datacriacao = datacriacao
-        self.datamodificacao = datamodificacao
-        self.contentType = contentType
+
+class IdentificadorInspecao(Base):
+    __tablename__ = 'identificadoresinspecao'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    identificador = Column(String(100))
+    inspecao_id = Column(Integer, ForeignKey('inspecoesnaoinvasivas.ID'))
+    inspecao = relationship(
+        'InspecaonaoInvasiva', backref=backref('identificadores')
+    )
 
 
 class PosicaoLote(EventoBase):
@@ -371,7 +374,7 @@ class Unitizacao(EventoBase):
     documentotransporte = Column(String(20))
     tipodocumentotransporte = Column(String(10))
     numero = Column(String(11))
-    placa = Column(String(11))
+    placa = Column(String(7))
     placasemireboque = Column(String(11))
 
     def __init__(self, **kwargs):
@@ -393,13 +396,14 @@ class ImagemUnitizacao(Base):
     ID = Column(Integer, primary_key=True)
     caminhoarquivo = Column(String(100))
     content = Column(String(1))
-    contentType  = Column(String(40))
+    contentType = Column(String(40))
     datacriacao = Column(DateTime())
     datamodificacao = Column(DateTime())
     unitizacao_id = Column(Integer, ForeignKey('unitizacoes.ID'))
     unitizacao = relationship(
         'Unitizacao', backref=backref('imagens')
     )
+
 
 class LoteUnitizacao(Base):
     __tablename__ = 'lotesunitizacao'
@@ -496,33 +500,22 @@ class DTSC(EventoBase):
         self.dataoperacao = parse(kwargs.get('dataoperacao'))
 
 
-class CargasDTSC(Base):
+class CargaDTSC(Base):
     __tablename__ = 'cargasDTSC'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     placa = Column(String(7))
+    numero = Column(String(11))
     codigorecinto = Column(String(7))
-    cpfcnpjproprietario = Column(String(11))
-    cpfcnpjtransportador = Column(String(11))
+    cpfcnpjproprietario = Column(String(15))
+    cpfcnpjtransportador = Column(String(15))
     documentotransporte = Column(String(10))
     placasemireboque = Column(String(7))
     tipodocumentotransporte = Column(String(10))
     DTSC_id = Column(Integer, ForeignKey('DTSC.ID'))
     DTSC = relationship(
-        'DTSC'
+        'DTSC', backref=backref("cargas")
     )
-
-    def __init__(self, parent, codigorecinto, cpfcnpjproprietario,
-                 cpfcnpjtransportador, documentotransporte, placa,
-                 placasemireboque, tipodocumentotransporte):
-        self.DTSC_id = parent.ID
-        self.placa = placa
-        self.codigorecinto = codigorecinto
-        self.cpfcnpjproprietario = cpfcnpjproprietario
-        self.cpfcnpjtransportador = cpfcnpjtransportador
-        self.documentotransporte = documentotransporte
-        self.placasemireboque = placasemireboque
-        self.tipodocumentotransporte = tipodocumentotransporte
 
 
 class AcessoVeiculo(EventoBase):
@@ -653,7 +646,7 @@ class Desunitizacao(EventoBase):
     documentotransporte = Column(String(20))
     tipodocumentotransporte = Column(String(10))
     numero = Column(String(11))
-    placa = Column(String(11))
+    placa = Column(String(7))
     placasemireboque = Column(String(11))
 
     # imagens = relationship('ImagemDesunitizacao')
@@ -677,13 +670,14 @@ class ImagemDesunitizacao(Base):
     ID = Column(Integer, primary_key=True)
     caminhoarquivo = Column(String(100))
     content = Column(String(1))
-    contentType  = Column(String(40))
+    contentType = Column(String(40))
     datacriacao = Column(DateTime())
     datamodificacao = Column(DateTime())
     desunitizacao_id = Column(Integer, ForeignKey('desunitizacoes.ID'))
     desunitizacao = relationship(
         'Desunitizacao', backref=backref('imagens')
     )
+
 
 class Lote(Base):
     __tablename__ = 'lotes'
@@ -783,6 +777,7 @@ class AcessoVeiculoSchema(Schema):
     operadorevento = fields.Str()
     dataregistro = fields.DateTime()
     operadorregistro = fields.Str()
+
     conteineres = fields.Nested('ConteineresGateSchema', many=True,
                                 exclude=('ID', 'acessoveiculo_id', 'acessoveiculo'))
 

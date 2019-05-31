@@ -726,7 +726,7 @@ paths:
           content: {}
   /dtsc:
     post:
-      operationId: api.DTSC
+      operationId: api.dtsc
       requestBody:
         description: Controle de posição dos lotes nos armazens
         content:
@@ -744,7 +744,7 @@ paths:
           content: {}
   /dtsc/{IDEvento}:
     get:
-      operationId: api.get_DTSC
+      operationId: api.get_dtsc
       parameters:
       - name: IDEvento
         in: path
@@ -1416,7 +1416,7 @@ components:
             items:
               type: object
               properties:
-                identificacao:
+                identificador:
                   type: string
           numero:
             type: string

@@ -70,6 +70,7 @@ def add_evento(aclass, evento):
         db_session.add(novo_evento)
     except Exception as err:
         logging.error(err, exc_info=True)
+        db_session.rollback()
         return str(err), 405
     return _commit(novo_evento)
 
@@ -90,8 +91,6 @@ def get_acessopessoa(IDEvento):
     return get_evento(IDEvento, orm.AcessoPessoa)
 
 
-
-
 def posicaolote(evento):
     return add_evento(orm.PosicaoLote, evento)
 
@@ -108,14 +107,6 @@ def get_avarialote(IDEvento):
     return get_evento(IDEvento, orm.AvariaLote)
 
 
-def DTSC(evento):
-    return add_evento(orm.DTSC, evento)
-
-
-def get_DTSC(IDEvento):
-    return get_evento(IDEvento, orm.DTSC)
-
-
 def pesagemmaritimo(evento):
     return add_evento(orm.PesagemMaritimo, evento)
 
@@ -125,11 +116,59 @@ def get_pesagemmaritimo(IDEvento):
 
 
 def inspecaonaoinvasiva(evento):
-    return add_evento(orm.InspecaonaoInvasiva, evento)
+    db_session = current_app.config['db_session']
+    logging.info('Creating inspecaonaoinvasiva %s..', evento.get('IDEvento'))
+    try:
+        inspecaonaoinvasiva = orm.InspecaonaoInvasiva(**evento)
+        db_session.add(inspecaonaoinvasiva)
+        identificadores = evento.get('identificadores')
+        if identificadores:
+            for identificador in identificadores:
+                logging.info('Creating identificadorinspecaonaoinvasiva %s..',
+                             identificador.get('numerolote'))
+                oidentificador = orm.IdentificadorInspecao(
+                    inspecao=inspecaonaoinvasiva,
+                    **identificador)
+                db_session.add(oidentificador)
+        anexos = evento.get('anexos')
+        if anexos:
+            for anexo in anexos:
+                logging.info('Creating anexoinspecaonaoinvasiva %s..',
+                             anexo.get('caminhoarquivo'))
+                oanexo = orm.AnexoInspecao(
+                    inspecao=inspecaonaoinvasiva,
+                    caminhoarquivo=anexo.get('caminhoarquivo'),
+                    content=anexo.get('content'),
+                    contentType=anexo.get('contentType'),
+                    datacriacao=parse(anexo.get('datacriacao')),
+                    datamodificacao=parse(anexo.get('datamodificacao'))
+                )
+                db_session.add(oanexo)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        db_session.rollback()
+        return str(err), 400
+    return _commit(inspecaonaoinvasiva)
 
 
 def get_inspecaonaoinvasiva(IDEvento):
-    return get_evento(IDEvento, orm.InspecaonaoInvasiva)
+    try:
+        inspecaonaoinvasiva = orm.InspecaonaoInvasiva.query.filter(
+            orm.InspecaonaoInvasiva.IDEvento == IDEvento
+        ).outerjoin(
+            orm.AnexoInspecao
+        ).outerjoin(
+            orm.IdentificadorInspecao
+        ).one_or_none()
+        if inspecaonaoinvasiva is None:
+            return {'message': 'Evento não encontrado.'}, 404
+        inspecaonaoinvasiva_schema = maschemas.InspecaonaoInvasiva()
+        data = inspecaonaoinvasiva_schema.dump(inspecaonaoinvasiva).data
+        data['hash'] = hash(inspecaonaoinvasiva)
+        return data, 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
 
 
 def operacaonavio(evento):
@@ -158,7 +197,7 @@ def get_acessoveiculo(IDEvento):
             orm.ReboquesGate).one_or_none()
         if acessoveiculo is None:
             return {'message': 'Evento não encontrado.'}, 404
-        acessoveiculo_schema = orm.AcessoVeiculoSchema()
+        acessoveiculo_schema = maschemas.AcessoVeiculo()
         data = acessoveiculo_schema.dump(acessoveiculo).data
         data['hash'] = hash(acessoveiculo)
         return data, 200
@@ -195,8 +234,50 @@ def acessoveiculo(evento):
             db_session.add(reboquegate)
     except Exception as err:
         logging.error(err, exc_info=True)
+        db_session.rollback()
         return str(err), 400
     return _commit(acessoveiculo)
+
+
+def dtsc(evento):
+    db_session = current_app.config['db_session']
+    logging.info('Creating DTSC %s..', evento.get('IDEvento'))
+    try:
+        dtsc = orm.DTSC(**evento)
+        db_session.add(dtsc)
+        cargas = evento.get('cargas')
+        if cargas:
+            for carga in cargas:
+                logging.info('Creating loteDTSC %s..',
+                             carga.get('placa'))
+                acarga = orm.CargaDTSC(
+                    DTSC=dtsc,
+                    **carga
+                )
+                db_session.add(acarga)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        db_session.rollback()
+        return str(err), 400
+    return _commit(dtsc)
+
+
+def get_dtsc(IDEvento):
+    try:
+        dtsc = orm.DTSC.query.filter(
+            orm.DTSC.IDEvento == IDEvento
+        ).outerjoin(
+            orm.CargaDTSC
+        ).one_or_none()
+        if dtsc is None:
+            return {'message': 'Evento não encontrado.'}, 404
+        dtsc_schema = maschemas.DTSC()
+        data = dtsc_schema.dump(dtsc).data
+        data['hash'] = hash(dtsc)
+        return data, 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 400
 
 
 def pesagemveiculovazio(evento):
@@ -217,6 +298,7 @@ def pesagemveiculovazio(evento):
                 db_session.add(olote)
     except Exception as err:
         logging.error(err, exc_info=True)
+        db_session.rollback()
         return str(err), 400
     return _commit(pesagemveiculovazio)
 
@@ -238,6 +320,7 @@ def get_pesagemveiculovazio(IDEvento):
         logging.error(err, exc_info=True)
         return str(err), 400
 
+
 def posicaoveiculo(evento):
     db_session = current_app.config['db_session']
     logging.info('Creating posicaoveiculo %s..', evento.get('IDEvento'))
@@ -249,19 +332,20 @@ def posicaoveiculo(evento):
             for conteiner in conteineres:
                 logging.info('Creating conteinerpesagemterrestre %s..', conteiner.get('numero'))
                 oconteiner = orm.ConteinerPosicao(posicaoveiculo=posicaoveiculo,
-                                                           numero=conteiner.get('numero'),
-                                                           vazio=conteiner.get('vazio'))
+                                                  numero=conteiner.get('numero'),
+                                                  vazio=conteiner.get('vazio'))
                 db_session.add(oconteiner)
         reboques = evento.get('reboques')
         if reboques:
             for reboque in reboques:
                 logging.info('Creating reboque %s..', reboque.get('placa'))
                 oreboque = orm.ReboquePosicao(posicaoveiculo=posicaoveiculo,
-                                                       placa=reboque.get('placa'),
-                                                       vazio=reboque.get('vazio'))
+                                              placa=reboque.get('placa'),
+                                              vazio=reboque.get('vazio'))
             db_session.add(oreboque)
     except Exception as err:
         logging.error(err, exc_info=True)
+        db_session.rollback()
         return str(err), 400
     return _commit(posicaoveiculo)
 
@@ -284,7 +368,6 @@ def get_posicaoveiculo(IDEvento):
     except Exception as err:
         logging.error(err, exc_info=True)
         return str(err), 400
-
 
 
 def unitizacao(evento):
@@ -316,6 +399,7 @@ def unitizacao(evento):
             db_session.add(aimagemunitizacao)
     except Exception as err:
         logging.error(err, exc_info=True)
+        db_session.rollback()
         return str(err), 400
     return _commit(unitizacao)
 
@@ -369,6 +453,7 @@ def desunitizacao(evento):
                 db_session.add(aimagemdesunitizacao)
     except Exception as err:
         logging.error(err, exc_info=True)
+        db_session.rollback()
         return str(err), 400
     return _commit(desunitizacao)
 
@@ -417,6 +502,7 @@ def pesagemterrestre(evento):
             db_session.add(oreboque)
     except Exception as err:
         logging.error(err, exc_info=True)
+        db_session.rollback()
         return str(err), 400
     return _commit(pesagemterrestre)
 
@@ -476,6 +562,7 @@ def artefatorecinto(evento):
                 db_session.add(coordenadaarteafato)
     except Exception as err:
         logging.error(err, exc_info=True)
+        db_session.rollback()
         return str(err), 400
     return _commit(artefatorecinto)
 

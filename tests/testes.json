@@ -134,15 +134,15 @@
       "caminhoarquivo": "string",
       "content": "string",
       "contentType": "string",
-      "datacriacao": "2019-05-28T12:18:41.204Z",
-      "datamodificacao": "2019-05-28T12:18:41.204Z"
+      "datacriacao": "2019-05-31T02:55:50.300000+00:00",
+      "datamodificacao": "2019-05-31T02:55:50.300000+00:00"
     }
   ],
   "capturaautomatica": true,
   "documentotransporte": "string",
   "identificadores": [
     {
-      "identificacao": "string"
+      "identificador": "string"
     }
   ],
   "numero": "string",
