@@ -5,3 +5,5 @@ build/*
 *.egg-info/*
 *.db
 *checkpoint*
+.coverage
+*.log
