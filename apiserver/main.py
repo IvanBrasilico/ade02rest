@@ -1,5 +1,4 @@
 import connexion
-from flask import current_app
 
 from apiserver.models import orm
 from views import create_views
@@ -16,12 +15,11 @@ def create_app(session, engine):
     return app
 
 
+
 def main():
     # session, engine = orm.init_db('sqlite:///:memory:')
     # orm.Base.metadata.create_all(bind=engine)
     session, engine = orm.init_db()
-    orm.Base.metadata.drop_all(bind=engine)
-    orm.Base.metadata.create_all(bind=engine)
     app = create_app(session, engine)
     print(app.app.config['db_session'])
     app.run(debug=True, port=8000, threaded=False)
