@@ -1,0 +1,3 @@
+# 1. Devo guardar os dados??
+
+Os dados devem ser guardados...
