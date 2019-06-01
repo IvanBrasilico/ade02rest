@@ -48,11 +48,14 @@ paths:
               $ref: '#/components/schemas/AcessoPessoa'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /acessopessoa/{IDEvento}:
     get:
@@ -93,11 +96,14 @@ paths:
               $ref: '#/components/schemas/AcessoVeiculo'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /acessoveiculo/{IDEvento}:
     get:
@@ -137,11 +143,14 @@ paths:
               $ref: '#/components/schemas/ArtefatoRecinto'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /artefatorecinto/{IDEvento}:
     get:
@@ -181,11 +190,14 @@ paths:
               $ref: '#/components/schemas/Ocorrencia'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /ocorrencia/{IDEvento}:
     get:
@@ -225,11 +237,14 @@ paths:
               $ref: '#/components/schemas/PesagemVeiculoVazio'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /pesagemveiculovazio/{IDEvento}:
     get:
@@ -269,11 +284,14 @@ paths:
               $ref: '#/components/schemas/PesagemMaritimo'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /pesagemmaritimo/{IDEvento}:
     get:
@@ -313,11 +331,14 @@ paths:
               $ref: '#/components/schemas/PesagemTerrestre'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /pesagemterrestre/{IDEvento}:
     get:
@@ -357,11 +378,14 @@ paths:
               $ref: '#/components/schemas/InspecaonaoInvasiva'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /inspecaonaoinvasiva/{IDEvento}:
     get:
@@ -401,11 +425,14 @@ paths:
               $ref: '#/components/schemas/OperacaoNavio'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /operacaonavio/{IDEvento}:
     get:
@@ -445,11 +472,14 @@ paths:
               $ref: '#/components/schemas/PosicaoVeiculoPatio'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /posicaoveiculo/{IDEvento}:
     get:
@@ -489,11 +519,14 @@ paths:
               $ref: '#/components/schemas/PosicaoConteiner'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /posicaoconteiner/list:
     post:
@@ -560,11 +593,14 @@ paths:
               $ref: '#/components/schemas/Desunitizacao'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /desunitizacao/{IDEvento}:
     get:
@@ -604,11 +640,14 @@ paths:
               $ref: '#/components/schemas/PosicaoLote'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /posicaolote/{IDEvento}:
     get:
@@ -648,11 +687,14 @@ paths:
               $ref: '#/components/schemas/AvariaLote'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /avarialote/{IDEvento}:
     get:
@@ -692,11 +734,14 @@ paths:
               $ref: '#/components/schemas/UnitizacaoLote'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /unitizacao/{IDEvento}:
     get:
@@ -736,11 +781,14 @@ paths:
               $ref: '#/components/schemas/DTSC'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /dtsc/{IDEvento}:
     get:

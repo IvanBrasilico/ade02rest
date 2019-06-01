@@ -801,27 +801,28 @@ def init_db(uri='sqlite:///test.db'):
         db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False,
                                                  bind=engine))
         Base.query = db_session.query_property()
+        for table in ['DTSC', 'acessospessoas', 'avariaslote', 'desunitizacoes', 'pesagensterrestres',
+                      'pesagensveiculosvazios', 'posicoeslote', 'posicoesveiculo', 'unitizacoes',
+                      'acessosveiculo', 'pesagensmaritimo', 'posicoesconteiner', 'inspecoesnaoinvasivas',
+                      'artefatosrecinto', 'ocorrencias', 'operacoesnavios']:
+            # print(table)
+            Table(table, Base.metadata,
+                  Index(table + '_ideventorecinto_idx',
+                        'recinto', 'IDEvento',
+                        unique=True,
+                        ),
+                  extend_existing=True
+                  )
     return db_session, engine
 
 
-for table in ['DTSC', 'acessospessoas', 'avariaslote', 'desunitizacoes', 'pesagensterrestres',
-              'pesagensveiculosvazios', 'posicoeslote', 'posicoesveiculo', 'unitizacoes',
-              'acessosveiculo', 'pesagensmaritimo', 'posicoesconteiner', 'inspecoesnaoinvasivas',
-              'artefatosrecinto', 'ocorrencias', 'operacoesnavios']:
-    print(table)
-    Table(table, Base.metadata,
-          Index(table + '_ideventorecinto_idx',
-                'recinto', 'IDEvento',
-                unique=True,
-                ),
-          extend_existing=True
-          )
 
 if __name__ == '__main__':
     db, engine = init_db()
     try:
+        print('Apagando Banco!!!')
         Base.metadata.drop_all(bind=engine)
+        print('Criando Banco novo!!!')
         Base.metadata.create_all(bind=engine)
-        print('Criou Banco!!!')
     except Exception as err:
         logging.error(err, exc_info=True)
