@@ -117,8 +117,8 @@ def geteventosnovos():
             dataevento = parse(request.form.get('dataevento'))
         except Exception:
             if IDEvento is None:
-                return 'IDEvento e dataevento invalidos, ' + \
-                       'ao menos um dos dois e necessario'
+                return jsonify(_response('IDEvento e dataevento invalidos, ' 
+                       'ao menos um dos dois e necessario', 400)), 400
             dataevento = None
         tipoevento = request.form.get('tipoevento')
         aclass = getattr(orm, tipoevento)
@@ -132,12 +132,12 @@ def geteventosnovos():
             ).all()
         if eventos is None:
             if dataevento is None:
-                return 'Sem eventos com ID maior que %d.' % IDEvento, 404
-            return 'Sem eventos com dataevento maior que %s.' % dataevento, 404
+                return jsonify(_response('Sem eventos com ID maior que %d.' % IDEvento, 404)), 404
+            return jsonify(_response('Sem eventos com dataevento maior que %s.' % dataevento, 404)), 404
         return dump_eventos(eventos)
     except Exception as err:
         logging.error(err, exc_info=True)
-        return str(err), 400
+        return jsonify(_response(str(err), 400)), 400
 
 
 def geteventosintervalo():
