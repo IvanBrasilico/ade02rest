@@ -155,7 +155,7 @@ class ReboquePesagemTerrestre(Base):
     tara = Column(Integer)
     pesagem_id = Column(Integer, ForeignKey('pesagensterrestres.ID'))
     pesagem = relationship(
-        'PesagemTerrestre', backref=backref("reboques")
+        'PesagemTerrestre', backref=backref('reboques')
     )
 
     # def __init__(self, **kwargs):
@@ -227,7 +227,7 @@ class CoordenadaArtefato(Base):
     lat = Column(Float)
     artefato_id = Column(Integer, ForeignKey('artefatosrecinto.ID'))
     artefato = relationship(
-        'ArtefatoRecinto', backref=backref("coordenadasartefato")
+        'ArtefatoRecinto', backref=backref('coordenadasartefato')
     )
 
 
@@ -267,7 +267,7 @@ class ReboquesPesagem(Base):
     placa = Column(String(7))
     pesagem_id = Column(Integer, ForeignKey('pesagensveiculosvazios.ID'))
     pesagem = relationship(
-        'PesagemVeiculoVazio', backref=backref("reboques")
+        'PesagemVeiculoVazio', backref=backref('reboques')
     )
 
 
@@ -343,20 +343,23 @@ class AnexoBase(Base):
         return filepath
 
     def save_file(self, basepath, file, filename, evento) -> (str, bool):
-        '''
+        """
 
         :param basepath: diretorio onde guardar arquivos
         :param file: objeto arquivo
         :return:
             mensagem de sucesso ou mensagem de erro
             True se sucesso, False se houve erro
-        '''
+        """
         if not file or not filename:
             return None
         filepath = self.monta_caminho_arquivo(
             basepath, evento)
         with open(os.path.join(filepath, filename), 'wb') as file_out:
-            file = b64decode(file.encode())
+            try:
+                file = b64decode(file.encode())
+            except AttributeError:
+                pass
             file_out.write(file)
         self.contentType = mimetypes.guess_type(filename)[0]
         self.nomearquivo = filename
@@ -566,7 +569,7 @@ class CargaDTSC(Base):
     tipodocumentotransporte = Column(String(10))
     DTSC_id = Column(Integer, ForeignKey('DTSC.ID'))
     DTSC = relationship(
-        'DTSC', backref=backref("cargas")
+        'DTSC', backref=backref('cargas')
     )
 
 
@@ -643,7 +646,7 @@ class ConteineresGate(Gate):
     nomecliente = Column(String(30))
     acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
-        'AcessoVeiculo', backref=backref("conteineres")
+        'AcessoVeiculo', backref=backref('conteineres')
     )
 
 
@@ -663,7 +666,7 @@ class ReboquesGate(Gate):
     avarias = Column(String(100))
     acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
-        'AcessoVeiculo', backref=backref("reboques")
+        'AcessoVeiculo', backref=backref('reboques')
     )
 
 
@@ -674,7 +677,7 @@ class ListaNfeGate(Base):
     chavenfe = Column(String(30))
     acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
-        'AcessoVeiculo', backref=backref("listanfe")
+        'AcessoVeiculo', backref=backref('listanfe')
     )
 
 
@@ -791,31 +794,8 @@ class Lote(Base):
     tipovolume = Column(String(20))
     desunitizacao_id = Column(Integer, ForeignKey('desunitizacoes.ID'))
     desunitizacao = relationship(
-        'Desunitizacao', backref=backref("lotes")
+        'Desunitizacao', backref=backref('lotes')
     )
-
-
-'''
-    def __init__(self, parent, numerolote, acrescimo,
-                 documentodesconsolidacao, documentopapel,
-                 falta, marca, observacoes, pesolote, qtdefalta,
-                 qtdevolumes, tipodocumentodesconsolidacao,
-                 tipodocumentopapel, tipovolume):
-        self.desunitizacao_id = parent.ID
-        self.numerolote = numerolote
-        self.acrescimo = acrescimo
-        self.documentodesconsolidacao = documentodesconsolidacao
-        self.documentopapel = documentopapel
-        self.falta = falta
-        self.marca = marca
-        self.observacoes = observacoes
-        self.pesolote = pesolote
-        self.qtdefalta = qtdefalta
-        self.qtdevolumes = qtdevolumes
-        self.tipodocumentodesconsolidacao = tipodocumentodesconsolidacao
-        self.tipodocumentopapel = tipodocumentopapel
-        self.tipovolume = tipovolume
-'''
 
 
 class DesunitizacaoSchema(ModelSchema):
@@ -855,9 +835,10 @@ def init_db(uri='sqlite:///test.db'):
         db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False,
                                                  bind=engine))
         Base.query = db_session.query_property()
-        for table in ['DTSC', 'acessospessoas', 'avariaslote', 'desunitizacoes', 'pesagensterrestres',
-                      'pesagensveiculosvazios', 'posicoeslote', 'posicoesveiculo', 'unitizacoes',
-                      'acessosveiculo', 'pesagensmaritimo', 'posicoesconteiner', 'inspecoesnaoinvasivas',
+        for table in ['DTSC', 'acessospessoas', 'avariaslote', 'desunitizacoes',
+                      'pesagensterrestres', 'pesagensveiculosvazios', 'posicoeslote',
+                      'posicoesveiculo', 'unitizacoes', 'acessosveiculo',
+                      'pesagensmaritimo', 'posicoesconteiner', 'inspecoesnaoinvasivas',
                       'artefatosrecinto', 'ocorrencias', 'operacoesnavios']:
             # print(table)
             Table(table, Base.metadata,

@@ -159,10 +159,10 @@ def inspecaonaoinvasiva(evento):
                     datamodificacao=parse(anexo.get('datamodificacao'))
                 )
                 basepath = current_app.config.get('UPLOAD_FOLDER')
-                msg = oanexo.save_file(basepath,
-                                       anexo.get('content'),
-                                       anexo.get('nomearquivo')
-                                       )
+                oanexo.save_file(basepath,
+                                 anexo.get('content'),
+                                 anexo.get('nomearquivo')
+                                 )
                 db_session.add(oanexo)
     except Exception as err:
         logging.error(err, exc_info=True)
@@ -363,7 +363,8 @@ def posicaoveiculo(evento):
         conteineres = evento.get('conteineres')
         if conteineres:
             for conteiner in conteineres:
-                logging.info('Creating conteinerpesagemterrestre %s..', conteiner.get('numero'))
+                logging.info('Creating conteinerpesagemterrestre %s..',
+                             conteiner.get('numero'))
                 oconteiner = orm.ConteinerPosicao(posicaoveiculo=posicaoveiculo,
                                                   numero=conteiner.get('numero'),
                                                   vazio=conteiner.get('vazio'))
@@ -520,18 +521,21 @@ def pesagemterrestre(evento):
         conteineres = evento.get('conteineres')
         if conteineres:
             for conteiner in conteineres:
-                logging.info('Creating conteinerpesagemterrestre %s..', conteiner.get('numero'))
-                oconteiner = orm.ConteinerPesagemTerrestre(pesagem=pesagemterrestre,
-                                                           numero=conteiner.get('numero'),
-                                                           tara=conteiner.get('tara'))
+                logging.info('Creating conteinerpesagemterrestre %s..',
+                             conteiner.get('numero'))
+                oconteiner = orm.ConteinerPesagemTerrestre(
+                    pesagem=pesagemterrestre,
+                    numero=conteiner.get('numero'),
+                    tara=conteiner.get('tara'))
                 db_session.add(oconteiner)
         reboques = evento.get('reboques')
         if reboques:
             for reboque in reboques:
                 logging.info('Creating reboque %s..', reboque.get('placa'))
-                oreboque = orm.ReboquePesagemTerrestre(pesagem=pesagemterrestre,
-                                                       placa=reboque.get('placa'),
-                                                       tara=reboque.get('tara'))
+                oreboque = orm.ReboquePesagemTerrestre(
+                    pesagem=pesagemterrestre,
+                    placa=reboque.get('placa'),
+                    tara=reboque.get('tara'))
             db_session.add(oreboque)
     except Exception as err:
         logging.error(err, exc_info=True)
@@ -587,11 +591,12 @@ def artefatorecinto(evento):
         if coordenadas:
             for coordenada in coordenadas:
                 logging.info('Creating coordenada %s..', coordenada.get('ordem'))
-                coordenadaarteafato = orm.CoordenadaArtefato(artefato=artefatorecinto,
-                                                             ordem=coordenada.get('ordem'),
-                                                             lat=coordenada.get('lat'),
-                                                             long=coordenada.get('long')
-                                                             )
+                coordenadaarteafato = orm.CoordenadaArtefato(
+                    artefato=artefatorecinto,
+                    ordem=coordenada.get('ordem'),
+                    lat=coordenada.get('lat'),
+                    long=coordenada.get('long')
+                )
                 db_session.add(coordenadaarteafato)
     except Exception as err:
         logging.error(err, exc_info=True)
@@ -612,7 +617,7 @@ def list_posicaoconteiner(filtro):
                        orm.PosicaoConteiner.recinto.like(recinto)]
             if altura is not None:
                 filters.append(orm.PosicaoConteiner.altura.__eq__(int(altura)))
-        except  Exception as err:
+        except Exception as err:
             logging.error(err, exc_info=True)
             return _response('Erro nos filtros passados: %s' % str(err), 400)
         eventos = db_session.query(
@@ -646,7 +651,8 @@ def get_eventosnovos(filtro):
         if eventos is None or len(eventos) == 0:
             if dataevento is None:
                 return _response('Sem eventos com ID maior que %d.' % IDEvento, 404)
-            return _response('Sem eventos com dataevento maior que %s.' % dataevento, 404)
+            return _response('Sem eventos com dataevento maior que %s.' % dataevento,
+                             404)
         return dump_eventos(eventos)
     except Exception as err:
         logging.error(err, exc_info=True)
