@@ -19,11 +19,12 @@ def dump_eventos(eventos):
     return jsonify(eventos_dump)
 
 
-titles = {'200': 'Evento encontrado',
-          '201': 'Evento incluido',
-          '400': 'Evento ou consulta invalidos (BAD Request)',
-          '404': 'Evento nao encontrado',
-          '409': 'Erro de integridade'}
+titles = {200: 'Evento encontrado',
+          201: 'Evento incluido',
+          400: 'Evento ou consulta invalidos (BAD Request)',
+          404: 'Evento nao encontrado',
+          409: 'Erro de integridade'}
+
 
 def _response(msg, status_code, title=None):
     if title is None:
@@ -136,12 +137,13 @@ def inspecaonaoinvasiva(evento):
     logging.info('Creating inspecaonaoinvasiva %s..', evento.get('IDEvento'))
     try:
         inspecaonaoinvasiva = orm.InspecaonaoInvasiva(**evento)
+        inspecaonaoinvasiva.recinto = RECINTO
         db_session.add(inspecaonaoinvasiva)
         identificadores = evento.get('identificadores')
         if identificadores:
             for identificador in identificadores:
                 logging.info('Creating identificadorinspecaonaoinvasiva %s..',
-                             identificador.get('numerolote'))
+                             identificador.get('identificador'))
                 oidentificador = orm.IdentificadorInspecao(
                     inspecao=inspecaonaoinvasiva,
                     **identificador)
@@ -150,15 +152,17 @@ def inspecaonaoinvasiva(evento):
         if anexos:
             for anexo in anexos:
                 logging.info('Creating anexoinspecaonaoinvasiva %s..',
-                             anexo.get('caminhoarquivo'))
+                             anexo.get('nomearquivo'))
                 oanexo = orm.AnexoInspecao(
                     inspecao=inspecaonaoinvasiva,
-                    caminhoarquivo=anexo.get('caminhoarquivo'),
-                    content=anexo.get('content'),
-                    contentType=anexo.get('contentType'),
                     datacriacao=parse(anexo.get('datacriacao')),
                     datamodificacao=parse(anexo.get('datamodificacao'))
                 )
+                basepath = current_app.config.get('UPLOAD_FOLDER')
+                msg = oanexo.save_file(basepath,
+                                       anexo.get('content'),
+                                       anexo.get('nomearquivo')
+                                       )
                 db_session.add(oanexo)
     except Exception as err:
         logging.error(err, exc_info=True)
@@ -181,6 +185,9 @@ def get_inspecaonaoinvasiva(IDEvento):
         inspecaonaoinvasiva_schema = maschemas.InspecaonaoInvasiva()
         data = inspecaonaoinvasiva_schema.dump(inspecaonaoinvasiva).data
         data['hash'] = hash(inspecaonaoinvasiva)
+        basepath = current_app.config.get('UPLOAD_FOLDER')
+        for ind, anexo in enumerate(inspecaonaoinvasiva.anexos):
+            data['anexos'][ind]['content'] = anexo.load_file(basepath)
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)

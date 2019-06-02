@@ -1,5 +1,8 @@
 import collections
 import logging
+import mimetypes
+import os
+from base64 import b64decode, b64encode
 
 from dateutil.parser import parse
 from marshmallow import fields, ValidationError
@@ -307,7 +310,6 @@ class InspecaonaoInvasiva(EventoBase):
     numero = Column(String(11))
     placa = Column(String(8))
     placasemireboque = Column(String(8))
-    nomearquivo = Column(String(100))
     capturaautomatica = Column(Boolean)
 
     def __init__(self, **kwargs):
@@ -323,19 +325,69 @@ class InspecaonaoInvasiva(EventoBase):
         self.capturaautomatica = kwargs.get('capturaautomatica')
 
 
-class AnexoInspecao(Base):
+class AnexoBase(Base):
+    __abstract__ = True
+    content = Column(String(1), default='')
+    nomearquivo = Column(String(100), default='')
+    contentType = Column(String(40), default='')
+
+    def monta_caminho_arquivo(self, basepath, eventobase):
+        filepath = basepath
+        for caminho in [eventobase.recinto,
+                        eventobase.dataevento.year,
+                        eventobase.dataevento.month,
+                        eventobase.dataevento.day]:
+            filepath = os.path.join(filepath, str(caminho))
+            if not os.path.exists(basepath):
+                os.mkdir(filepath)
+        return filepath
+
+    def save_file(self, basepath, file, filename, evento) -> (str, bool):
+        '''
+
+        :param basepath: diretorio onde guardar arquivos
+        :param file: objeto arquivo
+        :return:
+            mensagem de sucesso ou mensagem de erro
+            True se sucesso, False se houve erro
+        '''
+        if not file or not filename:
+            return None
+        filepath = self.monta_caminho_arquivo(
+            basepath, evento)
+        with open(os.path.join(filepath, filename), 'wb') as file_out:
+            file = b64decode(file.encode())
+            file_out.write(file)
+        self.contentType = mimetypes.guess_type(filename)[0]
+        self.nomearquivo = filename
+        return 'Arquivo salvo'
+
+    def load_file(self, basepath, evento):
+        if not self.nomearquivo:
+            return ''
+        filepath = self.monta_caminho_arquivo(basepath, evento)
+        content = open(os.path.join(filepath, self.nomearquivo), 'rb')
+        base64_bytes = b64encode(content.read())
+        base64_string = base64_bytes.decode('utf-8')
+        return base64_string
+
+
+class AnexoInspecao(AnexoBase):
     __tablename__ = 'anexosinspecao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
-    caminhoarquivo = Column(String(100))
     datacriacao = Column(DateTime())
-    content = Column(String(1))
     datamodificacao = Column(DateTime())
-    contentType = Column(String(40))
     inspecao_id = Column(Integer, ForeignKey('inspecoesnaoinvasivas.ID'))
     inspecao = relationship(
         'InspecaonaoInvasiva', backref=backref('anexos')
     )
+
+    def save_file(self, basepath, file, filename) -> (str, bool):
+        return super().save_file(basepath, file, filename, self.inspecao)
+
+    def load_file(self, basepath):
+        return super().load_file(basepath, self.inspecao)
 
 
 class IdentificadorInspecao(Base):
@@ -625,6 +677,7 @@ class ListaNfeGate(Base):
         'AcessoVeiculo', backref=backref("listanfe")
     )
 
+
 class PosicaoVeiculo(EventoBase):
     __tablename__ = 'posicoesveiculo'
     __table_args__ = {'sqlite_autoincrement': True}
@@ -638,6 +691,7 @@ class PosicaoVeiculo(EventoBase):
     solicitante = Column(String(20))
     documentotransporte = Column(String(20))
     tipodocumentotransporte = Column(String(20))
+
     def __init__(self, **kwargs):
         superkwargs = dict([
             (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
@@ -814,7 +868,6 @@ def init_db(uri='sqlite:///test.db'):
                   extend_existing=True
                   )
     return db_session, engine
-
 
 
 if __name__ == '__main__':

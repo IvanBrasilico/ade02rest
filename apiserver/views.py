@@ -14,39 +14,6 @@ def home():
     return render_template('home.html')
 
 
-def get_caminho_arquivo(evento):
-    filepath = current_app.config.get('UPLOAD_FOLDER')
-    # print(filepath)
-    for caminho in [evento.recinto,
-                    evento.dataevento.year,
-                    evento.dataevento.month,
-                    evento.dataevento.day]:
-        filepath = os.path.join(filepath, str(caminho))
-        if not os.path.exists(filepath):
-            os.mkdir(filepath)
-    return filepath
-
-
-def save_file_evento(file, IDEvento, tipoevento, campoevento):
-    db_session = current_app.config['db_session']
-    try:
-        aclass = getattr(orm, tipoevento)
-        evento = db_session.query(aclass).filter(
-            aclass.IDEvento == IDEvento
-        ).one_or_none()
-        if evento is None:
-            return 'Evento não encontrado.', 404
-        setattr(evento, campoevento, file.filename)
-        db_session.add(evento)
-        filepath = get_caminho_arquivo(evento)
-        file.save(os.path.join(filepath, file.filename))
-        db_session.commit()
-        return 'Arquivo salvo', 201
-    except Exception as err:
-        logging.error(err, exc_info=True)
-        return str(err), 400
-
-
 def allowed_file(filename, extensions):
     """Checa extensões permitidas."""
     return '.' in filename and \
@@ -70,19 +37,18 @@ def valid_file(file, extensions=['jpg', 'xml', 'json']):
 
 def getfile():
     db_session = current_app.config['db_session']
+    basepath = current_app.config.get('UPLOAD_FOLDER')
     try:
         IDEvento = request.form.get('IDEvento')
         tipoevento = request.form.get('tipoevento')
-        campoevento = request.form.get('campoevento')
         aclass = getattr(orm, tipoevento)
         evento = db_session.query(aclass).filter(
             aclass.IDEvento == IDEvento
         ).one_or_none()
         if evento is None:
             return 'Evento não encontrado.', 404
-        filepath = get_caminho_arquivo(evento)
-        file = open(os.path.join(filepath, getattr(evento, campoevento)), 'rb').read()
-        return Response(response=file, mimetype='image/jpeg'), 200
+        # file = get_file_evento(db_session, basepath, evento)
+        # return Response(response=file, mimetype='image/jpeg'), 200
     except Exception as err:
         logging.error(err, exc_info=True)
         return str(err), 400
@@ -91,15 +57,24 @@ def getfile():
 def uploadfile():
     """Função simplificada para upload de arquivo para um Evento."""
     # check if the post request has the file part
+    db_session = current_app.config['db_session']
+    basepath = current_app.config.get('UPLOAD_FOLDER')
     try:
         file = request.files.get('file')
         IDEvento = request.form.get('IDEvento')
         tipoevento = request.form.get('tipoevento')
-        campoevento = request.form.get('campoevento')
         validfile, mensagem = valid_file(file)
         if not validfile:
-            return 'Arquivo invalido', 405
-        return save_file_evento(file, IDEvento, tipoevento, campoevento)
+            return _response('Arquivo invalido', 405)
+        aclass = getattr(__name__, tipoevento)
+        evento = db_session.query(aclass).filter(
+            aclass.IDEvento == IDEvento
+        ).one_or_none()
+        if evento is None:
+            return _response('Evento não encontrado.', 404)
+        db_session.add(evento)
+        # return orm.save_file_evento(db_session, basepath, file,
+        #                            IDEvento, tipoevento)
     except Exception as err:
         logger.error(err, exc_info=True)
         return err, 405
@@ -208,7 +183,8 @@ def seteventosnovos():
 
 
 def recriatedb():
-    db_session = current_app.config['db_session']
+    # db_session = current_app.config['db_session']
+    engine = current_app.config['engine']
     try:
         orm.Base.metadata.drop_all(bind=engine)
         orm.Base.metadata.create_all(bind=engine)

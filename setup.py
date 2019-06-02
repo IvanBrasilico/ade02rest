@@ -33,7 +33,8 @@ setup(
             'jupyter',
             'pytest',
             'pytest-pep8',
-            'pytest-cov'
+            'pytest-cov',
+            'tox'
         ]
     },
     packages=find_packages(),
