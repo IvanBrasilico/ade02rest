@@ -392,6 +392,10 @@ class AnexoInspecao(AnexoBase):
     def load_file(self, basepath):
         return super().load_file(basepath, self.inspecao)
 
+    @classmethod
+    def create(cls, parent):
+        return AnexoInspecao(inspecao=parent)
+
 
 class IdentificadorInspecao(Base):
     __tablename__ = 'identificadoresinspecao'

@@ -60,12 +60,13 @@ def getfile():
 
 def uploadfile():
     """Função simplificada para upload de arquivo para um Evento."""
-    # check if the post request has the file part
     db_session = current_app.config['db_session']
     try:
         file = request.files.get('file')
         IDEvento = request.form.get('IDEvento')
         tipoevento = request.form.get('tipoevento')
+        nomearquivo = request.form.get('nomearquivo')
+        tipoanexo = request.form.get('tipoanexo')
         validfile, mensagem = valid_file(file)
         if not validfile:
             return jsonify(_response(mensagem, 400)), 400
@@ -76,7 +77,20 @@ def uploadfile():
         if evento is None:
             return jsonify(_response('Evento não encontrado.', 404)), 404
         db_session.add(evento)
-        oanexo = evento.anexos[0]
+        oanexo = None
+        if nomearquivo:
+            for anexo in evento.anexos:
+                if anexo.nomearquivo == nomearquivo:
+                    oanexo = anexo
+                    break
+        else:
+            if getattr(evento, 'anexos', False) and len(evento.anexos) > 0:
+                oanexo = evento.anexos[0]
+        if oanexo is None:
+            classeanexo = getattr(orm, tipoanexo)
+            oanexo = classeanexo.create(
+                evento
+            )
         basepath = current_app.config.get('UPLOAD_FOLDER')
         oanexo.save_file(basepath,
                          file.read(),
