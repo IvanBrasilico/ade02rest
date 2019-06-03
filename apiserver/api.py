@@ -41,6 +41,7 @@ def _commit(evento):
         evento.request_IP = request.environ.get('HTTP_X_REAL_IP',
                                                 request.remote_addr)
         evento.recinto = RECINTO
+        # evento.time_created = datetime.datetime.now().isoformat()
         db_session.flush()
         db_session.refresh(evento)
         ohash = hash(evento)

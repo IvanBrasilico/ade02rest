@@ -12,7 +12,6 @@ from sqlalchemy import Boolean, Column, DateTime, Integer, \
     String, create_engine, ForeignKey, Index, Table, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref
-from sqlalchemy.sql import func
 
 Base = declarative_base()
 db_session = None
@@ -27,8 +26,7 @@ class EventoBase(Base):
     dataregistro = Column(DateTime(), index=True)
     operadorregistro = Column(String(14), index=True)
     time_created = Column(DateTime(timezone=True),
-                          index=True,
-                          server_default=func.now())
+                          index=True)
     recinto = Column(String(10), index=True)
     request_IP = Column(String(21), index=True)
     # TODO: Ver como tratar retificação (viola índice único)
@@ -45,6 +43,8 @@ class EventoBase(Base):
         self.dataregistro = parse(dataregistro)
         self.operadorregistro = operadorregistro
         self.retificador = retificador
+        self.time_created = datetime.datetime.now().isoformat()
+
         if recinto is not None:
             self.recinto = recinto
         if request_IP is not None:
