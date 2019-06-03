@@ -355,12 +355,15 @@ class AnexoBase(Base):
             return None
         filepath = self.monta_caminho_arquivo(
             basepath, evento)
-        with open(os.path.join(filepath, filename), 'wb') as file_out:
-            try:
-                file = b64decode(file.encode())
-            except AttributeError:
-                pass
-            file_out.write(file)
+        try:
+            with open(os.path.join(filepath, filename), 'wb') as file_out:
+                try:
+                    file = b64decode(file.encode())
+                except AttributeError:
+                    pass
+                file_out.write(file)
+        except FileNotFoundError as err:
+            logging.error(str(err), exc_info=True)
         self.contentType = mimetypes.guess_type(filename)[0]
         self.nomearquivo = filename
         return 'Arquivo salvo'
@@ -368,10 +371,13 @@ class AnexoBase(Base):
     def load_file(self, basepath, evento):
         if not self.nomearquivo:
             return ''
-        filepath = self.monta_caminho_arquivo(basepath, evento)
-        content = open(os.path.join(filepath, self.nomearquivo), 'rb')
-        base64_bytes = b64encode(content.read())
-        base64_string = base64_bytes.decode('utf-8')
+        try:
+            filepath = self.monta_caminho_arquivo(basepath, evento)
+            content = open(os.path.join(filepath, self.nomearquivo), 'rb')
+            base64_bytes = b64encode(content.read())
+            base64_string = base64_bytes.decode('utf-8')
+        except FileNotFoundError as err:
+            base64_string = None
         return base64_string
 
 
