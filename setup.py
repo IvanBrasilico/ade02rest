@@ -16,9 +16,11 @@ VERSION = "0.9"
 REQUIRES = ["connexion[swagger-ui]",
             "dateutils",
             "gunicorn",
+            "marshmallow-sqlalchemy",
+            "mysql-connector",
             "requests",
             "sqlalchemy",
-            "marshmallow-sqlalchemy"]
+            ]
 
 setup(
     name=NAME,
