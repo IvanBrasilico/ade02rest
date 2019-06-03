@@ -16,7 +16,7 @@ def create_app(session, engine):
 
 
 def main():
-    # session, engine = orm.init_db('sqlite:///:memory:')
+    #session, engine = orm.init_db('sqlite:///:memory:')
     # orm.Base.metadata.create_all(bind=engine)
     session, engine = orm.init_db()
     app = create_app(session, engine)
