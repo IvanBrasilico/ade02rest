@@ -1,14 +1,27 @@
 
 Eventos a receber lista:
 
--> Mapa Instantâneo do Pátio de Contêineres
+-> Mapa Instantâneo do Pátio de Contêineres (necessário discutir/detalhar)
+  Obs.: Parece ser na verdade a junção de Eventos AcessoVeiculo e PosicaoConteiner
 -> Lista de Pessoas Cadastradas
+  OK - Precisa apenas de endpoint para pegar e receber com anexos, ou o desenvolvimento de um list próprio
 -> Lista de Veículos Cadastrados
--> Lista de Atracações / Voos Cadastrados
+  OK - Precisa apenas de endpoint para pegar e receber com anexos, ou o desenvolvimento de um list próprio
 -> Lista de Representantes Cadastrados
+  OK, funciona com set_eventos e get_eventos genérico
 
 
-Faltantes:
+Eventos mutáveis:
+
+Todos os Eventos deveriam ser imutáveis. Entretanto, alguns Eventos são na verdade cadastramentos.
+
+A inclusão no Cadastro que é o Evento, na verdade. E a exclusão ou bloqueio outro Evento.
+
+Solução foi criar a classe "Cadastro", idêntica aos Eventos imutáveis, mas com um campo a mais: ativo. Assim,
+quando da exclusão basta acessar uma ação (excluir, cancelar, bloquear) do Evento original.
+
+Faltantes (necessário discutir/detalhar):
 
 Troca de Navio
 04.19 - AGENDA NAVIOS / VOOS
+-> Lista de Atracações / Voos Cadastrados
