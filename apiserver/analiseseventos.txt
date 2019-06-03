@@ -13,7 +13,9 @@ Eventos a receber lista:
 
 Eventos mutáveis:
 
-Todos os Eventos deveriam ser imutáveis. Entretanto, alguns Eventos são na verdade cadastramentos.
+Todos os Eventos deveriam ser imutáveis. Entretanto, alguns Eventos são na verdade cadastramentos. São eles:
+
+CadastroRepresentacao, CredenciamentoPessoa, CredenciamentoVeiculo, AgendamentoConferencia, InformacaoBloqueio
 
 A inclusão no Cadastro que é o Evento, na verdade. E a exclusão ou bloqueio outro Evento.
 
@@ -25,3 +27,4 @@ Faltantes (necessário discutir/detalhar):
 Troca de Navio
 04.19 - AGENDA NAVIOS / VOOS
 -> Lista de Atracações / Voos Cadastrados
+#TODO

@@ -807,7 +807,7 @@ class Cadastro(Base):
     __abstract__ = True
     ativo = Column(Boolean(), index=True, default=True)
 
-    def bloqueia(self):
+    def inativar(self):
         if self.ativo is True:
             # TODO: Criar / gerar evento para inativacao
             # (Salvar em uma tabela as datas de ativacao e inativacao)
@@ -920,7 +920,7 @@ class CredenciamentoVeiculo(EventoBase, Cadastro):
         self.motivacao = kwargs.get('motivacao')
 
 
-class ArtefatoRecinto(EventoBase):
+class ArtefatoRecinto(EventoBase, Cadastro):
     __tablename__ = 'artefatosrecinto'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)

@@ -668,7 +668,7 @@ def bloqueia_cadastro(IDEvento, aclass):
         if cadastro is None:
             return _response('Evento nao encontrado', 404)
         cadastro.hash = hash(cadastro)
-        cadastro.bloqueia()
+        cadastro.inativar()
         db_session.commit()
         return cadastro.dump(), 200
     except Exception as err:
