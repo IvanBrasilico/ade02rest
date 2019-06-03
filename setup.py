@@ -19,7 +19,7 @@ REQUIRES = ["connexion[swagger-ui]",
             "marshmallow-sqlalchemy",
             "mysql-connector",
             "requests",
-            "sqlalchemy",
+            "sqlalchemy"
             ]
 
 setup(
