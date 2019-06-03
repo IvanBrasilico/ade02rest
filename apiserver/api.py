@@ -203,11 +203,11 @@ def get_operacaonavio(IDEvento):
 
 
 def ocorrencia(evento):
-    return add_evento(orm.Ocorrencias, evento)
+    return add_evento(orm.Ocorrencia, evento)
 
 
 def get_ocorrencia(IDEvento):
-    return get_evento(IDEvento, orm.Ocorrencias)
+    return get_evento(IDEvento, orm.Ocorrencia)
 
 
 def get_acessoveiculo(IDEvento):
@@ -572,7 +572,7 @@ def get_artefatorecinto(IDEvento):
             orm.CoordenadaArtefato).one_or_none()
         if artefatorecinto is None:
             return {'message': 'Evento não encontrado.'}, 404
-        artefatorecinto_schema = orm.ArtefatoRecintoSchema()
+        artefatorecinto_schema = maschemas.ArtefatoRecinto()
         data = artefatorecinto_schema.dump(artefatorecinto).data
         data['hash'] = hash(artefatorecinto)
         return data, 200
@@ -711,3 +711,27 @@ def get_credenciamentopessoa(IDEvento):
 
 def bloqueia_credenciamentopessoa(IDEvento):
     return bloqueia_cadastro(IDEvento, orm.CredenciamentoPessoa)
+
+
+def informacaobloqueio(evento):
+    return add_evento(orm.InformacaoBloqueio, evento)
+
+
+def get_informacaobloqueio(IDEvento):
+    return get_evento(IDEvento, orm.InformacaoBloqueio)
+
+
+def exclui_informacaobloqueio(IDEvento):
+    return bloqueia_cadastro(IDEvento, orm.InformacaoBloqueio)
+
+
+def agendamentoconferencia(evento):
+    return add_evento(orm.AgendamentoConferencia, evento)
+
+
+def get_agendamentoconferencia(IDEvento):
+    return get_evento(IDEvento, orm.AgendamentoConferencia)
+
+
+def cancela_agendamentoconferencia(IDEvento):
+    return bloqueia_cadastro(IDEvento, orm.AgendamentoConferencia)

@@ -10,7 +10,5 @@ Eventos a receber lista:
 
 Faltantes:
 
-04.19 - AGENDA NAVIOS / VOOS
 Troca de Navio
-04.22 – Agendamento de Conferência Física
-Informação Bloqueio / Desbloqueio de Veículo / Carga
+04.19 - AGENDA NAVIOS / VOOS

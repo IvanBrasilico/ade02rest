@@ -200,51 +200,6 @@ class ReboquePesagemTerrestreSchema(ModelSchema):
         model = ReboquePesagemTerrestre
 
 
-class ArtefatoRecinto(EventoBase):
-    __tablename__ = 'artefatosrecinto'
-    __table_args__ = {'sqlite_autoincrement': True}
-    ID = Column(Integer, primary_key=True)
-    tipoartefato = Column(String(10))
-    codigo = Column(String(10))
-
-    # coordenadas = relationship('CoordenadaArtefato')
-
-    def __init__(self, **kwargs):
-        superkwargs = dict([
-            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
-        ])
-        super().__init__(**superkwargs)
-        self.recinto = kwargs.get('recinto')
-        self.codigo = kwargs.get('codigo')
-        self.tipoartefato = kwargs.get('tipoartefato')
-
-
-class CoordenadaArtefato(Base):
-    __tablename__ = 'coordenadasartefato'
-    __table_args__ = {'sqlite_autoincrement': True}
-    ID = Column(Integer, primary_key=True)
-    ordem = Column(Integer)
-    long = Column(Float)
-    lat = Column(Float)
-    artefato_id = Column(Integer, ForeignKey('artefatosrecinto.ID'))
-    artefato = relationship(
-        'ArtefatoRecinto', backref=backref('coordenadasartefato')
-    )
-
-
-class ArtefatoRecintoSchema(ModelSchema):
-    coordenadasartefato = fields.Nested('CoordenadaArtefatoSchema', many=True,
-                                        exclude=('ID', 'artefato_id', 'artefato'))
-
-    class Meta:
-        model = ArtefatoRecinto
-
-
-class CoordenadaArtefatoSchema(ModelSchema):
-    class Meta:
-        model = CoordenadaArtefato
-
-
 class PesagemVeiculoVazio(EventoBase):
     __tablename__ = 'pesagensveiculosvazios'
     __table_args__ = {'sqlite_autoincrement': True}
@@ -527,26 +482,6 @@ class OperacaoNavio(EventoBase):
         self.imonavio = kwargs.get('imonavio')
         self.porto = kwargs.get('porto')
         self.posicao = kwargs.get('posicao')
-
-
-class Ocorrencias(EventoBase):
-    __tablename__ = 'ocorrencias'
-    __table_args__ = {'sqlite_autoincrement': True}
-    ID = Column(Integer, primary_key=True)
-    tipoartefato = Column(String(10), index=True)
-    codigo = Column(String(10), index=True)
-    disponivel = Column(Boolean, index=True)
-    motivo = Column(String(100))
-
-    def __init__(self, **kwargs):
-        superkwargs = dict([
-            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
-        ])
-        super().__init__(**superkwargs)
-        self.tipoartefato = kwargs.get('tipoartefato')
-        self.codigo = kwargs.get('codigo')
-        self.disponivel = kwargs.get('disponivel')
-        self.motivo = kwargs.get('motivo')
 
 
 class DTSC(EventoBase):
@@ -983,6 +918,108 @@ class CredenciamentoVeiculo(EventoBase, Cadastro):
         self.horasaida = kwargs.get('horasaida')
         self.permissao = kwargs.get('permissao')
         self.motivacao = kwargs.get('motivacao')
+
+
+class ArtefatoRecinto(EventoBase):
+    __tablename__ = 'artefatosrecinto'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    tipoartefato = Column(String(10))
+    codigo = Column(String(10))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.codigo = kwargs.get('codigo')
+        self.tipoartefato = kwargs.get('tipoartefato')
+
+
+class CoordenadaArtefato(Base):
+    __tablename__ = 'coordenadasartefato'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    ordem = Column(Integer)
+    long = Column(Float)
+    lat = Column(Float)
+    artefato_id = Column(Integer, ForeignKey('artefatosrecinto.ID'))
+    artefato = relationship(
+        'ArtefatoRecinto', backref=backref('coordenadasartefato')
+    )
+
+
+class AgendamentoConferencia(EventoBase, Cadastro):
+    __tablename__ = 'agendamentosconferencia'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    documentotransporte = Column(String(20))
+    tipodocumentotransporte = Column(String(10))
+    numero = Column(String(11))
+    placa = Column(String(7))
+    placasemireboque = Column(String(11))
+    dataagendamento = Column(DateTime)
+    artefato = Column(Integer)
+    local = Column(String(20))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.documentotransporte = kwargs.get('documentotransporte')
+        self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
+        self.numero = kwargs.get('numero')
+        self.placa = kwargs.get('placa')
+        self.placasemireboque = kwargs.get('placasemireboque')
+        self.dataagendamento = parse(kwargs.get('dataagendamento'))
+        self.artefato = kwargs.get('artefato')
+        self.local = kwargs.get('local')
+
+
+class InformacaoBloqueio(EventoBase, Cadastro):
+    __tablename__ = 'bloqueios'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    documentotransporte = Column(String(20))
+    tipodocumentotransporte = Column(String(10))
+    numero = Column(String(11))
+    placa = Column(String(7))
+    motivo = Column(String(20))
+    solicitante = Column(String(20))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.documentotransporte = kwargs.get('documentotransporte')
+        self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
+        self.numero = kwargs.get('numero')
+        self.placa = kwargs.get('placa')
+        self.placasemireboque = kwargs.get('placasemireboque')
+        self.dataagendamento = parse(kwargs.get('dataagendamento'))
+        self.artefato = kwargs.get('artefato')
+
+
+class Ocorrencia(EventoBase):
+    __tablename__ = 'ocorrencias'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    tipoartefato = Column(String(10), index=True)
+    codigo = Column(String(10), index=True)
+    disponivel = Column(Boolean, index=True)
+    motivo = Column(String(100))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.tipoartefato = kwargs.get('tipoartefato')
+        self.codigo = kwargs.get('codigo')
+        self.disponivel = kwargs.get('disponivel')
+        self.motivo = kwargs.get('motivo')
 
 
 if __name__ == '__main__':
