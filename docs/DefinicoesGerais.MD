@@ -9,6 +9,8 @@ Sistema de registro das operações de entrada e saída de pessoas e veículos,
 * A modelagem dos "endpoints" (funções da API) também está definida neste arquivo.
 * Os endpoints transmitirão JSON conforme especificado no arquivo OpenAPI.
 * Os endpoints retornarão JSON conforme especificado no arquivo OpenAPI.
+* O IDEvento é um campo transmitido pelo interveniente, e DEVE ser o identificador sequencial
+ da informação no Sistema de origem.
 * Alguns "endpoints especiais" não definidos ou detalhados na API estarão definidos e detalhados
  aqui na seção "endpoints especiais". Nestes haverá funcionalidade para enviar e receber
  lista de eventos. As listas são arquivos JSON que poderão ser compactados no formato gzip.
@@ -20,7 +22,24 @@ no Sistema assim que este seja restabelecido.
  juntamente de dados adicionais que tenham dado origem aos Eventos. 
  A cada recepção de Evento será fornecido um recibo digital que deve ser guardado 
  no registro correspondente do Sistema do Recinto.
+* Sempre que o tipo for "Data/date-time" significa data UTC no formato ISO:
 
+    UTC Data ISO 8601 - AAAA-MM-DDThh:mmZ Ex.  2019-04-17T09:52:01Z
+
+* Os campos com número de documento (CPF, CNPJ, CNH, etc) devem conter somente números, 
+sem máscaras ou caracteres especiais
+
+* O Servidor que recebe os eventos DEVE adicionar as seguintes informações:
+1) Data e hora da transmissão do evento
+2) Identificação do código do recinto que transmitiu evento
+3) IP do computador que transmitiu o evento
+4) Hash do JSON completo do Evento, visando prevenir modificações. Deve haver uma função para conferir o Hash do Evento 
+e este deve ser transmitido na resposta, bem como gravado em um log de sistema de registro de eventos recebidos
+
+* Haverá função no portal para representante com Certificado digital gerar chaves pública e privada
+ do interveniente para acesso ao Sistema. O representante então deve baixar a chave privada e utilizar para transmissão,
+ criptografando o conteúdo ou parte do conteúdo do JSON do Evento transmitido. O Servidor irá usar a chave privada 
+ gerada para descriptografar no recebimento, garantindo assim sigilo, não repúdio e autenticidade.
 
 # Endpoints especiais
 
