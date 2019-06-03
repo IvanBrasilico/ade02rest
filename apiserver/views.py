@@ -107,6 +107,10 @@ def uploadfile():
 
 
 def geteventosnovos():
+    # TODO: Fazer para Eventos complexos, que possuem filhos
+    # Um modo possível é refatorar as "views" que já estão na api para
+    # Use Cases e chamar a view adequada para gerar a representacao de cada evento
+    # é necessario fazer isso aqui e também no setter
     db_session = current_app.config['db_session']
     try:
         try:
