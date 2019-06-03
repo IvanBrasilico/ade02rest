@@ -153,7 +153,7 @@ class ViewTestCase(TestCase):
         r = self.client.get('get_file', data=data)
         assert r.status_code == 200
         assert r.is_json is False
-        if r.data is not None:
+        if r.data is not None and r.data is not b'':
             assert b64decode(r.data) == self.image
 
     def test_eventos_list(self):
