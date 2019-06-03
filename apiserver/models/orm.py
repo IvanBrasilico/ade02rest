@@ -43,7 +43,7 @@ class EventoBase(Base):
         self.dataregistro = parse(dataregistro)
         self.operadorregistro = operadorregistro
         self.retificador = retificador
-        self.time_created = datetime.datetime.now().isoformat()
+        self.time_created = datetime.datetime.utcnow()
 
         if recinto is not None:
             self.recinto = recinto
@@ -806,12 +806,13 @@ def init_db(uri='sqlite:///test.db'):
 class Cadastro(Base):
     __abstract__ = True
     ativo = Column(Boolean(), index=True, default=True)
+    fim = Column(DateTime(), index=True)
 
     def inativar(self):
         if self.ativo is True:
             # TODO: Criar / gerar evento para inativacao
             # (Salvar em uma tabela as datas de ativacao e inativacao)
-            self.fim = datetime.datetime.now().isoformat()
+            self.fim = datetime.datetime.utcnow()
             self.ativo = False
         raise Exception('Cadastro já foi inativado em %s' %
                         datetime.datetime.strftime(self.fim,
@@ -825,7 +826,6 @@ class CadastroRepresentacao(EventoBase, Cadastro):
     cpfrepresentante = Column(String(11), index=True)
     cpfcnpjrepresentado = Column(String(14), index=True)
     inicio = Column(DateTime(), index=True)
-    fim = Column(DateTime(), index=True)
 
     def __init__(self, **kwargs):
         superkwargs = dict([
