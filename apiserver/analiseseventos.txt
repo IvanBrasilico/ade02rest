@@ -8,18 +8,9 @@ Eventos a receber lista:
 -> Lista de Representantes Cadastrados
 
 
-04.1 – Credenciamento de Entrada / Saída de Pessoas
-04.3 – Credenciamento de Veículos
+Faltantes:
+
 04.19 - AGENDA NAVIOS / VOOS
-04.20 - Representantes
-	- CPF Representante
-	- CNPJ Representado
-	- DATA Inicio representação
-	- DATA Fim representação
 Troca de Navio
-
-
 04.22 – Agendamento de Conferência Física
-
-
 Informação Bloqueio / Desbloqueio de Veículo / Carga

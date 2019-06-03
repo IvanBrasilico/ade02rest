@@ -22,7 +22,7 @@ def dump_eventos(eventos):
 titles = {200: 'Evento encontrado',
           201: 'Evento incluido',
           400: 'Evento ou consulta invalidos (BAD Request)',
-          404: 'Evento nao encontrado',
+          404: 'Evento ou recurso nao encontrado',
           409: 'Erro de integridade'}
 
 
@@ -68,7 +68,7 @@ def get_evento(IDEvento, aclass):
         # print(evento.dump() if evento is not None else 'None')
         # print(hash(evento) if evento is not None else 'None')
         if evento is None:
-            return 'Not found', 404
+            return _response('Evento não encontrado', 404)
         evento.hash = hash(evento)
         return evento.dump(), 200
     except Exception as err:

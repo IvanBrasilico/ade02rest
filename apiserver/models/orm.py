@@ -865,10 +865,24 @@ def init_db(uri='sqlite:///test.db'):
 
 # Entidades de cadastro
 # Entidades de cadastro têm um comportamento diferente
-# TODO: definir comportamento Eventos para entidade de cadastro
+# TODO: definir comportamento Eventos para entidade de cadastro (previa na classe Cadastro)
+
+class Cadastro(Base):
+    __abstract__ = True
+    ativo = Column(Boolean(), index=True, default=True)
+
+    def bloqueia(self):
+        if self.ativo is True:
+            # TODO: Criar / gerar evento para inativacao
+            # (Salvar em uma tabela as datas de ativacao e inativacao)
+            self.fim = datetime.datetime.now().isoformat()
+            self.ativo = False
+        raise Exception('Cadastro já foi inativado em %s' %
+                        datetime.datetime.strftime(self.fim,
+                                                   '%d/%m/%Y %H:%M'))
 
 
-class CadatroRepresentacao(EventoBase):
+class CadatroRepresentacao(EventoBase, Cadastro):
     __tablename__ = 'representacao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -876,7 +890,6 @@ class CadatroRepresentacao(EventoBase):
     cpfcnpjrepresentado = Column(String(14), index=True)
     inicio = Column(DateTime(), index=True)
     fim = Column(DateTime(), index=True)
-    ativo = Column(Boolean(), index=True, default=True)
 
     def __init__(self, **kwargs):
         superkwargs = dict([
@@ -885,13 +898,90 @@ class CadatroRepresentacao(EventoBase):
         super().__init__(**superkwargs)
         self.cpfrepresentante = kwargs.get('cpfrepresentante')
         self.cpfcnpjrepresentado = kwargs.get('cpfcnpjrepresentado')
-        self.inicio = kwargs.get('inicio')
-        self.fim = kwargs.get('fim')
+        self.inicio = parse(kwargs.get('inicio'))
+        self.fim = parse(kwargs.get('fim'))
 
-    def bloqueia(self):
-        if self.ativo is True:
-            self.fim = datetime.datetime.now().isoformat()
-            self.ativo = False
+
+class CredenciamentoPessoa(EventoBase, Cadastro):
+    __tablename__ = 'credenciamentopessoas'
+    __table_args__ = {'sqlite_autoincrement': True}
+    # TODO: Anexos - fotos/documentos
+    ID = Column(Integer, primary_key=True)
+    cpf = Column(String(11), index=True)
+    identidade = Column(String(15), index=True)
+    cnh = Column(String(15), index=True)
+    nome = Column(String(50), index=True)
+    nascimento = Column(DateTime)
+    telefone = Column(String(20))
+    cpfcnpjrepresentado = Column(String(14), index=True)
+    nomerepresentado = Column(String(50), index=True)
+    funcao = Column(String(40))
+    iniciovalidade = Column(DateTime(), index=True)
+    fimvalidade = Column(DateTime(), index=True)
+    horaentrada = Column(Integer)
+    horasaida = Column(Integer)
+    permissao = Column(String(100))
+    materiais = Column(String(100))
+    motivacao = Column(String(100))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.cpf = kwargs.get('cpf')
+        self.identidade = kwargs.get('identidade')
+        self.cnh = kwargs.get('cnh')
+        self.nome = kwargs.get('nome')
+        self.nascimento = kwargs.get('nascimento')
+        self.telefone = kwargs.get('telefone')
+        self.cpfcnpjrepresentado = kwargs.get('cpfcnpjrepresentado')
+        self.nomerepresentado = kwargs.get('nomerepresentado')
+        self.funcao = kwargs.get('funcao')
+        self.iniciovalidade = parse(kwargs.get('iniciovalidade'))
+        self.fimvalidade = parse(kwargs.get('fimvalidade'))
+        self.horaentrada = kwargs.get('horaentrada')
+        self.horasaida = kwargs.get('horasaida')
+        self.permissao = kwargs.get('permissao')
+        self.materiais = kwargs.get('materiais')
+        self.motivacao = kwargs.get('motivacao')
+
+
+class CredenciamentoVeiculo(EventoBase, Cadastro):
+    __tablename__ = 'credenciamentoveiculos'
+    __table_args__ = {'sqlite_autoincrement': True}
+    # TODO: Anexos - imagens e reboques
+    ID = Column(Integer, primary_key=True)
+    cpfcnpjresponsavel = Column(String(14), index=True)
+    placa = Column(String(7), index=True)
+    marca = Column(String(40))
+    modelo = Column(String(40))
+    ano = Column(String(4))
+    geolocalizacao = Column(Boolean)
+    iniciovalidade = Column(DateTime(), index=True)
+    fimvalidade = Column(DateTime(), index=True)
+    horaentrada = Column(Integer)
+    horasaida = Column(Integer)
+    permissao = Column(String(100))
+    motivacao = Column(String(100))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.cpfcnpjresponsavel = kwargs.get('cpfcnpjresponsavel')
+        self.placa = kwargs.get('placa')
+        self.marca = kwargs.get('marca')
+        self.modelo = kwargs.get('modelo')
+        self.ano = kwargs.get('ano')
+        self.geolocalizacao = kwargs.get('geolocalizacao')
+        self.iniciovalidade = parse(kwargs.get('iniciovalidade'))
+        self.fimvalidade = parse(kwargs.get('fimvalidade'))
+        self.horaentrada = kwargs.get('horaentrada')
+        self.horasaida = kwargs.get('horasaida')
+        self.permissao = kwargs.get('permissao')
+        self.motivacao = kwargs.get('motivacao')
 
 
 if __name__ == '__main__':
