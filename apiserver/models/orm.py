@@ -863,10 +863,8 @@ def init_db(uri='sqlite:///test.db'):
     return db_session, engine
 
 
-
-
-##### Entidades de cadastro
-### Entidades de cadastro têm um comportamento diferente
+# Entidades de cadastro
+# Entidades de cadastro têm um comportamento diferente
 # TODO: definir comportamento Eventos para entidade de cadastro
 
 
@@ -894,6 +892,7 @@ class CadatroRepresentacao(EventoBase):
         if self.ativo is True:
             self.fim = datetime.datetime.now().isoformat()
             self.ativo = False
+
 
 if __name__ == '__main__':
     db, engine = init_db()
