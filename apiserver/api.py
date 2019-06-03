@@ -657,3 +657,29 @@ def get_eventosnovos(filtro):
     except Exception as err:
         logging.error(err, exc_info=True)
         return _response(str(err), 405)
+
+
+def cadastrorepresentacao(evento):
+    return add_evento(orm.CadatroRepresentacao, evento)
+
+
+def get_cadastrorepresentacao(IDEvento):
+    return get_evento(IDEvento, orm.CadatroRepresentacao)
+
+
+def bloqueia_cadastrorepresentacao(IDEvento):
+    db_session = current_app.config['db_session']
+    try:
+        cadastro = db_session.query(orm.CadatroRepresentacao).filter(
+            orm.CadatroRepresentacao.IDEvento == IDEvento
+        ).one_or_none()
+        if cadastro is None:
+            return 'Not found', 404
+        cadastro.hash = hash(cadastro)
+        cadastro.bloqueia()
+        db_session.commit()
+        return cadastro.dump(), 200
+    except Exception as err:
+        db_session.rollback()
+        logging.error(err, exc_info=True)
+        return _response(str(err), 400)

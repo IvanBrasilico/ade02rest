@@ -1,4 +1,5 @@
 import collections
+import datetime
 import logging
 import mimetypes
 import os
@@ -861,6 +862,38 @@ def init_db(uri='sqlite:///test.db'):
                   )
     return db_session, engine
 
+
+
+
+##### Entidades de cadastro
+### Entidades de cadastro têm um comportamento diferente
+# TODO: definir comportamento Eventos para entidade de cadastro
+
+
+class CadatroRepresentacao(EventoBase):
+    __tablename__ = 'representacao'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    cpfrepresentante = Column(String(11), index=True)
+    cpfcnpjrepresentado = Column(String(14), index=True)
+    inicio = Column(DateTime(), index=True)
+    fim = Column(DateTime(), index=True)
+    ativo = Column(Boolean(), index=True, default=True)
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.cpfrepresentante = kwargs.get('cpfrepresentante')
+        self.cpfcnpjrepresentado = kwargs.get('cpfcnpjrepresentado')
+        self.inicio = kwargs.get('inicio')
+        self.fim = kwargs.get('fim')
+
+    def bloqueia(self):
+        if self.ativo is True:
+            self.fim = datetime.datetime.now().isoformat()
+            self.ativo = False
 
 if __name__ == '__main__':
     db, engine = init_db()
