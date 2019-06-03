@@ -865,7 +865,8 @@ def init_db(uri='sqlite:///test.db'):
 
 # Entidades de cadastro
 # Entidades de cadastro têm um comportamento diferente
-# TODO: definir comportamento Eventos para entidade de cadastro (previa na classe Cadastro)
+# TODO: definir comportamento Eventos para entidade de cadastro
+#  (previa na classe Cadastro)
 
 class Cadastro(Base):
     __abstract__ = True
@@ -882,7 +883,7 @@ class Cadastro(Base):
                                                    '%d/%m/%Y %H:%M'))
 
 
-class CadatroRepresentacao(EventoBase, Cadastro):
+class CadastroRepresentacao(EventoBase, Cadastro):
     __tablename__ = 'representacao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)

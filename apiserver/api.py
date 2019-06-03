@@ -659,22 +659,14 @@ def get_eventosnovos(filtro):
         return _response(str(err), 405)
 
 
-def cadastrorepresentacao(evento):
-    return add_evento(orm.CadatroRepresentacao, evento)
-
-
-def get_cadastrorepresentacao(IDEvento):
-    return get_evento(IDEvento, orm.CadatroRepresentacao)
-
-
-def bloqueia_cadastrorepresentacao(IDEvento):
+def bloqueia_cadastro(IDEvento, aclass):
     db_session = current_app.config['db_session']
     try:
-        cadastro = db_session.query(orm.CadatroRepresentacao).filter(
-            orm.CadatroRepresentacao.IDEvento == IDEvento
+        cadastro = db_session.query(aclass).filter(
+            aclass.IDEvento == IDEvento
         ).one_or_none()
         if cadastro is None:
-            return 'Not found', 404
+            return _response('Evento nao encontrado', 404)
         cadastro.hash = hash(cadastro)
         cadastro.bloqueia()
         db_session.commit()
@@ -683,3 +675,39 @@ def bloqueia_cadastrorepresentacao(IDEvento):
         db_session.rollback()
         logging.error(err, exc_info=True)
         return _response(str(err), 400)
+
+
+def cadastrorepresentacao(evento):
+    return add_evento(orm.CadastroRepresentacao, evento)
+
+
+def get_cadastrorepresentacao(IDEvento):
+    return get_evento(IDEvento, orm.CadastroRepresentacao)
+
+
+def bloqueia_cadastrorepresentacao(IDEvento):
+    return bloqueia_cadastro(IDEvento, orm.CadastroRepresentacao)
+
+
+def credenciamentoveiculo(evento):
+    return add_evento(orm.CredenciamentoVeiculo, evento)
+
+
+def get_credenciamentoveiculo(IDEvento):
+    return get_evento(IDEvento, orm.CredenciamentoVeiculo)
+
+
+def bloqueia_credenciamentoveiculo(IDEvento):
+    return bloqueia_cadastro(IDEvento, orm.CredenciamentoVeiculo)
+
+
+def credenciamentopessoa(evento):
+    return add_evento(orm.CredenciamentoPessoa, evento)
+
+
+def get_credenciamentopessoa(IDEvento):
+    return get_evento(IDEvento, orm.CredenciamentoPessoa)
+
+
+def bloqueia_credenciamentopessoa(IDEvento):
+    return bloqueia_cadastro(IDEvento, orm.CredenciamentoPessoa)
