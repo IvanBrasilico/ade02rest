@@ -156,7 +156,7 @@ class ViewTestCase(TestCase):
         if r.data is not None and r.data is not b'':
             assert b64decode(r.data) == self.image
 
-    def test_eventos_list(self):
+    def test_posicaoconteiner_list(self):
         posicaoconteiner = {
             "dataevento": "2019-05-24T16:48:21.245Z",
             "dataregistro": "2019-05-24T16:48:21.245Z",

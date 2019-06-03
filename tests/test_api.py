@@ -55,6 +55,16 @@ class APITestCase(TestCase):
             assert rv.status_code == 404
             assert rv.is_json is True
 
+    def compara_eventos(self, teste, response_json):
+        for data in ['dataevento', 'dataregistro', 'dataoperacao', 'dataliberacao', 'dataagendamento']:
+            if teste.get(data) is not None:
+                teste.pop(data)
+            if response_json.get(data) is not None:
+                response_json.pop(data)
+        sub_response = extractDictAFromB(teste, response_json)
+        self.maxDiff = None
+        self.assertDictContainsSubset(teste, sub_response)
+
     def test3_api(self):
         for classe, teste in self.testes.items():
             print(classe)
@@ -65,17 +75,7 @@ class APITestCase(TestCase):
             rv = self.client.get(classe.lower() + '/' + str(teste['IDEvento']))
             assert rv.status_code == 200
             assert rv.is_json is True
-            response_json = rv.json
-            for data in ['dataevento', 'dataregistro', 'dataoperacao', 'dataliberacao', 'dataagendamento']:
-                if teste.get(data) is not None:
-                    teste.pop(data)
-                if response_json.get(data) is not None:
-                    response_json.pop(data)
-            sub_response = extractDictAFromB(teste, response_json)
-            self.maxDiff = None
-            # self.assertEqual(teste, sub_response)
-            self.assertDictContainsSubset(teste, sub_response)
-            # self.assertEqual(response_json, sub_teste)
+            self.compara_eventos(teste, rv.json)
 
     def test4_evento_duplicado_409(self):
         for classe, teste in self.testes.items():
@@ -95,7 +95,7 @@ class APITestCase(TestCase):
         motoristas = [random_str(11, letras) for i in range(50)]
         textos = [random_str(random.randint(10, 20), textos) for i in range(50)]
 
-        pesagens = []
+        self.pesagens = []
         for r in range(10):
             data = datetime.datetime.now().isoformat()
             operador = random.choice(operadores)
@@ -109,7 +109,7 @@ class APITestCase(TestCase):
             pesagem = \
                 {'IDEvento': r + 500,
                  'capturaautomatica': True,
-                 'conteiner': random.choice(conteineres),
+                 'numero': random.choice(conteineres),
                  'dataevento': data,
                  'dataregistro': data,
                  'retificador': False,
@@ -122,8 +122,8 @@ class APITestCase(TestCase):
                  'placasemireboque': reboque,
                  'taraconjunto': tara,
                  'tipodocumentotransporte': 'CE'}
-            pesagens.append(pesagem)
-            json_pesagens = {'PesagemMaritimo': pesagens}
+            self.pesagens.append(pesagem)
+            json_pesagens = {'PesagemMaritimo': self.pesagens}
             with open('test.json', 'w', encoding='utf-8', newline='') as json_out:
                 json.dump(json_pesagens, json_out)
 
@@ -141,4 +141,6 @@ class APITestCase(TestCase):
         print(r.data)
         assert r.is_json is True
         assert len(r.json) == 10
+        self.compara_eventos(self.pesagens[0], r.json[0])
+
 
