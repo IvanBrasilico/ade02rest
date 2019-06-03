@@ -377,6 +377,7 @@ class AnexoBase(Base):
             base64_bytes = b64encode(content.read())
             base64_string = base64_bytes.decode('utf-8')
         except FileNotFoundError as err:
+            logging.error(str(err), exc_info=True)
             base64_string = None
         return base64_string
 
