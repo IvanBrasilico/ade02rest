@@ -50,3 +50,14 @@ cotejar os dados destes com os dados transmitidos.
 As realidades locais devem ser avaliadas localmente. Sendo funcṍes possíveis de serem transferidas para a API,
 recomenda-se a centralização. É necessário que a Unidade Local avalie o caso específico.
 
+## 5. Quem são as "pessoas habituais" sujeita a biometria?  
+
+Consta na redação da nova norma Art. 5º.: “ As pessoas habituais no recinto 
+ou área deverão ser identificadas por reconhecimento biométrico...".
+Por pessoas habituais entende-se todos que tenham alguma frequência/repetição neste
+acesso. Assim, acesso de passageiros de cruzeiros, passageiros de vôos, por exemplo,
+ são acessos eventuais. Acesso de funcionários, prestadores de serviços, terceirizados,
+ motoristas, despachantes, são exemplos acessos frequentes/habituais.
+
+
+
