@@ -117,3 +117,16 @@ class ReboquesGate(ModelSchema):
 class ListaNfeGate(ModelSchema):
     class Meta:
         model = orm.ListaNfeGate
+
+
+class ArtefatoRecinto(ModelSchema):
+    coordenadasartefato = fields.Nested('CoordenadaArtefato', many=True,
+                                        exclude=('ID', 'artefato_id', 'artefato'))
+
+    class Meta:
+        model = orm.ArtefatoRecinto
+
+
+class CoordenadaArtefato(ModelSchema):
+    class Meta:
+        model = orm.CoordenadaArtefato

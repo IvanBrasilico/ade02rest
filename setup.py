@@ -1,6 +1,5 @@
 # coding: utf-8
 
-import sys
 from setuptools import setup, find_packages
 
 NAME = "apirecintos"
@@ -16,9 +15,11 @@ VERSION = "0.9"
 REQUIRES = ["connexion[swagger-ui]",
             "dateutils",
             "gunicorn",
+            "marshmallow-sqlalchemy",
+            "mysql-connector",
             "requests",
-            "sqlalchemy",
-            "marshmallow-sqlalchemy"]
+            "sqlalchemy"
+            ]
 
 setup(
     name=NAME,
@@ -33,7 +34,8 @@ setup(
             'jupyter',
             'pytest',
             'pytest-pep8',
-            'pytest-cov'
+            'pytest-cov',
+            'tox'
         ]
     },
     packages=find_packages(),
@@ -45,4 +47,3 @@ setup(
     API para prestação de informações sobre eventos de controle aduaneiro a cargo dos Redex, Recintos, Operadores Portuários e demais intervenientes em carga sobre controle aduaneiro.
     """
 )
-

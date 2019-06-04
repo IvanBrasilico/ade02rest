@@ -48,11 +48,14 @@ paths:
               $ref: '#/components/schemas/AcessoPessoa'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /acessopessoa/{IDEvento}:
     get:
@@ -93,11 +96,14 @@ paths:
               $ref: '#/components/schemas/AcessoVeiculo'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /acessoveiculo/{IDEvento}:
     get:
@@ -137,11 +143,14 @@ paths:
               $ref: '#/components/schemas/ArtefatoRecinto'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /artefatorecinto/{IDEvento}:
     get:
@@ -181,11 +190,14 @@ paths:
               $ref: '#/components/schemas/Ocorrencia'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /ocorrencia/{IDEvento}:
     get:
@@ -225,11 +237,14 @@ paths:
               $ref: '#/components/schemas/PesagemVeiculoVazio'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /pesagemveiculovazio/{IDEvento}:
     get:
@@ -269,11 +284,14 @@ paths:
               $ref: '#/components/schemas/PesagemMaritimo'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /pesagemmaritimo/{IDEvento}:
     get:
@@ -313,11 +331,14 @@ paths:
               $ref: '#/components/schemas/PesagemTerrestre'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /pesagemterrestre/{IDEvento}:
     get:
@@ -357,11 +378,14 @@ paths:
               $ref: '#/components/schemas/InspecaonaoInvasiva'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /inspecaonaoinvasiva/{IDEvento}:
     get:
@@ -401,11 +425,14 @@ paths:
               $ref: '#/components/schemas/OperacaoNavio'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /operacaonavio/{IDEvento}:
     get:
@@ -445,11 +472,14 @@ paths:
               $ref: '#/components/schemas/PosicaoVeiculoPatio'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /posicaoveiculo/{IDEvento}:
     get:
@@ -489,11 +519,14 @@ paths:
               $ref: '#/components/schemas/PosicaoConteiner'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /posicaoconteiner/list:
     post:
@@ -560,11 +593,14 @@ paths:
               $ref: '#/components/schemas/Desunitizacao'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /desunitizacao/{IDEvento}:
     get:
@@ -604,11 +640,14 @@ paths:
               $ref: '#/components/schemas/PosicaoLote'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /posicaolote/{IDEvento}:
     get:
@@ -648,11 +687,14 @@ paths:
               $ref: '#/components/schemas/AvariaLote'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /avarialote/{IDEvento}:
     get:
@@ -692,11 +734,14 @@ paths:
               $ref: '#/components/schemas/UnitizacaoLote'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /unitizacao/{IDEvento}:
     get:
@@ -736,11 +781,14 @@ paths:
               $ref: '#/components/schemas/DTSC'
         required: true
       responses:
-        200:
+        201:
           description: Evento incluido
           content: {}
-        405:
-          description: Evento invalido
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
           content: {}
   /dtsc/{IDEvento}:
     get:
@@ -759,6 +807,234 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DTSC'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /cadastrorepresentacao:
+    post:
+      operationId: api.cadastrorepresentacao
+      requestBody:
+        description: Controle de representacao
+        content:
+          application/json:
+            schema:
+              x-body-name: evento
+              $ref: '#/components/schemas/CadastroRepresentacao'
+        required: true
+      responses:
+        201:
+          description: Evento incluido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaPadrao'
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
+          content: {}
+  /cadastrorepresentacao/{IDEvento}:
+    get:
+      operationId: api.get_cadastrorepresentacao
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CadastroRepresentacao'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /cadastrorepresentacao/bloqueia/{IDEvento}:
+    get:
+      operationId: api.bloqueia_cadastrorepresentacao
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        201:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaPadrao'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /informacaobloqueio:
+    post:
+      operationId: api.informacaobloqueio
+      requestBody:
+        description: Controle de representacao
+        content:
+          application/json:
+            schema:
+              x-body-name: evento
+              $ref: '#/components/schemas/InformacaoBloqueio'
+        required: true
+      responses:
+        201:
+          description: Evento incluido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaPadrao'
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
+          content: {}
+  /informacaobloqueio/{IDEvento}:
+    get:
+      operationId: api.get_informacaobloqueio
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InformacaoBloqueio'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /informacaobloqueio/exclui/{IDEvento}:
+    get:
+      operationId: api.exclui_informacaobloqueio
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        201:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaPadrao'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /agendamentoconferencia:
+    post:
+      operationId: api.agendamentoconferencia
+      requestBody:
+        description: Controle de representacao
+        content:
+          application/json:
+            schema:
+              x-body-name: evento
+              $ref: '#/components/schemas/AgendamentoConferencia'
+        required: true
+      responses:
+        201:
+          description: Evento incluido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaPadrao'
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
+          content: {}
+  /agendamentoconferencia/{IDEvento}:
+    get:
+      operationId: api.get_agendamentoconferencia
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CadastroRepresentacao'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /agendamentoconferencia/cancela/{IDEvento}:
+    get:
+      operationId: api.cancela_agendamentoconferencia
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        201:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaPadrao'
         400:
           description: ID inválido
           content: {}
@@ -862,6 +1138,17 @@ components:
       - Rodoviario
       - Aereo
       - Maritimo
+    RespostaPadrao:
+      type: object
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+          description: Mensagem de erro ou hash do evento transmitido
+        status:
+          type: integer
+          description: HTTP Status code
     Anexos:
       type: object
       properties:
@@ -923,7 +1210,7 @@ components:
             type: string
             description: Data de nascimento
             format: date
-          representado:
+          cpfcnpjrepresentado:
             type: string
             description: CNPJ/CPF representado
           nomerepresentado:
@@ -941,27 +1228,17 @@ components:
             description: Fim Período de validade do credenciamento
             format: date-time
           horaentrada:
-            type: string
+            type: integer
             description: Hora comum de entrada
-            format: time
           horasaida:
-            type: string
+            type: integer
             description: Hora comum de saida
-            format: time
           permissao:
             type: string
             description: Areas permitidas acesso
           materiais:
             type: string
             description: Lista materiais/ferramentas de trabalho
-          dataativacao:
-            type: string
-            description: Ultima data de ativacao deste cadastramento
-            format: date-time
-          datainativacao:
-            type: string
-            description: Informado apenas quando o credenciamento desta pessoa nao e mais valido
-            format: date-time
           motivacao:
             type: string
             description: Motivacao de acesso ao terminal
@@ -1044,14 +1321,15 @@ components:
             description: Fim Período de validade do credenciamento
             format: date-time
           horaentrada:
-            type: string
+            type: integer
             description: Hora comum de entrada
-            format: time
           horasaida:
-            type: string
+            type: integer
             description: Hora comum de saida
-            format: time
           permissao:
+            type: string
+            description: Areas permitidas acesso
+          motivacao:
             type: string
             description: Areas permitidas acesso
     AgendamentoVeiculo:
@@ -1289,16 +1567,66 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/CoordenadaArtefato'
+    AgendamentoConferencia:
+      allOf:
+      - $ref: '#/components/schemas/Evento'
+      - type: object
+        properties:
+          documentotransporte:
+            type: string
+            description: Numero do documento de transporte
+          tipodocumentotransporte:
+            $ref: '#/components/schemas/TipoDocumentoTransporte'
+          numero:
+            type: string
+            description: Numero do conteiner
+          placa:
+            type: string
+            description: Placa do caminhao/truck/cavalo
+          placasemireboque:
+            type: string
+            description: Placa semireboque em caso de carga em carreta
+          dataagendamento:
+            type: string
+            description: Data marcada para a conferencia
+            format: date-time
+          artefato:
+            type: string
+            description: Codigo que identifica o artefato no Recinto
+          local:
+            type: string
+            description: Descricao do local no Recinto
+    InformacaoBloqueio:
+      allOf:
+      - $ref: '#/components/schemas/Evento'
+      - type: object
+        properties:
+          documentotransporte:
+            type: string
+            description: Numero do documento de transporte
+          tipodocumentotransporte:
+            $ref: '#/components/schemas/TipoDocumentoTransporte'
+          numero:
+            type: string
+            description: Numero do conteiner
+          placa:
+            type: string
+            description: Placa do caminhao/truck/cavalo
+          motivo:
+            type: string
+            description: Codigo que identifica o artefato no Recinto
+          solicitante:
+            $ref: '#/components/schemas/Autoridade'
     Ocorrencia:
       allOf:
       - $ref: '#/components/schemas/Evento'
       - type: object
         properties:
+          tipoartefato:
+            $ref: '#/components/schemas/TipoArtefato'
           codigo:
             type: string
             description: Codigo que identifica o artefato no Recinto
-          tipoartefato:
-            $ref: '#/components/schemas/TipoArtefato'
           disponivel:
             type: boolean
             description: Recurso disponivel ou indisponivel
@@ -1503,13 +1831,20 @@ components:
         IDEvento:
           type: integer
           description: IDEvento a partir do qual pesquisar (maior que) OU
-        dataevento:
+        recinto:
           type: string
-          description: Data de ocorrência do evento - inicio de pesquisa
-          format: date-time
+          description: Codigo do Recinto a pesquisar
         tipoevento:
           type: string
           description: Nome da classe de Evento
+        datainicial:
+          type: string
+          description: Data de ocorrência física do evento - inicio de pesquisa
+          format: date-time
+        datafinal:
+          type: string
+          description: Data de ocorrência física do evento - final de pesquisa
+          format: date-time
     FiltroPosicaoConteiner:
       type: object
       properties:
@@ -1735,3 +2070,22 @@ components:
             porto:
               type: string
               description: Sigla do porto de origem ou de destino
+    CadastroRepresentacao:
+      allOf:
+        - $ref: '#/components/schemas/Evento'
+        - type: object
+          properties:
+            cpfrepresentante:
+              type: string
+              description: CPF ou CNPJ do Representante
+            cpfcnpjrepresentado:
+              type: string
+              description: CPF ou CNPJ do Representado
+            inicio:
+              type: string
+              description: Data e Hora de inicio da Validade
+              format: date-time
+            fim:
+              type: string
+              description: Data e Hora de fim da Validade
+              format: date-time

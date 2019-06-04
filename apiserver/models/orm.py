@@ -1,5 +1,9 @@
 import collections
+import datetime
 import logging
+import mimetypes
+import os
+from base64 import b64decode, b64encode
 
 from dateutil.parser import parse
 from marshmallow import fields, ValidationError
@@ -8,7 +12,6 @@ from sqlalchemy import Boolean, Column, DateTime, Integer, \
     String, create_engine, ForeignKey, Index, Table, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref
-from sqlalchemy.sql import func
 
 Base = declarative_base()
 db_session = None
@@ -23,8 +26,7 @@ class EventoBase(Base):
     dataregistro = Column(DateTime(), index=True)
     operadorregistro = Column(String(14), index=True)
     time_created = Column(DateTime(timezone=True),
-                          index=True,
-                          server_default=func.now())
+                          index=True)
     recinto = Column(String(10), index=True)
     request_IP = Column(String(21), index=True)
     # TODO: Ver como tratar retificação (viola índice único)
@@ -41,6 +43,8 @@ class EventoBase(Base):
         self.dataregistro = parse(dataregistro)
         self.operadorregistro = operadorregistro
         self.retificador = retificador
+        self.time_created = datetime.datetime.utcnow()
+
         if recinto is not None:
             self.recinto = recinto
         if request_IP is not None:
@@ -152,7 +156,7 @@ class ReboquePesagemTerrestre(Base):
     tara = Column(Integer)
     pesagem_id = Column(Integer, ForeignKey('pesagensterrestres.ID'))
     pesagem = relationship(
-        'PesagemTerrestre', backref=backref("reboques")
+        'PesagemTerrestre', backref=backref('reboques')
     )
 
     # def __init__(self, **kwargs):
@@ -196,51 +200,6 @@ class ReboquePesagemTerrestreSchema(ModelSchema):
         model = ReboquePesagemTerrestre
 
 
-class ArtefatoRecinto(EventoBase):
-    __tablename__ = 'artefatosrecinto'
-    __table_args__ = {'sqlite_autoincrement': True}
-    ID = Column(Integer, primary_key=True)
-    tipoartefato = Column(String(10))
-    codigo = Column(String(10))
-
-    # coordenadas = relationship('CoordenadaArtefato')
-
-    def __init__(self, **kwargs):
-        superkwargs = dict([
-            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
-        ])
-        super().__init__(**superkwargs)
-        self.recinto = kwargs.get('recinto')
-        self.codigo = kwargs.get('codigo')
-        self.tipoartefato = kwargs.get('tipoartefato')
-
-
-class CoordenadaArtefato(Base):
-    __tablename__ = 'coordenadasartefato'
-    __table_args__ = {'sqlite_autoincrement': True}
-    ID = Column(Integer, primary_key=True)
-    ordem = Column(Integer)
-    long = Column(Float)
-    lat = Column(Float)
-    artefato_id = Column(Integer, ForeignKey('artefatosrecinto.ID'))
-    artefato = relationship(
-        'ArtefatoRecinto', backref=backref("coordenadasartefato")
-    )
-
-
-class ArtefatoRecintoSchema(ModelSchema):
-    coordenadasartefato = fields.Nested('CoordenadaArtefatoSchema', many=True,
-                                        exclude=('ID', 'artefato_id', 'artefato'))
-
-    class Meta:
-        model = ArtefatoRecinto
-
-
-class CoordenadaArtefatoSchema(ModelSchema):
-    class Meta:
-        model = CoordenadaArtefato
-
-
 class PesagemVeiculoVazio(EventoBase):
     __tablename__ = 'pesagensveiculosvazios'
     __table_args__ = {'sqlite_autoincrement': True}
@@ -264,7 +223,7 @@ class ReboquesPesagem(Base):
     placa = Column(String(7))
     pesagem_id = Column(Integer, ForeignKey('pesagensveiculosvazios.ID'))
     pesagem = relationship(
-        'PesagemVeiculoVazio', backref=backref("reboques")
+        'PesagemVeiculoVazio', backref=backref('reboques')
     )
 
 
@@ -307,7 +266,6 @@ class InspecaonaoInvasiva(EventoBase):
     numero = Column(String(11))
     placa = Column(String(8))
     placasemireboque = Column(String(8))
-    nomearquivo = Column(String(100))
     capturaautomatica = Column(Boolean)
 
     def __init__(self, **kwargs):
@@ -323,19 +281,83 @@ class InspecaonaoInvasiva(EventoBase):
         self.capturaautomatica = kwargs.get('capturaautomatica')
 
 
-class AnexoInspecao(Base):
+class AnexoBase(Base):
+    __abstract__ = True
+    content = Column(String(1), default='')
+    nomearquivo = Column(String(100), default='')
+    contentType = Column(String(40), default='')
+
+    def monta_caminho_arquivo(self, basepath, eventobase):
+        filepath = basepath
+        for caminho in [eventobase.recinto,
+                        eventobase.dataevento.year,
+                        eventobase.dataevento.month,
+                        eventobase.dataevento.day]:
+            filepath = os.path.join(filepath, str(caminho))
+            if not os.path.exists(basepath):
+                os.mkdir(filepath)
+        return filepath
+
+    def save_file(self, basepath, file, filename, evento) -> (str, bool):
+        """
+
+        :param basepath: diretorio onde guardar arquivos
+        :param file: objeto arquivo
+        :return:
+            mensagem de sucesso ou mensagem de erro
+            True se sucesso, False se houve erro
+        """
+        if not file or not filename:
+            return None
+        filepath = self.monta_caminho_arquivo(
+            basepath, evento)
+        try:
+            with open(os.path.join(filepath, filename), 'wb') as file_out:
+                try:
+                    file = b64decode(file.encode())
+                except AttributeError:
+                    pass
+                file_out.write(file)
+        except FileNotFoundError as err:
+            logging.error(str(err), exc_info=True)
+        self.contentType = mimetypes.guess_type(filename)[0]
+        self.nomearquivo = filename
+        return 'Arquivo salvo'
+
+    def load_file(self, basepath, evento):
+        if not self.nomearquivo:
+            return ''
+        try:
+            filepath = self.monta_caminho_arquivo(basepath, evento)
+            content = open(os.path.join(filepath, self.nomearquivo), 'rb')
+            base64_bytes = b64encode(content.read())
+            base64_string = base64_bytes.decode('utf-8')
+        except FileNotFoundError as err:
+            logging.error(str(err), exc_info=True)
+            base64_string = None
+        return base64_string
+
+
+class AnexoInspecao(AnexoBase):
     __tablename__ = 'anexosinspecao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
-    caminhoarquivo = Column(String(100))
     datacriacao = Column(DateTime())
-    content = Column(String(1))
     datamodificacao = Column(DateTime())
-    contentType = Column(String(40))
     inspecao_id = Column(Integer, ForeignKey('inspecoesnaoinvasivas.ID'))
     inspecao = relationship(
         'InspecaonaoInvasiva', backref=backref('anexos')
     )
+
+    def save_file(self, basepath, file, filename) -> (str, bool):
+        return super().save_file(basepath, file, filename, self.inspecao)
+
+    def load_file(self, basepath):
+        return super().load_file(basepath, self.inspecao)
+
+    @classmethod
+    def create(cls, parent):
+        return AnexoInspecao(inspecao=parent)
 
 
 class IdentificadorInspecao(Base):
@@ -462,26 +484,6 @@ class OperacaoNavio(EventoBase):
         self.posicao = kwargs.get('posicao')
 
 
-class Ocorrencias(EventoBase):
-    __tablename__ = 'ocorrencias'
-    __table_args__ = {'sqlite_autoincrement': True}
-    ID = Column(Integer, primary_key=True)
-    tipoartefato = Column(String(10), index=True)
-    codigo = Column(String(10), index=True)
-    disponivel = Column(Boolean, index=True)
-    motivo = Column(String(100))
-
-    def __init__(self, **kwargs):
-        superkwargs = dict([
-            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
-        ])
-        super().__init__(**superkwargs)
-        self.tipoartefato = kwargs.get('tipoartefato')
-        self.codigo = kwargs.get('codigo')
-        self.disponivel = kwargs.get('disponivel')
-        self.motivo = kwargs.get('motivo')
-
-
 class DTSC(EventoBase):
     __tablename__ = 'DTSC'
     __table_args__ = {'sqlite_autoincrement': True}
@@ -514,7 +516,7 @@ class CargaDTSC(Base):
     tipodocumentotransporte = Column(String(10))
     DTSC_id = Column(Integer, ForeignKey('DTSC.ID'))
     DTSC = relationship(
-        'DTSC', backref=backref("cargas")
+        'DTSC', backref=backref('cargas')
     )
 
 
@@ -591,7 +593,7 @@ class ConteineresGate(Gate):
     nomecliente = Column(String(30))
     acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
-        'AcessoVeiculo', backref=backref("conteineres")
+        'AcessoVeiculo', backref=backref('conteineres')
     )
 
 
@@ -611,7 +613,7 @@ class ReboquesGate(Gate):
     avarias = Column(String(100))
     acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
-        'AcessoVeiculo', backref=backref("reboques")
+        'AcessoVeiculo', backref=backref('reboques')
     )
 
 
@@ -622,8 +624,9 @@ class ListaNfeGate(Base):
     chavenfe = Column(String(30))
     acessoveiculo_id = Column(Integer, ForeignKey('acessosveiculo.ID'))
     acessoveiculo = relationship(
-        'AcessoVeiculo', backref=backref("listanfe")
+        'AcessoVeiculo', backref=backref('listanfe')
     )
+
 
 class PosicaoVeiculo(EventoBase):
     __tablename__ = 'posicoesveiculo'
@@ -638,6 +641,7 @@ class PosicaoVeiculo(EventoBase):
     solicitante = Column(String(20))
     documentotransporte = Column(String(20))
     tipodocumentotransporte = Column(String(20))
+
     def __init__(self, **kwargs):
         superkwargs = dict([
             (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
@@ -737,31 +741,8 @@ class Lote(Base):
     tipovolume = Column(String(20))
     desunitizacao_id = Column(Integer, ForeignKey('desunitizacoes.ID'))
     desunitizacao = relationship(
-        'Desunitizacao', backref=backref("lotes")
+        'Desunitizacao', backref=backref('lotes')
     )
-
-
-'''
-    def __init__(self, parent, numerolote, acrescimo,
-                 documentodesconsolidacao, documentopapel,
-                 falta, marca, observacoes, pesolote, qtdefalta,
-                 qtdevolumes, tipodocumentodesconsolidacao,
-                 tipodocumentopapel, tipovolume):
-        self.desunitizacao_id = parent.ID
-        self.numerolote = numerolote
-        self.acrescimo = acrescimo
-        self.documentodesconsolidacao = documentodesconsolidacao
-        self.documentopapel = documentopapel
-        self.falta = falta
-        self.marca = marca
-        self.observacoes = observacoes
-        self.pesolote = pesolote
-        self.qtdefalta = qtdefalta
-        self.qtdevolumes = qtdevolumes
-        self.tipodocumentodesconsolidacao = tipodocumentodesconsolidacao
-        self.tipodocumentopapel = tipodocumentopapel
-        self.tipovolume = tipovolume
-'''
 
 
 class DesunitizacaoSchema(ModelSchema):
@@ -801,27 +782,252 @@ def init_db(uri='sqlite:///test.db'):
         db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False,
                                                  bind=engine))
         Base.query = db_session.query_property()
+        for table in ['DTSC', 'acessospessoas', 'avariaslote', 'desunitizacoes',
+                      'pesagensterrestres', 'pesagensveiculosvazios', 'posicoeslote',
+                      'posicoesveiculo', 'unitizacoes', 'acessosveiculo',
+                      'pesagensmaritimo', 'posicoesconteiner', 'inspecoesnaoinvasivas',
+                      'artefatosrecinto', 'ocorrencias', 'operacoesnavios']:
+            # print(table)
+            Table(table, Base.metadata,
+                  Index(table + '_ideventorecinto_idx',
+                        'recinto', 'IDEvento',
+                        unique=True,
+                        ),
+                  extend_existing=True
+                  )
     return db_session, engine
 
 
-for table in ['DTSC', 'acessospessoas', 'avariaslote', 'desunitizacoes', 'pesagensterrestres',
-              'pesagensveiculosvazios', 'posicoeslote', 'posicoesveiculo', 'unitizacoes',
-              'acessosveiculo', 'pesagensmaritimo', 'posicoesconteiner', 'inspecoesnaoinvasivas',
-              'artefatosrecinto', 'ocorrencias', 'operacoesnavios']:
-    print(table)
-    Table(table, Base.metadata,
-          Index(table + '_ideventorecinto_idx',
-                'recinto', 'IDEvento',
-                unique=True,
-                ),
-          extend_existing=True
-          )
+# Entidades de cadastro
+# Entidades de cadastro têm um comportamento diferente
+# TODO: definir comportamento Eventos para entidade de cadastro
+#  (previa na classe Cadastro)
+
+class Cadastro(Base):
+    __abstract__ = True
+    ativo = Column(Boolean(), index=True, default=True)
+    fim = Column(DateTime(), index=True)
+
+    def inativar(self):
+        if self.ativo is True:
+            # TODO: Criar / gerar evento para inativacao
+            # (Salvar em uma tabela as datas de ativacao e inativacao)
+            self.fim = datetime.datetime.utcnow()
+            self.ativo = False
+        raise Exception('Cadastro já foi inativado em %s' %
+                        datetime.datetime.strftime(self.fim,
+                                                   '%d/%m/%Y %H:%M'))
+
+
+class CadastroRepresentacao(EventoBase, Cadastro):
+    __tablename__ = 'representacao'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    cpfrepresentante = Column(String(11), index=True)
+    cpfcnpjrepresentado = Column(String(14), index=True)
+    inicio = Column(DateTime(), index=True)
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.cpfrepresentante = kwargs.get('cpfrepresentante')
+        self.cpfcnpjrepresentado = kwargs.get('cpfcnpjrepresentado')
+        self.inicio = parse(kwargs.get('inicio'))
+        self.fim = parse(kwargs.get('fim'))
+
+
+class CredenciamentoPessoa(EventoBase, Cadastro):
+    __tablename__ = 'credenciamentopessoas'
+    __table_args__ = {'sqlite_autoincrement': True}
+    # TODO: Anexos - fotos/documentos
+    ID = Column(Integer, primary_key=True)
+    cpf = Column(String(11), index=True)
+    identidade = Column(String(15), index=True)
+    cnh = Column(String(15), index=True)
+    nome = Column(String(50), index=True)
+    nascimento = Column(DateTime)
+    telefone = Column(String(20))
+    cpfcnpjrepresentado = Column(String(14), index=True)
+    nomerepresentado = Column(String(50), index=True)
+    funcao = Column(String(40))
+    iniciovalidade = Column(DateTime(), index=True)
+    fimvalidade = Column(DateTime(), index=True)
+    horaentrada = Column(Integer)
+    horasaida = Column(Integer)
+    permissao = Column(String(100))
+    materiais = Column(String(100))
+    motivacao = Column(String(100))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.cpf = kwargs.get('cpf')
+        self.identidade = kwargs.get('identidade')
+        self.cnh = kwargs.get('cnh')
+        self.nome = kwargs.get('nome')
+        self.nascimento = kwargs.get('nascimento')
+        self.telefone = kwargs.get('telefone')
+        self.cpfcnpjrepresentado = kwargs.get('cpfcnpjrepresentado')
+        self.nomerepresentado = kwargs.get('nomerepresentado')
+        self.funcao = kwargs.get('funcao')
+        self.iniciovalidade = parse(kwargs.get('iniciovalidade'))
+        self.fimvalidade = parse(kwargs.get('fimvalidade'))
+        self.horaentrada = kwargs.get('horaentrada')
+        self.horasaida = kwargs.get('horasaida')
+        self.permissao = kwargs.get('permissao')
+        self.materiais = kwargs.get('materiais')
+        self.motivacao = kwargs.get('motivacao')
+
+
+class CredenciamentoVeiculo(EventoBase, Cadastro):
+    __tablename__ = 'credenciamentoveiculos'
+    __table_args__ = {'sqlite_autoincrement': True}
+    # TODO: Anexos - imagens e reboques
+    ID = Column(Integer, primary_key=True)
+    cpfcnpjresponsavel = Column(String(14), index=True)
+    placa = Column(String(7), index=True)
+    marca = Column(String(40))
+    modelo = Column(String(40))
+    ano = Column(String(4))
+    geolocalizacao = Column(Boolean)
+    iniciovalidade = Column(DateTime(), index=True)
+    fimvalidade = Column(DateTime(), index=True)
+    horaentrada = Column(Integer)
+    horasaida = Column(Integer)
+    permissao = Column(String(100))
+    motivacao = Column(String(100))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.cpfcnpjresponsavel = kwargs.get('cpfcnpjresponsavel')
+        self.placa = kwargs.get('placa')
+        self.marca = kwargs.get('marca')
+        self.modelo = kwargs.get('modelo')
+        self.ano = kwargs.get('ano')
+        self.geolocalizacao = kwargs.get('geolocalizacao')
+        self.iniciovalidade = parse(kwargs.get('iniciovalidade'))
+        self.fimvalidade = parse(kwargs.get('fimvalidade'))
+        self.horaentrada = kwargs.get('horaentrada')
+        self.horasaida = kwargs.get('horasaida')
+        self.permissao = kwargs.get('permissao')
+        self.motivacao = kwargs.get('motivacao')
+
+
+class ArtefatoRecinto(EventoBase, Cadastro):
+    __tablename__ = 'artefatosrecinto'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    tipoartefato = Column(String(10))
+    codigo = Column(String(10))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.codigo = kwargs.get('codigo')
+        self.tipoartefato = kwargs.get('tipoartefato')
+
+
+class CoordenadaArtefato(Base):
+    __tablename__ = 'coordenadasartefato'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    ordem = Column(Integer)
+    long = Column(Float)
+    lat = Column(Float)
+    artefato_id = Column(Integer, ForeignKey('artefatosrecinto.ID'))
+    artefato = relationship(
+        'ArtefatoRecinto', backref=backref('coordenadasartefato')
+    )
+
+
+class AgendamentoConferencia(EventoBase, Cadastro):
+    __tablename__ = 'agendamentosconferencia'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    documentotransporte = Column(String(20))
+    tipodocumentotransporte = Column(String(10))
+    numero = Column(String(11))
+    placa = Column(String(7))
+    placasemireboque = Column(String(11))
+    dataagendamento = Column(DateTime)
+    artefato = Column(Integer)
+    local = Column(String(20))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.documentotransporte = kwargs.get('documentotransporte')
+        self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
+        self.numero = kwargs.get('numero')
+        self.placa = kwargs.get('placa')
+        self.placasemireboque = kwargs.get('placasemireboque')
+        self.dataagendamento = parse(kwargs.get('dataagendamento'))
+        self.artefato = kwargs.get('artefato')
+        self.local = kwargs.get('local')
+
+
+class InformacaoBloqueio(EventoBase, Cadastro):
+    __tablename__ = 'bloqueios'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    documentotransporte = Column(String(20))
+    tipodocumentotransporte = Column(String(10))
+    numero = Column(String(11))
+    placa = Column(String(7))
+    motivo = Column(String(20))
+    solicitante = Column(String(20))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.documentotransporte = kwargs.get('documentotransporte')
+        self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
+        self.numero = kwargs.get('numero')
+        self.placa = kwargs.get('placa')
+        self.placasemireboque = kwargs.get('placasemireboque')
+        self.dataagendamento = parse(kwargs.get('dataagendamento'))
+        self.artefato = kwargs.get('artefato')
+
+
+class Ocorrencia(EventoBase):
+    __tablename__ = 'ocorrencias'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    tipoartefato = Column(String(10), index=True)
+    codigo = Column(String(10), index=True)
+    disponivel = Column(Boolean, index=True)
+    motivo = Column(String(100))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.tipoartefato = kwargs.get('tipoartefato')
+        self.codigo = kwargs.get('codigo')
+        self.disponivel = kwargs.get('disponivel')
+        self.motivo = kwargs.get('motivo')
+
 
 if __name__ == '__main__':
     db, engine = init_db()
     try:
+        print('Apagando Banco!!!')
         Base.metadata.drop_all(bind=engine)
+        print('Criando Banco novo!!!')
         Base.metadata.create_all(bind=engine)
-        print('Criou Banco!!!')
     except Exception as err:
         logging.error(err, exc_info=True)

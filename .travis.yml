@@ -1,0 +1,19 @@
+language: python
+
+services:
+
+matrix:
+  include:
+    - python: '3.5'
+      env: TOXENV=py35
+    - python: '3.5'
+      env: TOXENV=check
+
+install:
+  - pip install tox codecov
+
+script:
+  - tox
+
+after_script:
+  - codecov

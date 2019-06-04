@@ -1,7 +1,7 @@
 import connexion
 
 from apiserver.models import orm
-from views import create_views
+from apiserver.views import create_views
 
 
 def create_app(session, engine):
@@ -13,7 +13,6 @@ def create_app(session, engine):
     app = create_views(app)
     print('Configurou views')
     return app
-
 
 
 def main():
