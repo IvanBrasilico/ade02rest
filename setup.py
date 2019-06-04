@@ -1,6 +1,5 @@
 # coding: utf-8
 
-import sys
 from setuptools import setup, find_packages
 
 NAME = "apirecintos"
@@ -48,4 +47,3 @@ setup(
     API para prestação de informações sobre eventos de controle aduaneiro a cargo dos Redex, Recintos, Operadores Portuários e demais intervenientes em carga sobre controle aduaneiro.
     """
 )
-

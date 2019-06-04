@@ -7,11 +7,9 @@ sys.path.insert(0, './apiserver')
 
 from apiserver.main import create_app
 
-
-MYSQLURI = os.environ.get('JAWSDB_URL', 'mysql+mysqlconnector://apirecintos@localhost/apirecintos')
+MYSQLURI = os.environ.get('JAWSDB_URL',
+                          'mysql+mysqlconnector://apirecintos@localhost/apirecintos')
 session, engine = orm.init_db(MYSQLURI)
-# orm.Base.metadata.drop_all(bind=engine)
-# orm.Base.metadata.create_all(bind=engine)
 app = create_app(session, engine)
 
 if __name__ == '__main__':

@@ -2,14 +2,11 @@ import datetime
 import json
 import os
 import random
-import sys
 from io import BytesIO
 from unittest import TestCase
 
-sys.path.insert(0, 'apiserver')
 from apiserver.main import create_app
-
-from apiserver.models import orm
+from models import orm
 
 
 def random_str(num, fila):
@@ -27,12 +24,17 @@ class APITestCase(TestCase):
 
     def setUp(self):
         session, engine = orm.init_db('sqlite:///:memory:')
+        self.engine = engine
         orm.Base.metadata.create_all(bind=engine)
         app = create_app(session, engine)
         self.client = app.app.test_client()
         with open(os.path.join(os.path.dirname(__file__),
                                'testes.json'), 'r') as json_in:
             self.testes = json.load(json_in)
+
+    def tearDown(self) -> None:
+        orm.Base.metadata.create_all(bind=self.engine)
+
 
     def test_health(self):
         response = self.client.get('/non_ecxiste')
@@ -83,6 +85,87 @@ class APITestCase(TestCase):
             rv = self.client.post(classe.lower(), json=teste)
             assert rv.status_code == 409
             assert rv.is_json is True
+
+    def cadastro_fluxo(self, cadastro, classe, acao):
+        rv = self.client.post(classe.lower(), json=cadastro)
+        assert rv.status_code == 201
+        assert rv.is_json is True
+        response_token = rv.json
+        rv = self.client.get(classe.lower() + '/' + str(cadastro['IDEvento']))
+        assert rv.status_code == 200
+        assert rv.is_json is True
+        self.compara_eventos(cadastro, rv.json)
+        rv = self.client.post(classe.lower() + '/' +
+                              str(cadastro['IDEvento']) + '/' + acao)
+        assert rv.status_code == 201
+        assert rv.is_json is True
+
+    def test_cadastrorepresentacao(self):
+        cadastro = {
+            "IDEvento": 0,
+            "dataevento": "2019-06-03T23:23:02.889Z",
+            "dataregistro": "2019-06-03T23:23:02.889Z",
+            "operadorevento": "string",
+            "operadorregistro": "string",
+            "cpfcnpjrepresentado": "string",
+            "cpfrepresentante": "string",
+            "inicio": "2019-06-03T23:23:02.889Z"
+        }
+
+    def test_(self):
+
+        informacaobloqueio = {
+        "IDEvento": 0,
+        "dataevento": "2019-06-03T23:33:36.294Z",
+        "dataregistro": "2019-06-03T23:33:36.294Z",
+        "operadorevento": "string",
+        "operadorregistro": "string",
+        "retificador": True,
+        "documentotransporte": "string",
+        "motivo": "string",
+        "numero": "string",
+        "placa": "string",
+        "solicitante": "RFB",
+        "tipodocumentotransporte": "CE"
+        }
+
+    def test_(self):
+
+        agendamentoconferencia = {
+            "IDEvento": 0,
+            "dataevento": "2019-06-03T23:35:22.842Z",
+            "dataregistro": "2019-06-03T23:35:22.842Z",
+            "operadorevento": "string",
+            "operadorregistro": "string",
+            "retificador": true,
+            "artefato": "string",
+            "dataagendamento": "2019-06-03T23:35:22.842Z",
+            "documentotransporte": "string",
+            "local": "string",
+            "numero": "string",
+            "placa": "string",
+            "placasemireboque": "string",
+            "tipodocumento": "RG"}
+
+    def test_(self):
+
+        artefatorecinto = {
+            "IDEvento": 0,
+            "dataevento": "2019-06-03T23:35:22.844Z",
+            "dataregistro": "2019-06-03T23:35:22.844Z",
+            "operadorevento": "string",
+            "operadorregistro": "string",
+            "retificador": True,
+            "codigo": "string",
+            "coordenadasartefato": [
+                {
+                    "lat": 0,
+                    "long": 0,
+                    "ordem": 0
+                }
+            ],
+            "tipoartefato": "Area (poligono)"
+        }
 
     def cria_lote(self):
         letras = 'ABCDEFGHIJKLMNOPQRSTUVXZ'
@@ -142,6 +225,5 @@ class APITestCase(TestCase):
         assert r.is_json is True
         assert len(r.json) == 10
         self.compara_eventos(self.pesagens[0], r.json[0])
-
 
     # TODO: Testar fluxo de Cadastro Representacao
