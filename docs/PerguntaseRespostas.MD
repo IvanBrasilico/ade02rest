@@ -45,7 +45,7 @@ será necessário uma auditoria simplificada feita durante a própria avaliaçã
 da Receita Federal poderá, a qualquer momento, solicitar acesso aos Sistemas dos intervenientes para
 cotejar os dados destes com os dados transmitidos.
 
-### 4. Como ficam os sistemas atuais que possuem funções desenvolvidas especificamente para a Unidade Local (bloqueios, mensagerias e outras comunicações)?
+## 4. Como ficam os sistemas atuais que possuem funções desenvolvidas especificamente para a Unidade Local (bloqueios, mensagerias e outras comunicações)?
 
 As realidades locais devem ser avaliadas localmente. Sendo funcṍes possíveis de serem transferidas para a API,
 recomenda-se a centralização. É necessário que a Unidade Local avalie o caso específico.
