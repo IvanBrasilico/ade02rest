@@ -1,6 +1,5 @@
 from apiserver.models import orm
-from apiserver.use_cases.usecases import insert_evento, load_evento, load_inspecaonaoinvasiva, \
-    insert_inspecaonaoinvasiva
+from apiserver.use_cases.usecases import UseCases
 from tests.basetest import BaseTestCase
 
 RECINTO = '00001'
@@ -9,20 +8,18 @@ REQUEST_IP = '10.10.10.10'
 
 class UseCaseTestCase(BaseTestCase):
 
+    def setUp(self):
+        super().setUp()
+        self.usecase = UseCases(self.session, RECINTO, REQUEST_IP, '')
+
     def _insert(self, classe_evento):
         evento = self.testes[classe_evento.__name__]
-        return insert_evento(self.session,
-                             classe_evento,
-                             evento,
-                             RECINTO,
-                             REQUEST_IP
-                             )
+        return self.usecase.insert_evento(classe_evento,
+                                          evento)
 
     def _load(self, classe_evento, IDEvento):
-        return load_evento(self.session,
-                           classe_evento,
-                           RECINTO,
-                           IDEvento)
+        return self.usecase.load_evento(classe_evento,
+                                        IDEvento)
 
     def _insert_and_load(self, classe_evento):
         evento = self.testes[classe_evento.__name__]
@@ -54,14 +51,10 @@ class UseCaseTestCase(BaseTestCase):
 
     def test_InspecaonaoInvasiva(self):
         evento = self.testes['InspecaonaoInvasiva']
-        evento_banco = insert_inspecaonaoinvasiva(self.session,
-                                                  evento,
-                                                  RECINTO,
-                                                  REQUEST_IP
-                                                  )
+        evento_banco = self.usecase.insert_inspecaonaoinvasiva(evento)
+
         self.compara_eventos(evento, evento_banco.dump())
-        evento_banco_load = load_inspecaonaoinvasiva(
-            RECINTO, evento['IDEvento'], '')
+        evento_banco_load = self.usecase.load_inspecaonaoinvasiva(evento['IDEvento'])
         self.compara_eventos(evento, evento_banco_load)
 
     def test_DTSC(self):

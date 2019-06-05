@@ -6,9 +6,9 @@ from apiserver.models import orm
 
 class Unitizacao(ModelSchema):
     lotes = fields.Nested('LoteUnitizacao', many=True,
-                          exclude=('ID', 'unitizacao_id', 'unitizacao'))
+                          exclude=('ID', 'unitizacao'))
     imagens = fields.Nested('ImagemUnitizacao', many=True,
-                            exclude=('ID', 'unitizacao_id', 'unitizacao'))
+                            exclude=('ID', 'unitizacao'))
 
     class Meta:
         model = orm.Unitizacao
@@ -26,7 +26,7 @@ class ImagemUnitizacao(ModelSchema):
 
 class PesagemVeiculoVazio(ModelSchema):
     reboques = fields.Nested('ReboquesPesagem', many=True,
-                             exclude=('ID', 'pesagem_id', 'pesagem'))
+                             exclude=('ID', 'pesagem'))
 
     class Meta:
         model = orm.PesagemVeiculoVazio
@@ -39,11 +39,9 @@ class ReboquesPesagem(ModelSchema):
 
 class PosicaoVeiculo(ModelSchema):
     conteineres = fields.Nested('ConteinerPosicao', many=True,
-                                exclude=('ID', 'posicaoveiculo_id',
-                                         'posicaoveiculo'))
+                                exclude=('ID', 'posicaoveiculo'))
     reboques = fields.Nested('ReboquePosicao', many=True,
-                             exclude=('ID', 'posicaoveiculo_id',
-                                      'posicaoveiculo'))
+                             exclude=('ID', 'posicaoveiculo'))
 
     class Meta:
         model = orm.PosicaoVeiculo
@@ -61,7 +59,7 @@ class ReboquePosicao(ModelSchema):
 
 class DTSC(ModelSchema):
     cargas = fields.Nested('CargaDTSC', many=True,
-                           exclude=('ID', 'DTSC_ID', 'DTSC'))
+                           exclude=('ID', 'DTSC'))
 
     class Meta:
         model = orm.DTSC
@@ -74,11 +72,11 @@ class CargaDTSC(ModelSchema):
 
 class InspecaonaoInvasiva(ModelSchema):
     identificadores = fields.Nested('IdentificadorInspecaoSchema', many=True,
-                                    exclude=('ID', 'inspecao_id', 'inspecao'),
+                                    exclude=('ID', 'inspecao'),
                                     unknown='EXCLUDE'
                                     )
     anexos = fields.Nested('AnexoInspecaoSchema', many=True,
-                           exclude=('ID', 'inspecao_id', 'inspecao'),
+                           exclude=('ID', 'inspecao'),
                            unknown='EXCLUDE'
                            )
 
@@ -98,11 +96,11 @@ class AnexoInspecaoSchema(ModelSchema):
 
 class AcessoVeiculo(ModelSchema):
     conteineres = fields.Nested('ConteineresGate', many=True,
-                                exclude=('ID', 'acessoveiculo_id', 'acessoveiculo'))
+                                exclude=('ID', 'acessoveiculo'))
     reboques = fields.Nested('ReboquesGate', many=True,
-                             exclude=('ID', 'acessoveiculo_id', 'acessoveiculo'))
+                             exclude=('ID', 'acessoveiculo'))
     listanfe = fields.Nested('ListaNfeGate', many=True,
-                             exclude=('ID', 'acessoveiculo_id', 'acessoveiculo'))
+                             exclude=('ID', 'acessoveiculo'))
 
     class Meta:
         model = orm.AcessoVeiculo
@@ -125,7 +123,7 @@ class ListaNfeGate(ModelSchema):
 
 class ArtefatoRecinto(ModelSchema):
     coordenadasartefato = fields.Nested('CoordenadaArtefato', many=True,
-                                        exclude=('ID', 'artefato_id', 'artefato'))
+                                        exclude=('ID', 'artefato'))
 
     class Meta:
         model = orm.ArtefatoRecinto

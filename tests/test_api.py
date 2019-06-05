@@ -1,12 +1,14 @@
 import datetime
 import json
-import os
 import random
+import sys
+from copy import deepcopy
 from io import BytesIO
-from unittest import TestCase
 
 from apiserver.main import create_app
-from apiserver.models import orm
+from basetest import BaseTestCase
+
+sys.path.insert(0, 'apiserver')
 
 
 def random_str(num, fila):
@@ -20,26 +22,25 @@ def extractDictAFromB(A, B):
     return dict([(k, B[k]) for k in A.keys() if k in B.keys()])
 
 
+"""
 print('Creating memory database')
 session, engine = orm.init_db('sqlite:///:memory:')
 orm.Base.metadata.create_all(bind=engine)
 with open(os.path.join(os.path.dirname(__file__),
                        'testes.json'), 'r') as json_in:
     testes = json.load(json_in)
+"""
 
 
-class APITestCase(TestCase):
+class APITestCase(BaseTestCase):
 
     def setUp(self):
-        self.engine = engine
-        self.testes = testes
-        app = create_app(session, engine)
+        super().setUp()
+        app = create_app(self.session, self.engine)
         self.client = app.app.test_client()
 
     def tearDown(self) -> None:
-        pass
-        # orm.Base.metadata.create_all(bind=self.engine)
-
+        super().tearDown()
 
     def test_health(self):
         response = self.client.get('/non_ecxiste')
@@ -63,13 +64,22 @@ class APITestCase(TestCase):
             assert rv.is_json is True
 
     def compara_eventos(self, teste, response_json):
-        for data in ['dataevento', 'dataregistro', 'dataoperacao', 'dataliberacao', 'dataagendamento']:
+        for data in ['dataevento', 'dataregistro', 'dataoperacao', 'dataliberacao',
+                     'dataagendamento', 'datamodificacao', 'datacriacao']:
             if teste.get(data) is not None:
                 teste.pop(data)
             if response_json.get(data) is not None:
                 response_json.pop(data)
         sub_response = extractDictAFromB(teste, response_json)
         self.maxDiff = None
+        eliminar = []
+        for k, v in teste.items():
+            if isinstance(v, list):
+                self.compara_eventos(v[0], sub_response[k][0])
+                eliminar.append(k)
+        for k in eliminar:
+            sub_response.pop(k)
+            teste.pop(k)
         self.assertDictContainsSubset(teste, sub_response)
 
     def test3_api(self):
@@ -82,11 +92,12 @@ class APITestCase(TestCase):
             rv = self.client.get(classe.lower() + '/' + str(teste['IDEvento']))
             assert rv.status_code == 200
             assert rv.is_json is True
-            self.compara_eventos(teste, rv.json)
+            self.compara_eventos(deepcopy(teste), rv.json)
 
     def test4_evento_duplicado_409(self):
         for classe, teste in self.testes.items():
             print(classe)
+            rv = self.client.post(classe.lower(), json=teste)
             rv = self.client.post(classe.lower(), json=teste)
             assert rv.status_code == 409
             assert rv.is_json is True
@@ -120,18 +131,18 @@ class APITestCase(TestCase):
     def test_(self):
 
         informacaobloqueio = {
-        "IDEvento": 0,
-        "dataevento": "2019-06-03T23:33:36.294Z",
-        "dataregistro": "2019-06-03T23:33:36.294Z",
-        "operadorevento": "string",
-        "operadorregistro": "string",
-        "retificador": True,
-        "documentotransporte": "string",
-        "motivo": "string",
-        "numero": "string",
-        "placa": "string",
-        "solicitante": "RFB",
-        "tipodocumentotransporte": "CE"
+            "IDEvento": 0,
+            "dataevento": "2019-06-03T23:33:36.294Z",
+            "dataregistro": "2019-06-03T23:33:36.294Z",
+            "operadorevento": "string",
+            "operadorregistro": "string",
+            "retificador": True,
+            "documentotransporte": "string",
+            "motivo": "string",
+            "numero": "string",
+            "placa": "string",
+            "solicitante": "RFB",
+            "tipodocumentotransporte": "CE"
         }
 
     def test_(self):

@@ -4,10 +4,11 @@ from dateutil.parser import parse
 from flask import current_app, request, jsonify
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 
 from apiserver.logconf import logger
 from apiserver.models import maschemas, orm
-from apiserver.use_cases.usecases import insert_evento
+from apiserver.use_cases.usecases import UseCases
 
 RECINTO = '00001'
 
@@ -27,6 +28,14 @@ titles = {200: 'Evento encontrado',
           409: 'Erro de integridade'}
 
 
+def create_usecases():
+    db_session = current_app.config['db_session']
+    request_IP = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+    recinto = RECINTO
+    basepath = current_app.config['UPLOAD_FOLDER']
+    return UseCases(db_session, recinto, request_IP, basepath)
+
+
 def _response(msg, status_code, title=None):
     if title is None:
         title = titles[status_code]
@@ -34,6 +43,19 @@ def _response(msg, status_code, title=None):
             'status': status_code,
             'title': title}, \
            status_code
+
+
+def _response_for_exception(exception, title=None):
+    status_code = 400
+    if isinstance(exception, IntegrityError):
+        status_code = 409
+    elif isinstance(exception, NoResultFound):
+        status_code = 404
+    if title is None:
+        title = titles[status_code]
+    return {'detail': str(exception),
+            'status': status_code,
+            'title': title}, status_code
 
 
 def _commit(evento):
@@ -81,26 +103,19 @@ def get_evento(IDEvento, aclass):
 
 
 def add_evento(aclass, evento):
-    db_session = current_app.config['db_session']
-    logging.info('Creating evento %s %s' %
-                 (aclass.__name__,
-                  evento.get('IDEvento'))
-                 )
+    usecase = create_usecases()
     try:
-        request_IP = request.environ.get('HTTP_X_REAL_IP',
-                                         request.remote_addr)
-        novo_evento = insert_evento(db_session, aclass,
-                                    evento, RECINTO, request_IP)
+        novo_evento = usecase.insert_evento(aclass, evento)
         logger.info('Recinto: %s Classe: %s IDEvento: %d ID: %d Token: %d' %
                     (novo_evento.recinto, novo_evento.__class__.__name__,
                      novo_evento.IDEvento, novo_evento.ID, novo_evento.hash))
     except IntegrityError as err:
-        db_session.rollback()
+        usecase.db_session.rollback()
         logging.error(err, exc_info=True)
         return _response('Evento repetido ou campo invalido: %s' % err,
                          409)
     except Exception as err:
-        db_session.rollback()
+        usecase.db_session.rollback()
         logging.error(err, exc_info=True)
         return _response('Erro inesperado: %s ' % err, 400)
     return _response(novo_evento.hash, 201)
@@ -147,65 +162,25 @@ def get_pesagemmaritimo(IDEvento):
 
 
 def inspecaonaoinvasiva(evento):
-    db_session = current_app.config['db_session']
-    logging.info('Creating inspecaonaoinvasiva %s..', evento.get('IDEvento'))
+    usecase = create_usecases()
     try:
-        inspecaonaoinvasiva = orm.InspecaonaoInvasiva(**evento)
-        inspecaonaoinvasiva.recinto = RECINTO
-        db_session.add(inspecaonaoinvasiva)
-        identificadores = evento.get('identificadores')
-        if identificadores:
-            for identificador in identificadores:
-                logging.info('Creating identificadorinspecaonaoinvasiva %s..',
-                             identificador.get('identificador'))
-                oidentificador = orm.IdentificadorInspecao(
-                    inspecao=inspecaonaoinvasiva,
-                    **identificador)
-                db_session.add(oidentificador)
-        anexos = evento.get('anexos')
-        if anexos:
-            for anexo in anexos:
-                logging.info('Creating anexoinspecaonaoinvasiva %s..',
-                             anexo.get('nomearquivo'))
-                oanexo = orm.AnexoInspecao(
-                    inspecao=inspecaonaoinvasiva,
-                    datacriacao=parse(anexo.get('datacriacao')),
-                    datamodificacao=parse(anexo.get('datamodificacao'))
-                )
-                basepath = current_app.config.get('UPLOAD_FOLDER')
-                oanexo.save_file(basepath,
-                                 anexo.get('content'),
-                                 anexo.get('nomearquivo')
-                                 )
-                db_session.add(oanexo)
+        inspecaonaoinvasiva = usecase.insert_inspecaonaoinvasiva(evento)
     except Exception as err:
         logging.error(err, exc_info=True)
-        db_session.rollback()
-        return _response(str(err), 400)
-    return _commit(inspecaonaoinvasiva)
+        usecase.db_session.rollback()
+        return _response_for_exception(err)
+    return _response(inspecaonaoinvasiva.hash, 201)
 
 
 def get_inspecaonaoinvasiva(IDEvento):
+    usecase = create_usecases()
     try:
-        inspecaonaoinvasiva = orm.InspecaonaoInvasiva.query.filter(
-            orm.InspecaonaoInvasiva.IDEvento == IDEvento
-        ).outerjoin(
-            orm.AnexoInspecao
-        ).outerjoin(
-            orm.IdentificadorInspecao
-        ).one_or_none()
-        if inspecaonaoinvasiva is None:
-            return _response('Evento não encontrado.', 404)
-        inspecaonaoinvasiva_schema = maschemas.InspecaonaoInvasiva()
-        data = inspecaonaoinvasiva_schema.dump(inspecaonaoinvasiva).data
-        data['hash'] = hash(inspecaonaoinvasiva)
-        basepath = current_app.config.get('UPLOAD_FOLDER')
-        for ind, anexo in enumerate(inspecaonaoinvasiva.anexos):
-            data['anexos'][ind]['content'] = anexo.load_file(basepath)
-        return data, 200
+        inspecaonaoinvasiva = usecase.load_inspecaonaoinvasiva(IDEvento)
+        print(inspecaonaoinvasiva)
+        return inspecaonaoinvasiva, 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 400)
+        return _response_for_exception(err)
 
 
 def operacaonavio(evento):
@@ -237,7 +212,7 @@ def get_acessoveiculo(IDEvento):
         if acessoveiculo is None:
             return _response('Evento não encontrado.', 404)
         acessoveiculo_schema = maschemas.AcessoVeiculo()
-        data = acessoveiculo_schema.dump(acessoveiculo).data
+        data = acessoveiculo_schema.dump(acessoveiculo)
         data['hash'] = hash(acessoveiculo)
         return data, 200
     except Exception as err:
@@ -319,7 +294,7 @@ def get_dtsc(IDEvento):
         if dtsc is None:
             return _response('Evento não encontrado.', 404)
         dtsc_schema = maschemas.DTSC()
-        data = dtsc_schema.dump(dtsc).data
+        data = dtsc_schema.dump(dtsc)
         data['hash'] = hash(dtsc)
         return data, 200
     except Exception as err:
@@ -360,7 +335,7 @@ def get_pesagemveiculovazio(IDEvento):
         if pesagemveiculovazio is None:
             return _response('Evento não encontrado.', 404)
         pesagemveiculovazio_schema = maschemas.PesagemVeiculoVazio()
-        data = pesagemveiculovazio_schema.dump(pesagemveiculovazio).data
+        data = pesagemveiculovazio_schema.dump(pesagemveiculovazio)
         data['hash'] = hash(pesagemveiculovazio)
         return data, 200
     except Exception as err:
@@ -410,7 +385,7 @@ def get_posicaoveiculo(IDEvento):
         if posicaoveiculo is None:
             return _response('Evento não encontrado.', 404)
         posicaoveiculo_schema = maschemas.PosicaoVeiculo()
-        data = posicaoveiculo_schema.dump(posicaoveiculo).data
+        data = posicaoveiculo_schema.dump(posicaoveiculo)
         data['hash'] = hash(posicaoveiculo)
         return data, 200
     except Exception as err:
@@ -464,7 +439,7 @@ def get_unitizacao(IDEvento):
         if unitizacao is None:
             return {'message': 'Evento não encontrado.'}, 404
         unitizacao_schema = maschemas.Unitizacao()
-        data = unitizacao_schema.dump(unitizacao).data
+        data = unitizacao_schema.dump(unitizacao)
         data['hash'] = hash(unitizacao)
         return data, 200
     except Exception as err:
@@ -518,7 +493,7 @@ def get_desunitizacao(IDEvento):
         if desunitizacao is None:
             return _response('Evento não encontrado.', 404)
         desunitizacao_schema = orm.DesunitizacaoSchema()
-        data = desunitizacao_schema.dump(desunitizacao).data
+        data = desunitizacao_schema.dump(desunitizacao)
         data['hash'] = hash(desunitizacao)
         return data, 200
     except Exception as err:
@@ -570,7 +545,7 @@ def get_pesagemterrestre(IDEvento):
         if pesagemterrestre is None:
             return _response('Evento não encontrado.', 404)
         pesagemterrestre_schema = orm.PesagemTerrestreSchema()
-        data = pesagemterrestre_schema.dump(pesagemterrestre).data
+        data = pesagemterrestre_schema.dump(pesagemterrestre)
         data['hash'] = hash(pesagemterrestre)
         return data, 200
     except Exception as err:
@@ -587,7 +562,7 @@ def get_artefatorecinto(IDEvento):
         if artefatorecinto is None:
             return {'message': 'Evento não encontrado.'}, 404
         artefatorecinto_schema = maschemas.ArtefatoRecinto()
-        data = artefatorecinto_schema.dump(artefatorecinto).data
+        data = artefatorecinto_schema.dump(artefatorecinto)
         data['hash'] = hash(artefatorecinto)
         return data, 200
     except Exception as err:

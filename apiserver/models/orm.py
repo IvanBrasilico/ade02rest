@@ -18,14 +18,16 @@ db_session = None
 engine = None
 
 
-
 class BaseDumpable(Base):
     __abstract__ = True
 
-    def dump(self):
+    def dump(self, exclude=None):
         dump = dict([(k, v) for k, v in vars(self).items() if not k.startswith('_')])
+        if exclude:
+            for key in exclude:
+                if dump.get(key):
+                    dump.pop(key)
         return dump
-
 
     def __hash__(self):
         dump = self.dump()
@@ -73,7 +75,6 @@ class EventoBase(BaseDumpable):
             self.recinto = recinto
         if request_IP is not None:
             self.request_IP = request_IP
-
 
 
 class PosicaoConteiner(EventoBase):
@@ -188,9 +189,9 @@ class ConteinerPesagemTerrestre(BaseDumpable):
 
 class PesagemTerrestreSchema(ModelSchema):
     conteineres = fields.Nested('ConteinerPesagemTerrestreSchema', many=True,
-                                exclude=('ID', 'pesagem_id', 'pesagem'))
+                                exclude=('ID', 'pesagem'))
     reboques = fields.Nested('ReboquePesagemTerrestreSchema', many=True,
-                             exclude=('ID', 'pesagem_id', 'pesagem'))
+                             exclude=('ID', 'pesagem'))
 
     class Meta:
         model = PesagemTerrestre
@@ -293,10 +294,6 @@ class AnexoBase(BaseDumpable):
     nomearquivo = Column(String(100), default='')
     contentType = Column(String(40), default='')
 
-    def dump(self):
-        dump = dict([(k, v) for k, v in vars(self).items() if not k.startswith('_')])
-        return dump
-
     def monta_caminho_arquivo(self, basepath, eventobase):
         filepath = basepath
         for caminho in [eventobase.recinto,
@@ -364,16 +361,17 @@ class AnexoInspecao(AnexoBase):
             (k, v) for k, v in kwargs.items() if k in vars(AnexoBase).keys()
         ])
         super().__init__(**superkwargs)
-        self.datacriacao = parse(kwargs.get('datacriacao'))
-        self.datamodificacao = parse(kwargs.get('datamodificacao'))
-        self.inspecao_id = kwargs.get('inspecao_id')
+        if kwargs.get('datacriacao') is not None:
+            self.datacriacao = parse(kwargs.get('datacriacao'))
+        if kwargs.get('datamodificacao') is not None:
+            self.datamodificacao = parse(kwargs.get('datamodificacao'))
+        self.inspecao = kwargs.get('inspecao')
 
     def save_file(self, basepath, file, filename) -> (str, bool):
         return super().save_file(basepath, file, filename, self.inspecao)
 
     def load_file(self, basepath):
         return super().load_file(basepath, self.inspecao)
-
 
     @classmethod
     def create(cls, parent):
@@ -582,8 +580,10 @@ class AcessoVeiculo(EventoBase):
         self.pesoespecial = kwargs.get('pesoespecial')
         self.dimensaoespecial = kwargs.get('dimensaoespecial')
         self.tipooperacao = kwargs.get('tipooperacao')
-        self.dataliberacao = parse(kwargs.get('dataliberacao'))
-        self.dataagendamento = parse(kwargs.get('dataagendamento'))
+        if self.dataliberacao is not None:
+            self.dataliberacao = parse(kwargs.get('dataliberacao'))
+        if self.dataagendamento is not None:
+            self.dataagendamento = parse(kwargs.get('dataagendamento'))
 
 
 class Gate(BaseDumpable):
@@ -767,9 +767,9 @@ class Lote(BaseDumpable):
 
 class DesunitizacaoSchema(ModelSchema):
     lotes = fields.Nested('LoteSchema', many=True,
-                          exclude=('ID', 'desunitizacao_id', 'desunitizacao'))
+                          exclude=('ID', 'desunitizacao'))
     imagens = fields.Nested('ImagemDesunitizacaoSchema', many=True,
-                            exclude=('ID', 'desunitizacao_id', 'desunitizacao'))
+                            exclude=('ID', 'desunitizacao'))
 
     class Meta:
         model = Desunitizacao
