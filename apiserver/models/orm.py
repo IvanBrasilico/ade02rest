@@ -590,9 +590,9 @@ class AcessoVeiculo(EventoBase):
         self.pesoespecial = kwargs.get('pesoespecial')
         self.dimensaoespecial = kwargs.get('dimensaoespecial')
         self.tipooperacao = kwargs.get('tipooperacao')
-        if self.dataliberacao is not None:
+        if kwargs.get('dataliberacao') is not None:
             self.dataliberacao = parse(kwargs.get('dataliberacao'))
-        if self.dataagendamento is not None:
+        if kwargs.get('dataagendamento') is not None:
             self.dataagendamento = parse(kwargs.get('dataagendamento'))
 
 

@@ -36,6 +36,9 @@ def valid_file(file, extensions=['jpg', 'xml', 'json']):
 
 
 def getfile():
+    # TODO: Tratar nomearquivo, mover o código de procurar anexo
+    # deste metodo e do upload para use case
+    # Ver se dá para deixar generico para qualquer AnexoBase
     db_session = current_app.config['db_session']
     # basepath = current_app.config.get('UPLOAD_FOLDER')
     try:
