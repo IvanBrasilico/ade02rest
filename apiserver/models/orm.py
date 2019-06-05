@@ -287,6 +287,10 @@ class AnexoBase(Base):
     nomearquivo = Column(String(100), default='')
     contentType = Column(String(40), default='')
 
+    def dump(self):
+        dump = dict([(k, v) for k, v in vars(self).items() if not k.startswith('_')])
+        return dump
+
     def monta_caminho_arquivo(self, basepath, eventobase):
         filepath = basepath
         for caminho in [eventobase.recinto,
@@ -349,11 +353,21 @@ class AnexoInspecao(AnexoBase):
         'InspecaonaoInvasiva', backref=backref('anexos')
     )
 
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(AnexoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.datacriacao = parse(kwargs.get('datacriacao'))
+        self.datamodificacao = parse(kwargs.get('datamodificacao'))
+        self.inspecao_id = kwargs.get('inspecao_id')
+
     def save_file(self, basepath, file, filename) -> (str, bool):
         return super().save_file(basepath, file, filename, self.inspecao)
 
     def load_file(self, basepath):
         return super().load_file(basepath, self.inspecao)
+
 
     @classmethod
     def create(cls, parent):

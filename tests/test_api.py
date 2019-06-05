@@ -6,7 +6,7 @@ from io import BytesIO
 from unittest import TestCase
 
 from apiserver.main import create_app
-from models import orm
+from apiserver.models import orm
 
 
 def random_str(num, fila):
@@ -20,20 +20,25 @@ def extractDictAFromB(A, B):
     return dict([(k, B[k]) for k in A.keys() if k in B.keys()])
 
 
+print('Creating memory database')
+session, engine = orm.init_db('sqlite:///:memory:')
+orm.Base.metadata.create_all(bind=engine)
+with open(os.path.join(os.path.dirname(__file__),
+                       'testes.json'), 'r') as json_in:
+    testes = json.load(json_in)
+
+
 class APITestCase(TestCase):
 
     def setUp(self):
-        session, engine = orm.init_db('sqlite:///:memory:')
         self.engine = engine
-        orm.Base.metadata.create_all(bind=engine)
+        self.testes = testes
         app = create_app(session, engine)
         self.client = app.app.test_client()
-        with open(os.path.join(os.path.dirname(__file__),
-                               'testes.json'), 'r') as json_in:
-            self.testes = json.load(json_in)
 
     def tearDown(self) -> None:
-        orm.Base.metadata.create_all(bind=self.engine)
+        pass
+        # orm.Base.metadata.create_all(bind=self.engine)
 
 
     def test_health(self):

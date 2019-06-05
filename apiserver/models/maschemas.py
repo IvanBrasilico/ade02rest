@@ -73,21 +73,25 @@ class CargaDTSC(ModelSchema):
 
 
 class InspecaonaoInvasiva(ModelSchema):
-    identificadores = fields.Nested('IdentificadorInspecao', many=True,
-                                    exclude=('ID', 'inspecao_id', 'inspecao'))
-    anexos = fields.Nested('AnexoInspecao', many=True,
-                           exclude=('ID', 'inspecao_id', 'inspecao'))
+    identificadores = fields.Nested('IdentificadorInspecaoSchema', many=True,
+                                    exclude=('ID', 'inspecao_id', 'inspecao'),
+                                    unknown='EXCLUDE'
+                                    )
+    anexos = fields.Nested('AnexoInspecaoSchema', many=True,
+                           exclude=('ID', 'inspecao_id', 'inspecao'),
+                           unknown='EXCLUDE'
+                           )
 
     class Meta:
         model = orm.InspecaonaoInvasiva
 
 
-class IdentificadorInspecao(ModelSchema):
+class IdentificadorInspecaoSchema(ModelSchema):
     class Meta:
         model = orm.IdentificadorInspecao
 
 
-class AnexoInspecao(ModelSchema):
+class AnexoInspecaoSchema(ModelSchema):
     class Meta:
         model = orm.AnexoInspecao
 

@@ -1,28 +1,19 @@
 import datetime
-import json
 import os
 import sys
 from base64 import b64decode
 from io import BytesIO
-from unittest import TestCase
+
+from apiserver.main import create_app
+from tests.basetest import BaseTestCase
 
 sys.path.insert(0, 'apiserver')
-from apiserver.main import create_app
 
-from apiserver.models import orm
-
-
-def extractDictAFromB(A, B):
-    return dict([(k, B[k]) for k in A.keys() if k in B.keys()])
-
-
-class ViewTestCase(TestCase):
+class ViewTestCase(BaseTestCase):
 
     def setUp(self):
-        session, engine = orm.init_db('sqlite:///:memory:')
-        self.engine = engine
-        orm.Base.metadata.create_all(bind=engine)
-        app = create_app(session, engine)
+        super().setUp()
+        app = create_app(self.session, self.engine)
         self.client = app.app.test_client()
         self.inspecao_modelo = {
             "IDEvento": 1001,
@@ -59,7 +50,7 @@ class ViewTestCase(TestCase):
         self.file = (BytesIO(self.image), self.filename)
 
     def tearDown(self) -> None:
-        orm.Base.metadata.drop_all(bind=self.engine)
+        super().tearDown()
 
     def test0_home(self):
         response = self.client.get('/')
@@ -83,7 +74,7 @@ class ViewTestCase(TestCase):
             if response_json.get(data) is not None:
                 response_json.pop(data)
 
-        self.assertDictContainsSubset(teste,
+        self.compare_dict(teste,
                                       response_json)
 
     def test2_upload_invalid_file(self):

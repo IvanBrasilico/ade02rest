@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from apiserver.logconf import logger
 from apiserver.models import maschemas, orm
+from apiserver.use_cases.usecases import insert_evento
 
 RECINTO = '00001'
 
@@ -41,13 +42,14 @@ def _commit(evento):
         evento.request_IP = request.environ.get('HTTP_X_REAL_IP',
                                                 request.remote_addr)
         evento.recinto = RECINTO
-        # evento.time_created = datetime.datetime.now().isoformat()
+        # evento.time_created = datetime.datetime.utcnow()
         db_session.flush()
         db_session.refresh(evento)
         ohash = hash(evento)
         db_session.commit()
-        logger.info('Recinto: %s IDEvento: %d ID: %d Token: %d' %
-                    (evento.recinto, evento.IDEvento, evento.ID, ohash))
+        logger.info('Recinto: %s Classe: %s IDEvento: %d ID: %d Token: %d' %
+                    (evento.recinto, evento.__class__.__name__,
+                     evento.IDEvento, evento.ID, ohash))
     except IntegrityError as err:
         db_session.rollback()
         logging.error(err, exc_info=True)
@@ -64,7 +66,8 @@ def get_evento(IDEvento, aclass):
     db_session = current_app.config['db_session']
     try:
         evento = db_session.query(aclass).filter(
-            aclass.IDEvento == IDEvento
+            aclass.IDEvento == IDEvento,
+            aclass.recinto == RECINTO
         ).one_or_none()
         # print(evento.dump() if evento is not None else 'None')
         # print(hash(evento) if evento is not None else 'None')
@@ -84,13 +87,23 @@ def add_evento(aclass, evento):
                   evento.get('IDEvento'))
                  )
     try:
-        novo_evento = aclass(**evento)
-        db_session.add(novo_evento)
-    except Exception as err:
-        logging.error(err, exc_info=True)
+        request_IP = request.environ.get('HTTP_X_REAL_IP',
+                                         request.remote_addr)
+        novo_evento = insert_evento(db_session, aclass,
+                                    evento, RECINTO, request_IP)
+        logger.info('Recinto: %s Classe: %s IDEvento: %d ID: %d Token: %d' %
+                    (novo_evento.recinto, novo_evento.__class__.__name__,
+                     novo_evento.IDEvento, novo_evento.ID, novo_evento.hash))
+    except IntegrityError as err:
         db_session.rollback()
-        return _response(str(err), 400)
-    return _commit(novo_evento)
+        logging.error(err, exc_info=True)
+        return _response('Evento repetido ou campo invalido: %s' % err,
+                         409)
+    except Exception as err:
+        db_session.rollback()
+        logging.error(err, exc_info=True)
+        return _response('Erro inesperado: %s ' % err, 400)
+    return _response(novo_evento.hash, 201)
 
 
 def posicaoconteiner(evento):
