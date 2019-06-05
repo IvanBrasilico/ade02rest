@@ -1,9 +1,8 @@
 import datetime
 import os
 import sys
-from base64 import b64decode
-
-from werkzeug.datastructures import FileStorage
+from base64 import b64decode, b64encode
+from io import BytesIO
 
 from apiserver.main import create_app
 from tests.basetest import BaseTestCase
@@ -28,8 +27,8 @@ class ViewTestCase(BaseTestCase):
                     "nomearquivo": "",
                     "content": "",
                     "contentType": "",
-                    "datacriacao": "2019-05-31T02:55:50.300000+00:00",
-                    "datamodificacao": "2019-05-31T02:55:50.300000+00:00"
+                    "datacriacao": "2019-05-31T02:55:50.300000Z",
+                    "datamodificacao": "2019-05-31T02:55:50.300000Z"
                 }
             ],
             "identificadores": [
@@ -47,9 +46,10 @@ class ViewTestCase(BaseTestCase):
         }
         images_dir = os.path.join(os.getcwd(), 'tests', 'images')
         self.filename = os.listdir(images_dir)[0]
-        self.image = open(
-            os.path.join(images_dir, self.filename), 'rb').read()
-        self.file = FileStorage(stream=self.image, filename=self.filename)
+        self.image = open(os.path.join(images_dir, self.filename), 'rb')
+        self.base64_bytes = b64encode(self.image.read())
+        # base64_string = base64_bytes.decode('utf-8')
+        self.file = (BytesIO(self.base64_bytes), self.filename)
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -82,11 +82,11 @@ class ViewTestCase(BaseTestCase):
     def test2_upload_invalid_file(self):
         r = self.client.post('inspecaonaoinvasiva',
                              json=self.inspecao_modelo)
-        files = {'file': (None, None, 'image/jpeg')}
+        file = (None, None, 'image/jpeg')
         headers = {}
         data = {'IDEvento': '1001',
                 'tipoevento': 'InspecaonaoInvasiva',
-                'files': [files]}
+                'file': file}
         # headers['Content-Type'] = 'image/jpeg'
         response = self.client.post('upload_file',
                                     data=data,
@@ -112,6 +112,7 @@ class ViewTestCase(BaseTestCase):
     def test4_evento_naoexistente(self):
         r = self.client.post('inspecaonaoinvasiva',
                              json=self.inspecao_modelo)
+        file = (None, None, 'image/jpeg')
         data = {'IDEvento': '100000',
                 'tipoevento': 'InspecaonaoInvasiva',
                 'file': self.file}
@@ -147,7 +148,7 @@ class ViewTestCase(BaseTestCase):
         assert r.status_code == 200
         assert r.is_json is False
         if r.data is not None and r.data is not b'':
-            assert b64decode(r.data) == self.image
+            assert b64decode(r.data) == self.base64_bytes
 
     def test_posicaoconteiner_list(self):
         posicaoconteiner = {

@@ -290,9 +290,12 @@ class InspecaonaoInvasiva(EventoBase):
 
 class AnexoBase(BaseDumpable):
     __abstract__ = True
-    content = Column(String(1), default='')
     nomearquivo = Column(String(100), default='')
     contentType = Column(String(40), default='')
+
+    def __init__(self, nomearquivo='', contentType=''):
+        self.nomearquivo = nomearquivo
+        self.contentType = contentType
 
     def monta_caminho_arquivo(self, basepath, eventobase):
         filepath = basepath
@@ -301,7 +304,8 @@ class AnexoBase(BaseDumpable):
                         eventobase.dataevento.month,
                         eventobase.dataevento.day]:
             filepath = os.path.join(filepath, str(caminho))
-            if not os.path.exists(basepath):
+            if not os.path.exists(filepath):
+                print('making dir %s' % filepath)
                 os.mkdir(filepath)
         return filepath
 
@@ -314,8 +318,13 @@ class AnexoBase(BaseDumpable):
             mensagem de sucesso ou mensagem de erro
             True se sucesso, False se houve erro
         """
-        if not file or not filename:
-            return None
+        if filename is None:
+            if self.nomearquivo:
+                filename = self.nomearquivo
+        if not file:
+            raise AttributeError('Arquivo vazio')
+        if not filename:
+            raise AttributeError('Nome arquivo não informado!')
         filepath = self.monta_caminho_arquivo(
             basepath, evento)
         try:
@@ -327,9 +336,10 @@ class AnexoBase(BaseDumpable):
                 file_out.write(file)
         except FileNotFoundError as err:
             logging.error(str(err), exc_info=True)
+            raise(err)
         self.contentType = mimetypes.guess_type(filename)[0]
         self.nomearquivo = filename
-        return 'Arquivo salvo'
+        return 'Arquivo salvo no anexo'
 
     def load_file(self, basepath, evento):
         if not self.nomearquivo:
@@ -342,7 +352,7 @@ class AnexoBase(BaseDumpable):
         except FileNotFoundError as err:
             logging.error(str(err), exc_info=True)
             base64_string = None
-        return base64_string
+        self.content = base64_string
 
 
 class AnexoInspecao(AnexoBase):
@@ -367,7 +377,7 @@ class AnexoInspecao(AnexoBase):
             self.datamodificacao = parse(kwargs.get('datamodificacao'))
         self.inspecao = kwargs.get('inspecao')
 
-    def save_file(self, basepath, file, filename) -> (str, bool):
+    def save_file(self, basepath, file, filename=None) -> (str, bool):
         return super().save_file(basepath, file, filename, self.inspecao)
 
     def load_file(self, basepath):

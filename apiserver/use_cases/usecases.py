@@ -17,7 +17,7 @@ class UseCases():
         self.request_IP = request_IP
         self.basepath = basepath
 
-    def insert_evento(self, aclass, evento: dict) -> orm.EventoBase:
+    def insert_evento(self, aclass, evento: dict, commit=True) -> orm.EventoBase:
         logging.info('Creating evento %s %s' %
                      (aclass.__name__,
                       evento.get('IDEvento'))
@@ -26,7 +26,10 @@ class UseCases():
         novo_evento.recinto = self.recinto
         novo_evento.request_IP = self.request_IP
         self.db_session.add(novo_evento)
-        self.db_session.commit()
+        if commit:
+            self.db_session.commit()
+        else:
+            self.db_session.flush()
         self.db_session.refresh(novo_evento)
         novo_evento.hash = hash(novo_evento)
         return novo_evento
@@ -49,7 +52,8 @@ class UseCases():
 
     def insert_inspecaonaoinvasiva(self, evento: dict) -> orm.InspecaonaoInvasiva:
         logging.info('Creating inspecaonaoinvasiva %s..', evento.get('IDEvento'))
-        inspecaonaoinvasiva = self.insert_evento(orm.InspecaonaoInvasiva, evento)
+        inspecaonaoinvasiva = self.insert_evento(orm.InspecaonaoInvasiva, evento,
+                                                 commit=False)
         anexos = evento.get('anexos', [])
         for anexo in anexos:
             anexo['inspecao_id'] = inspecaonaoinvasiva.ID
@@ -57,6 +61,9 @@ class UseCases():
                          anexo.get('datamodificacao'))
             anexoinspecao = orm.AnexoInspecao(inspecao=inspecaonaoinvasiva,
                                               **anexo)
+            content = anexo.get('content')
+            if anexo.get('content'):
+                anexoinspecao.save_file(self.basepath, content)
             self.db_session.add(anexoinspecao)
         identificadores = evento.get('identificadores', [])
         for identificador in identificadores:

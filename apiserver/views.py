@@ -49,8 +49,9 @@ def getfile():
             return jsonify(_response('Evento não encontrado.', 404)), 404
         oanexo = evento.anexos[0]
         basepath = current_app.config.get('UPLOAD_FOLDER')
-        content = oanexo.load_file(basepath)
-        return Response(response=content,
+        oanexo.load_file(basepath)
+        print(oanexo.content)
+        return Response(response=oanexo.content,
                         mimetype=oanexo.contentType
                         ), 200
     except Exception as err:
@@ -98,9 +99,6 @@ def uploadfile():
                          )
         db_session.add(oanexo)
         return jsonify(_commit(evento)), 201
-
-        # return orm.save_file_evento(db_session, basepath, file,
-        #                            IDEvento, tipoevento)
     except Exception as err:
         logger.error(str(err), exc_info=True)
         return jsonify(_response(str(err), 400)), 400
