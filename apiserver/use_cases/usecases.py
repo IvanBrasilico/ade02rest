@@ -100,7 +100,8 @@ class UseCases():
                 inspecaonaoinvasiva_dump['anexos'].append(
                     anexo.dump(exclude=['ID', 'inspecao', 'inspecao_id'])
                 )
-        if inspecaonaoinvasiva.identificadores and len(inspecaonaoinvasiva.identificadores) > 0:
+        if inspecaonaoinvasiva.identificadores and \
+            len(inspecaonaoinvasiva.identificadores) > 0:
             inspecaonaoinvasiva_dump['identificadores'] = []
             for identificador in inspecaonaoinvasiva.identificadores:
                 inspecaonaoinvasiva_dump['identificadores'].append(

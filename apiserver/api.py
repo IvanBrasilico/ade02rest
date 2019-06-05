@@ -213,7 +213,7 @@ def get_acessoveiculo(IDEvento):
             return _response('Evento não encontrado.', 404)
         acessoveiculo_schema = maschemas.AcessoVeiculo()
         data = acessoveiculo_schema.dump(acessoveiculo)
-        data['hash'] = hash(acessoveiculo)
+        data = {**{'hash': hash(acessoveiculo)}, **data}
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
