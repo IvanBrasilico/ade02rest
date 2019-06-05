@@ -2,12 +2,14 @@ import datetime
 import os
 import sys
 from base64 import b64decode
-from io import BytesIO
+
+from werkzeug.datastructures import FileStorage
 
 from apiserver.main import create_app
 from tests.basetest import BaseTestCase
 
 sys.path.insert(0, 'apiserver')
+
 
 class ViewTestCase(BaseTestCase):
 
@@ -47,7 +49,7 @@ class ViewTestCase(BaseTestCase):
         self.filename = os.listdir(images_dir)[0]
         self.image = open(
             os.path.join(images_dir, self.filename), 'rb').read()
-        self.file = (BytesIO(self.image), self.filename)
+        self.file = FileStorage(stream=self.image, filename=self.filename)
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -75,7 +77,7 @@ class ViewTestCase(BaseTestCase):
                 response_json.pop(data)
 
         self.compare_dict(teste,
-                                      response_json)
+                          response_json)
 
     def test2_upload_invalid_file(self):
         r = self.client.post('inspecaonaoinvasiva',

@@ -18,7 +18,31 @@ db_session = None
 engine = None
 
 
-class EventoBase(Base):
+
+class BaseDumpable(Base):
+    __abstract__ = True
+
+    def dump(self):
+        dump = dict([(k, v) for k, v in vars(self).items() if not k.startswith('_')])
+        return dump
+
+
+    def __hash__(self):
+        dump = self.dump()
+        clean_dump = {}
+        for k, v in dump.items():
+            if isinstance(v, collections.Hashable):
+                clean_dump[k] = v
+        _sorted = sorted([(k, v) for k, v in clean_dump.items()])
+        # print('Sorted dump:', _sorted)
+        ovalues = tuple([s[1] for s in _sorted])
+        # print('Sorted ovalues:', ovalues)
+        ohash = hash(ovalues)
+        # print(ohash)
+        return ohash
+
+
+class EventoBase(BaseDumpable):
     __abstract__ = True
     IDEvento = Column(Integer, index=True)
     dataevento = Column(DateTime(), index=True)
@@ -50,24 +74,6 @@ class EventoBase(Base):
         if request_IP is not None:
             self.request_IP = request_IP
 
-    def dump(self):
-        dump = dict([(k, v) for k, v in vars(self).items() if not k.startswith('_')])
-        # dump.pop('ID')
-        return dump
-
-    def __hash__(self):
-        dump = self.dump()
-        clean_dump = {}
-        for k, v in dump.items():
-            if isinstance(v, collections.Hashable):
-                clean_dump[k] = v
-        _sorted = sorted([(k, v) for k, v in clean_dump.items()])
-        # print('Sorted dump:', _sorted)
-        ovalues = tuple([s[1] for s in _sorted])
-        # print('Sorted ovalues:', ovalues)
-        ohash = hash(ovalues)
-        # print(ohash)
-        return ohash
 
 
 class PosicaoConteiner(EventoBase):
@@ -148,7 +154,7 @@ class PesagemTerrestre(EventoBase):
         self.capturaautomatica = kwargs.get('capturaautomatica')
 
 
-class ReboquePesagemTerrestre(Base):
+class ReboquePesagemTerrestre(BaseDumpable):
     __tablename__ = 'reboquespesagemterrestre'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -164,7 +170,7 @@ class ReboquePesagemTerrestre(Base):
     #    self.tara = kwargs.get('tara')
 
 
-class ConteinerPesagemTerrestre(Base):
+class ConteinerPesagemTerrestre(BaseDumpable):
     __tablename__ = 'conteinerespesagemterrestre'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -216,7 +222,7 @@ class PesagemVeiculoVazio(EventoBase):
         self.pesobalanca = kwargs.get('pesobalanca')
 
 
-class ReboquesPesagem(Base):
+class ReboquesPesagem(BaseDumpable):
     __tablename__ = 'reboquespesagem'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -281,7 +287,7 @@ class InspecaonaoInvasiva(EventoBase):
         self.capturaautomatica = kwargs.get('capturaautomatica')
 
 
-class AnexoBase(Base):
+class AnexoBase(BaseDumpable):
     __abstract__ = True
     content = Column(String(1), default='')
     nomearquivo = Column(String(100), default='')
@@ -374,7 +380,7 @@ class AnexoInspecao(AnexoBase):
         return AnexoInspecao(inspecao=parent)
 
 
-class IdentificadorInspecao(Base):
+class IdentificadorInspecao(BaseDumpable):
     __tablename__ = 'identificadoresinspecao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -426,7 +432,7 @@ class Unitizacao(EventoBase):
         self.placasemireboque = kwargs.get('placasemireboque')
 
 
-class ImagemUnitizacao(Base):
+class ImagemUnitizacao(BaseDumpable):
     __tablename__ = 'imagensunitizacao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -441,7 +447,7 @@ class ImagemUnitizacao(Base):
     )
 
 
-class LoteUnitizacao(Base):
+class LoteUnitizacao(BaseDumpable):
     __tablename__ = 'lotesunitizacao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -516,7 +522,7 @@ class DTSC(EventoBase):
         self.dataoperacao = parse(kwargs.get('dataoperacao'))
 
 
-class CargaDTSC(Base):
+class CargaDTSC(BaseDumpable):
     __tablename__ = 'cargasDTSC'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -580,7 +586,7 @@ class AcessoVeiculo(EventoBase):
         self.dataagendamento = parse(kwargs.get('dataagendamento'))
 
 
-class Gate(Base):
+class Gate(BaseDumpable):
     __abstract__ = True
     avarias = Column(String(50))
     lacres = Column(String(50))
@@ -631,7 +637,7 @@ class ReboquesGate(Gate):
     )
 
 
-class ListaNfeGate(Base):
+class ListaNfeGate(BaseDumpable):
     __tablename__ = 'listanfegate'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -672,7 +678,7 @@ class PosicaoVeiculo(EventoBase):
         self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
 
 
-class ConteinerPosicao(Base):
+class ConteinerPosicao(BaseDumpable):
     __tablename__ = 'conteineresposicao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -684,7 +690,7 @@ class ConteinerPosicao(Base):
     )
 
 
-class ReboquePosicao(Base):
+class ReboquePosicao(BaseDumpable):
     __tablename__ = 'reboquesposicao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -721,7 +727,7 @@ class Desunitizacao(EventoBase):
         self.placasemireboque = kwargs.get('placasemireboque')
 
 
-class ImagemDesunitizacao(Base):
+class ImagemDesunitizacao(BaseDumpable):
     __tablename__ = 'imagensdesunitizacao'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -736,7 +742,7 @@ class ImagemDesunitizacao(Base):
     )
 
 
-class Lote(Base):
+class Lote(BaseDumpable):
     __tablename__ = 'lotes'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
@@ -817,7 +823,7 @@ def init_db(uri='sqlite:///test.db'):
 # TODO: definir comportamento Eventos para entidade de cadastro
 #  (previa na classe Cadastro)
 
-class Cadastro(Base):
+class Cadastro(BaseDumpable):
     __abstract__ = True
     ativo = Column(Boolean(), index=True, default=True)
     fim = Column(DateTime(), index=True)
@@ -950,7 +956,7 @@ class ArtefatoRecinto(EventoBase, Cadastro):
         self.tipoartefato = kwargs.get('tipoartefato')
 
 
-class CoordenadaArtefato(Base):
+class CoordenadaArtefato(BaseDumpable):
     __tablename__ = 'coordenadasartefato'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)

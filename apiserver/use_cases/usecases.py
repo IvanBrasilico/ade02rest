@@ -1,3 +1,5 @@
+import logging
+
 from apiserver.models import orm
 
 
@@ -35,16 +37,28 @@ def load_evento(db_session, aclass,
     return evento
 
 
-def insert_inspecaonaoinvasiva(db_session, evento: dict,
-                               recinto: str, request_IP: str) -> orm.InspecaonaoInvasiva:
-    inspecaonaoinvasiva = insert_evento(db_session, orm.InspecaonaoInvasiva, evento,
-                  recinto, request_IP)
+def insert_inspecaonaoinvasiva(
+        db_session, evento: dict,
+        recinto: str, request_IP: str) -> orm.InspecaonaoInvasiva:
+    inspecaonaoinvasiva = insert_evento(
+        db_session, orm.InspecaonaoInvasiva, evento,
+        recinto, request_IP)
     anexos = evento.get('anexos', [])
     for anexo in anexos:
         anexo['inspecao_id'] = inspecaonaoinvasiva.ID
-        print('******', anexo)
-        anexoinspecao = orm.AnexoInspecao(**anexo)
+        logging.info('Creating anexoinspecaonaoinvasiva %s..',
+                     anexo.get('datamodificacao'))
+        anexoinspecao = orm.AnexoInspecao(inspecao=inspecaonaoinvasiva,
+                                          **anexo)
         db_session.add(anexoinspecao)
+    identificadores = evento.get('identificadores', [])
+    for identificador in identificadores:
+        logging.info('Creating identificadorinspecaonaoinvasiva %s..',
+                     identificador.get('identificador'))
+        oidentificador = orm.IdentificadorInspecao(
+            inspecao=inspecaonaoinvasiva,
+            **identificador)
+        db_session.add(oidentificador)
     db_session.commit()
     return inspecaonaoinvasiva
 
@@ -68,10 +82,13 @@ def load_inspecaonaoinvasiva(recinto: str, IDEvento: int,
         orm.IdentificadorInspecao
     ).one()
     inspecaonaoinvasiva_dump = inspecaonaoinvasiva.dump()
+    inspecaonaoinvasiva_dump['hash'] = hash(inspecaonaoinvasiva)
     if inspecaonaoinvasiva.anexos and len(inspecaonaoinvasiva.anexos) > 0:
         inspecaonaoinvasiva_dump['anexos'] = []
         for anexo in inspecaonaoinvasiva.anexos:
-            print(anexo.dump())
             inspecaonaoinvasiva_dump['anexos'].append(anexo.dump())
-    inspecaonaoinvasiva_dump['hash'] = hash(inspecaonaoinvasiva)
+    if inspecaonaoinvasiva.identificadores and len(inspecaonaoinvasiva.identificadores) > 0:
+        inspecaonaoinvasiva_dump['identificadores'] = []
+        for identificador in inspecaonaoinvasiva.identificadores:
+            inspecaonaoinvasiva_dump['identificadores'].append(identificador.dump())
     return inspecaonaoinvasiva_dump
