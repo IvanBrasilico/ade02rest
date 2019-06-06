@@ -213,6 +213,8 @@ def get_acessoveiculo(IDEvento):
             return _response('Evento não encontrado.', 404)
         acessoveiculo_schema = maschemas.AcessoVeiculo()
         data = acessoveiculo_schema.dump(acessoveiculo)
+        if getattr(data, 'data'):
+            data = data.data
         data = {**{'hash': hash(acessoveiculo)}, **data}
         return data, 200
     except Exception as err:
@@ -295,7 +297,9 @@ def get_dtsc(IDEvento):
             return _response('Evento não encontrado.', 404)
         dtsc_schema = maschemas.DTSC()
         data = dtsc_schema.dump(dtsc)
-        data['hash'] = hash(dtsc)
+        if getattr(data, 'data'):
+            data = data.data
+        data = {**{'hash': hash(dtsc)}, **data}
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
@@ -336,7 +340,9 @@ def get_pesagemveiculovazio(IDEvento):
             return _response('Evento não encontrado.', 404)
         pesagemveiculovazio_schema = maschemas.PesagemVeiculoVazio()
         data = pesagemveiculovazio_schema.dump(pesagemveiculovazio)
-        data['hash'] = hash(pesagemveiculovazio)
+        if getattr(data, 'data'):
+            data = data.data
+        data = {**{'hash': hash(pesagemveiculovazio)}, **data}
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
@@ -386,7 +392,9 @@ def get_posicaoveiculo(IDEvento):
             return _response('Evento não encontrado.', 404)
         posicaoveiculo_schema = maschemas.PosicaoVeiculo()
         data = posicaoveiculo_schema.dump(posicaoveiculo)
-        data['hash'] = hash(posicaoveiculo)
+        if getattr(data, 'data'):
+            data = data.data
+        data = {**{'hash': hash(posicaoveiculo)}, **data}
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
@@ -440,7 +448,9 @@ def get_unitizacao(IDEvento):
             return {'message': 'Evento não encontrado.'}, 404
         unitizacao_schema = maschemas.Unitizacao()
         data = unitizacao_schema.dump(unitizacao)
-        data['hash'] = hash(unitizacao)
+        if getattr(data, 'data'):
+            data = data.data
+        data = {**{'hash': hash(unitizacao)}, **data}
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
@@ -494,7 +504,9 @@ def get_desunitizacao(IDEvento):
             return _response('Evento não encontrado.', 404)
         desunitizacao_schema = orm.DesunitizacaoSchema()
         data = desunitizacao_schema.dump(desunitizacao)
-        data['hash'] = hash(desunitizacao)
+        if getattr(data, 'data'):
+            data = data.data
+        data = {**{'hash': hash(desunitizacao)}, **data}
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
@@ -546,7 +558,9 @@ def get_pesagemterrestre(IDEvento):
             return _response('Evento não encontrado.', 404)
         pesagemterrestre_schema = orm.PesagemTerrestreSchema()
         data = pesagemterrestre_schema.dump(pesagemterrestre)
-        data['hash'] = hash(pesagemterrestre)
+        if getattr(data, 'data'):
+            data = data.data
+        data = {**{'hash': hash(pesagemterrestre)}, **data}
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
@@ -563,7 +577,9 @@ def get_artefatorecinto(IDEvento):
             return {'message': 'Evento não encontrado.'}, 404
         artefatorecinto_schema = maschemas.ArtefatoRecinto()
         data = artefatorecinto_schema.dump(artefatorecinto)
-        data['hash'] = hash(artefatorecinto)
+        if getattr(data, 'data'):
+            data = data.data
+        data = {**{'hash': hash(artefatorecinto)}, **data}
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)

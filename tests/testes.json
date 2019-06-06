@@ -183,8 +183,8 @@
       "caminhoarquivo": "string",
       "content": "0",
       "contentType": "string",
-      "datacriacao": "2019-05-31T02:55:50.300000+00:00",
-      "datamodificacao": "2019-05-31T02:55:50.300000+00:00"
+      "datacriacao": "2019-05-31T02:55:50.300000Z",
+      "datamodificacao": "2019-05-31T02:55:50.300000Z"
     }
   ],
   "lotes": [
