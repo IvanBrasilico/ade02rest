@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/IvanBrasilico/ade02rest.svg?branch=master)](https://travis-ci.org/IvanBrasilico/ade02rest) 
+[![codecov](https://codecov.io/gh/IvanBrasilico/ade02rest/branch/master/graph/badge.svg)](https://codecov.io/gh/IvanBrasilico/ade02rest)
 
 
 # ade02rest
