@@ -100,5 +100,52 @@
     "permissao": "string",
     "placa": "string",
     "cpfcnpjresponsavel": "string"
+  },
+    "AgendamentoAcessoVeiculo": {
+    "IDEvento": 0,
+    "dataevento": "2019-06-06T23:30:10.340Z",
+    "dataregistro": "2019-06-06T23:30:10.340Z",
+    "operadorevento": "string",
+    "operadorregistro": "string",
+    "retificador": true,
+    "areasacesso": "string",
+    "conteineres": [
+      {
+        "cpfcnpjcliente": "string",
+        "lacres": "string",
+        "lacressif": "string",
+        "localsif": "string",
+        "navioembarque": "string",
+        "nomecliente": "string",
+        "numero": "string",
+        "paisdestino": "string",
+        "portodescarga": "string",
+        "vazio": true
+      }
+    ],
+    "cpfcnpjtransportador": "string",
+    "cpfmotorista": "string",
+    "dataagendamento": "2019-06-06T23:30:10.341Z",
+    "dimensaoespecial": true,
+    "documentotransporte": "string",
+    "modal": "Ferroviario",
+    "nomemotorista": "string",
+    "nometransportador": "string",
+    "pesoespecial": true,
+    "placa": "string",
+    "reboques": [
+      {
+        "cnpjestadia": "string",
+        "lacres": "string",
+        "lacressif": "string",
+        "localsif": "string",
+        "nomeestadia": "string",
+        "placa": "string",
+        "vazio": true
+      }
+    ],
+    "tipodocumentotransporte": "CE",
+    "tipooperacao": "Entrada"
   }
+
 }

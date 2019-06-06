@@ -183,6 +183,28 @@ def get_inspecaonaoinvasiva(IDEvento):
         return _response_for_exception(err)
 
 
+def agendamentoacessoveiculo(evento):
+    usecase = create_usecases()
+    try:
+        agendamentoacessoveiculo = usecase.insert_agendamentoacessoveiculo(evento)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        usecase.db_session.rollback()
+        return _response_for_exception(err)
+    return _response(agendamentoacessoveiculo.hash, 201)
+
+
+def get_agendamentoacessoveiculo(IDEvento):
+    usecase = create_usecases()
+    try:
+        agendamentoacessoveiculo = usecase.load_agendamentoacessoveiculo(IDEvento)
+        print(agendamentoacessoveiculo)
+        return agendamentoacessoveiculo, 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return _response_for_exception(err)
+
+
 def operacaonavio(evento):
     return add_evento(orm.OperacaoNavio, evento)
 

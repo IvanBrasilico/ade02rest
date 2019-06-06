@@ -118,7 +118,6 @@ class UseCases():
             commit=False)
         conteineres = evento.get('conteineres', [])
         for conteiner in conteineres:
-            conteiner['agendamento_id'] = agendamentoacessoveiculo.ID
             logging.info('Creating conteinergateagendamento %s..',
                          conteiner.get('numero'))
             oconteiner = orm.ConteineresGateAgendado(
@@ -129,7 +128,7 @@ class UseCases():
         for reboque in reboques:
             logging.info('Creating reboquegateagendamento %s..',
                          reboque.get('identificador'))
-            oreboque = orm.IdentificadorInspecao(
+            oreboque = orm.ReboquesGateAgendado(
                 agendamentoacessoveiculo=agendamentoacessoveiculo,
                 **reboque)
             self.db_session.add(oreboque)
@@ -148,23 +147,27 @@ class UseCases():
             orm.AgendamentoAcessoVeiculo.IDEvento == IDEvento,
             orm.AgendamentoAcessoVeiculo.recinto == self.recinto
         ).outerjoin(
-            orm.AnexoInspecao
+            orm.ConteineresGateAgendado
         ).outerjoin(
-            orm.IdentificadorInspecao
+            orm.ReboquesGateAgendado
         ).one()
         agendamentoacessoveiculo_dump = agendamento.dump()
         agendamentoacessoveiculo_dump['hash'] = hash(agendamento)
         if agendamento.conteineres and len(agendamento.conteineres) > 0:
             agendamentoacessoveiculo_dump['conteineres'] = []
-            for anexo in agendamento.conteineres:
+            for conteiner in agendamento.conteineres:
                 agendamentoacessoveiculo_dump['conteineres'].append(
-                    anexo.dump(exclude=['ID', 'inspecao', 'inspecao_id'])
+                    conteiner.dump(
+                        exclude=['ID', 'agendamentoacessoveiculo',
+                                 'agendamentoacessoveiculo_id'])
                 )
         if agendamento.reboques and \
                 len(agendamento.reboques) > 0:
             agendamentoacessoveiculo_dump['reboques'] = []
             for reboque in agendamento.reboques:
                 agendamentoacessoveiculo_dump['reboques'].append(
-                    reboque.dump(exclude=['ID', 'inspecao', 'inspecao_id'])
+                    reboque.dump(
+                        exclude=['ID', 'agendamentoacessoveiculo',
+                                 'agendamentoacessoveiculo_id'])
                 )
         return agendamentoacessoveiculo_dump

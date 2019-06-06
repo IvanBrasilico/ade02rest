@@ -11,8 +11,6 @@ from basetest import BaseTestCase
 sys.path.insert(0, 'apiserver')
 
 
-
-
 def extractDictAFromB(A, B):
     return dict([(k, B[k]) for k in A.keys() if k in B.keys()])
 
@@ -147,7 +145,6 @@ class APITestCase(BaseTestCase):
         classe = 'ArtefatoRecinto'
         self._cadastro(classe)
 
-
     def test_CredenciamentoPessoa(self):
         classe = 'CredenciamentoPessoa'
         self._cadastro(classe)
@@ -158,6 +155,9 @@ class APITestCase(BaseTestCase):
         self._cadastro(classe)
         self._api_cadastro_fluxo(classe, 'inativar')
 
+    def test_AgendamentoAcessoVeiculo(self):
+        classe = 'AgendamentoAcessoVeiculo'
+        self._cadastro(classe)
 
     def test_eventos_lote(self):
         self.cria_lote()
@@ -167,7 +167,7 @@ class APITestCase(BaseTestCase):
         query = {'IDEvento': 0,
                  'tipoevento': 'PesagemMaritimo'}
         r = self.client.post('eventosnovos/list',
-                            json=query)
+                             json=query)
         assert r.status_code == 200
 
         print(r.data)
@@ -175,18 +175,17 @@ class APITestCase(BaseTestCase):
         assert len(r.json) == 10
         self.compara_eventos(self.pesagens[0], r.json[0])
 
-
     def test_eventos_filter(self):
         self.cria_lote()
         data = {'file': (BytesIO(open('test.json', 'rb').read()), 'test.json')}
         r = self.client.post('eventosnovos/upload', data=data)
         assert r.status_code == 201
         datainicial = datetime.datetime.now() - datetime.timedelta(days=1)
-        query = { 'datainicial': datainicial.isoformat(),
-                  'datafinal': datetime.datetime.now().isoformat(),
-                  'tipoevento': 'PesagemMaritimo'}
+        query = {'datainicial': datainicial.isoformat(),
+                 'datafinal': datetime.datetime.now().isoformat(),
+                 'tipoevento': 'PesagemMaritimo'}
         r = self.client.post('eventos/filter',
-                            json=query)
+                             json=query)
         assert r.status_code == 200
 
         print(r.data)

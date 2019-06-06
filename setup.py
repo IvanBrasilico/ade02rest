@@ -42,8 +42,10 @@ setup(
     package_data={'OpenAPI3.0.1': ['apiserver/openapi.yaml']},
     include_package_data=True,
     entry_points={
-        'console_scripts': ['apirecintos=apiserver.main:main']},
+        'console_scripts': ['apiserver=apiserver.main:main',
+                            'apiclient=cli.cliente_api:carrega']},
     long_description="""\
-    API para prestação de informações sobre eventos de controle aduaneiro a cargo dos Redex, Recintos, Operadores Portuários e demais intervenientes em carga sobre controle aduaneiro.
+    API para prestação de informações sobre eventos de controle aduaneiro a cargo dos Redex,
+     Recintos, Operadores Portuários e demais intervenientes em carga sobre controle aduaneiro.
     """
 )
