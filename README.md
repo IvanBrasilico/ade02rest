@@ -19,7 +19,7 @@ $. venv/bin/activate
 
 #### Instalar dependências e configurar 
 ```
-(venv)$python setup.py 
+(venv)$python setup.py install 
 ```
 OU
 ```
@@ -44,6 +44,21 @@ MODO DEBUG
 ```
 $python apiserver/main.py
 ```
+
+
+### Rodar validador de arquivo/uploader
+```
+$apicliente
+```
+OU
+```
+(venv)$python cli/cliente_api.py
+```
+OU
+```
+(venv)$pyinstaller --one-file cli/cliente_api.py
+```
+
 
 
 #### Rodar testes
