@@ -107,6 +107,59 @@ def uploadfile():
         return jsonify(_response(str(err), 400)), 400
 
 
+def seteventosnovos():
+    db_session = current_app.config['db_session']
+    try:
+        file = request.files.get('file')
+        validfile, mensagem = valid_file(file,
+                                         extensions=['json', 'bson', 'zip'])
+        if not validfile:
+            return mensagem, 405
+        content = file.read()
+        content = content.decode('utf-8')
+        eventos = json.loads(content)
+        for tipoevento, eventos in eventos.items():
+            aclass = getattr(orm, tipoevento)
+            for evento in eventos:
+                try:
+                    evento['request_IP'] = request.environ.get('HTTP_X_REAL_IP',
+                                                               request.remote_addr)
+                    evento['recinto'] = RECINTO
+                    novo_evento = aclass(**evento)
+                    db_session.add(novo_evento)
+                # Ignora exceções porque vai comparar no Banco de Dados
+                except Exception as err:
+                    logging.error(str(err))
+            try:
+                db_session.commit()
+            except Exception as err:
+                logging.error(str(err))
+            result = []
+            for evento in eventos:
+                try:
+                    IDEvento = evento.get('IDEvento')
+                    evento_recuperado = db_session.query(aclass).filter(
+                        aclass.IDEvento == IDEvento
+                    ).one_or_none()
+                    if evento_recuperado is None:
+                        ohash = 'ERRO!!!'
+                    else:
+                        ohash = hash(evento_recuperado)
+                    result.append({'IDEvento': IDEvento, 'hash': ohash})
+                    logger.info('Recinto: %s IDEvento: %d ID: %d Token: %d' %
+                                (evento_recuperado.recinto, IDEvento,
+                                 evento_recuperado.ID, ohash))
+                except Exception as err:
+                    result.append({'IDEvento': IDEvento, 'hash': str(err)})
+                    logger.error('Evento ID:  %d erro: %s' %
+                                 (IDEvento,
+                                  str(err)))
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return str(err), 405
+    return jsonify(result), 201
+
+
 def geteventosnovos():
     # TODO: Fazer para Eventos complexos, que possuem filhos
     # Um modo possível é refatorar as "views" que já estão na api para
@@ -147,76 +200,7 @@ def geteventosnovos():
         return jsonify(_response(str(err), 400)), 400
 
 
-def geteventosintervalo():
-    db_session = current_app.config['db_session']
-    try:
-        tipoevento = request.form.get('tipoevento')
-        datainicial = parse(request.form.get('datainicial'))
-        datafinal = parse(request.form.get('datafinal'))
-        aclass = getattr(orm, tipoevento)
-        eventos = db_session.query(aclass).filter(
-            aclass.dataevento.between(datainicial, datafinal)
-        ).all()
-        if eventos is None:
-            return 'Sem eventos no intervalo de datas %s a %s.' % \
-                   (datainicial, datafinal), 404
-        return dump_eventos(eventos)
-    except Exception as err:
-        logging.error(err, exc_info=True)
-        return str(err), 400
-
-
-def seteventosnovos():
-    db_session = current_app.config['db_session']
-    try:
-        file = request.files.get('file')
-        validfile, mensagem = valid_file(file,
-                                         extensions=['json', 'bson', 'zip'])
-        if not validfile:
-            return mensagem, 405
-        content = file.read()
-        content = content.decode('utf-8')
-        eventos = json.loads(content)
-        for tipoevento, eventos in eventos.items():
-            aclass = getattr(orm, tipoevento)
-            for evento in eventos:
-                try:
-                    evento['request_IP'] = request.environ.get('HTTP_X_REAL_IP',
-                                                               request.remote_addr)
-                    evento['recinto'] = RECINTO
-                    novo_evento = aclass(**evento)
-                    db_session.add(novo_evento)
-                # Ignora exceções porque vai comparar no Banco de Dados
-                except Exception as err:
-                    logging.error(str(err))
-            db_session.commit()
-            result = []
-            for evento in eventos:
-                try:
-                    IDEvento = evento.get('IDEvento')
-                    evento_recuperado = db_session.query(aclass).filter(
-                        aclass.IDEvento == IDEvento
-                    ).one_or_none()
-                    if evento_recuperado is None:
-                        ohash = 'ERRO!!!'
-                    else:
-                        ohash = hash(evento_recuperado)
-                    result.append({'IDEvento': IDEvento, 'hash': ohash})
-                    logger.info('Recinto: %s IDEvento: %d ID: %d Token: %d' %
-                                (evento_recuperado.recinto, IDEvento,
-                                 evento_recuperado.ID, ohash))
-                except Exception as err:
-                    result.append({'IDEvento': IDEvento, 'hash': str(err)})
-                    logger.error('Evento ID:  %d erro: %s' %
-                                 (IDEvento,
-                                  str(err)))
-    except Exception as err:
-        logging.error(err, exc_info=True)
-        return str(err), 405
-    return jsonify(result), 201
-
-
-def recriatedb():
+def recriatedb():  # pragma: no cover
     # db_session = current_app.config['db_session']
     engine = current_app.config['engine']
     try:
@@ -235,8 +219,8 @@ def create_views(app):
     app.add_url_rule('/', 'home', home)
     app.add_url_rule('/upload_file', 'uploadfile', uploadfile, methods=['POST'])
     app.add_url_rule('/get_file', 'getfile', getfile)
-    app.add_url_rule('/get_eventos_novos', 'geteventosnovos', geteventosnovos)
-    app.add_url_rule('/set_eventos_novos', 'seteventosnovos',
+    app.add_url_rule('/eventosnovos/get', 'geteventosnovos', geteventosnovos)
+    app.add_url_rule('/eventosnovos/upload', 'seteventosnovos',
                      seteventosnovos, methods=['POST'])
     app.add_url_rule('/recriatedb', 'recriatedb', recriatedb)
     return app

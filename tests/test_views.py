@@ -189,3 +189,19 @@ class ViewTestCase(BaseTestCase):
         assert r.is_json is True
         lista = r.json
         assert len(lista) == 1
+
+    def test_eventos_lote(self):
+        self.cria_lote()
+        data = {'file': (BytesIO(open('test.json', 'rb').read()), 'test.json')}
+        r = self.client.post('eventosnovos/upload', data=data)
+        assert r.status_code == 201
+        query = {'IDEvento': 0,
+                 'tipoevento': 'PesagemMaritimo'}
+        r = self.client.get('eventosnovos/get',
+                            data=query)
+        assert r.status_code == 200
+
+        print(r.data)
+        assert r.is_json is True
+        assert len(r.json) == 10
+        self.compara_eventos(self.pesagens[0], r.json[0])

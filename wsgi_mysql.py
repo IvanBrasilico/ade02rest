@@ -13,4 +13,4 @@ session, engine = orm.init_db(MYSQLURI)
 app = create_app(session, engine)
 
 if __name__ == '__main__':
-    app.run(port=8000, threaded=False, debug=True)
+    app.run(port=8000, debug=True)

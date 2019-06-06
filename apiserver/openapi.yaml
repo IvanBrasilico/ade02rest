@@ -8,6 +8,33 @@ info:
 servers:
 - url: /
 paths:
+  /eventos/filter:
+    post:
+      operationId: api.filter_eventos
+      requestBody:
+        description: Lista de eventos que correspondam ao filtro
+        content:
+          application/json:
+            schema:
+              x-body-name: filtro
+              $ref: '#/components/schemas/FiltroEvento'
+        required: true
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayEventoBase'
+        400:
+          description: Erro
+          content: {}
+        404:
+          description: Eventos não encontrados para filtro atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
   /eventosnovos/list:
     post:
       operationId: api.get_eventosnovos
@@ -1980,6 +2007,23 @@ components:
         IDEvento:
           type: integer
           description: IDEvento a partir do qual pesquisar (maior que) OU
+        recinto:
+          type: string
+          description: Codigo do Recinto a pesquisar
+        tipoevento:
+          type: string
+          description: Nome da classe de Evento
+        datainicial:
+          type: string
+          description: Data de ocorrência física do evento - inicio de pesquisa
+          format: date-time
+        datafinal:
+          type: string
+          description: Data de ocorrência física do evento - final de pesquisa
+          format: date-time
+    FiltroEvento:
+      type: object
+      properties:
         recinto:
           type: string
           description: Codigo do Recinto a pesquisar

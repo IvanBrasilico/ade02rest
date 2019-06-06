@@ -11,11 +11,6 @@ from basetest import BaseTestCase
 sys.path.insert(0, 'apiserver')
 
 
-def random_str(num, fila):
-    result = ''
-    for i in range(num):
-        result += random.choice(fila)
-    return result
 
 
 def extractDictAFromB(A, B):
@@ -163,61 +158,37 @@ class APITestCase(BaseTestCase):
         self._cadastro(classe)
         self._api_cadastro_fluxo(classe, 'inativar')
 
-    def cria_lote(self):
-        letras = 'ABCDEFGHIJKLMNOPQRSTUVXZ'
-        numeros = ''.join([str(i) for i in range(10)])
-        textos = 'ABCDEFGHIJKLMNOPQRSTUVXZ          abcdefghijklmnopqrstuvwxyz'
-        placas = [random_str(3, letras) + random_str(5, numeros) for i in range(100)]
-        reboques = [random_str(3, letras) + random_str(5, numeros) for i in range(200)]
-        conteineres = [random_str(4, letras) + random_str(7, numeros) for i in range(200)]
-        operadores = [random_str(11, letras) for i in range(10)]
-        motoristas = [random_str(11, letras) for i in range(50)]
-        textos = [random_str(random.randint(10, 20), textos) for i in range(50)]
-
-        self.pesagens = []
-        for r in range(10):
-            data = datetime.datetime.now().isoformat()
-            operador = random.choice(operadores)
-            conteiner = random.choice(conteineres)
-            tara = random.randint(9000, 12000)
-            pesobrutodeclarado = random.randint(3000, 15000)
-            pesobalanca = tara + random.randint(-2000, 2000)
-            placa = random.choice(placas)
-            reboque = random.choice(reboques)
-            texto = random.choice(textos)
-            pesagem = \
-                {'IDEvento': r + 500,
-                 'capturaautomatica': True,
-                 'numero': random.choice(conteineres),
-                 'dataevento': data,
-                 'dataregistro': data,
-                 'retificador': False,
-                 'documentotransporte': texto,
-                 'operadorevento': operador,
-                 'operadorregistro': operador,
-                 'pesobalanca': pesobalanca,
-                 'pesobrutodeclarado': pesobrutodeclarado,
-                 'placa': placa,
-                 'placasemireboque': reboque,
-                 'taraconjunto': tara,
-                 'tipodocumentotransporte': 'CE'}
-            self.pesagens.append(pesagem)
-            json_pesagens = {'PesagemMaritimo': self.pesagens}
-            with open('test.json', 'w', encoding='utf-8', newline='') as json_out:
-                json.dump(json_pesagens, json_out)
 
     def test_eventos_lote(self):
         self.cria_lote()
         data = {'file': (BytesIO(open('test.json', 'rb').read()), 'test.json')}
-        r = self.client.post('set_eventos_novos', data=data)
+        r = self.client.post('eventosnovos/upload', data=data)
         assert r.status_code == 201
         query = {'IDEvento': 0,
                  'tipoevento': 'PesagemMaritimo'}
-        r = self.client.get('get_eventos_novos',
-                            data=query)
+        r = self.client.post('eventosnovos/list',
+                            json=query)
         assert r.status_code == 200
 
         print(r.data)
         assert r.is_json is True
         assert len(r.json) == 10
         self.compara_eventos(self.pesagens[0], r.json[0])
+
+
+    def test_eventos_filter(self):
+        self.cria_lote()
+        data = {'file': (BytesIO(open('test.json', 'rb').read()), 'test.json')}
+        r = self.client.post('eventosnovos/upload', data=data)
+        assert r.status_code == 201
+        datainicial = datetime.datetime.now() - datetime.timedelta(days=1)
+        query = { 'datainicial': datainicial.isoformat(),
+                  'datafinal': datetime.datetime.now().isoformat(),
+                  'tipoevento': 'PesagemMaritimo'}
+        r = self.client.post('eventos/filter',
+                            json=query)
+        assert r.status_code == 200
+
+        print(r.data)
+        assert r.is_json is True
+        assert len(r.json) == 10

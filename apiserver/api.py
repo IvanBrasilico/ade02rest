@@ -638,13 +638,29 @@ def list_posicaoconteiner(filtro):
 
 
 def get_eventosnovos(filtro):
+    # TODO: Fazer para Eventos complexos, que possuem filhos
+    # Um modo possível é refatorar as "views" que já estão na api para
+    # Use Cases e chamar a view adequada para gerar a representacao de cada evento
+    # é necessario fazer isso aqui e também no setter
     db_session = current_app.config['db_session']
+    print(filtro)
+    IDEvento = filtro.get('IDEvento')
+    dataevento = filtro.get('dataevento')
     try:
-        print(filtro)
-        IDEvento = filtro.get('IDEvento')
-        dataevento = filtro.get('dataevento')
+        dataevento = parse(dataevento)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        if IDEvento is None:
+            return _response('IDEvento e dataevento invalidos, '
+                             'ao menos um dos dois e necessario', 400)
+        dataevento = None
+    try:
         tipoevento = filtro.get('tipoevento')
         aclass = getattr(orm, tipoevento)
+    except AttributeError as err:
+        logging.error(err, exc_info=True)
+        return _response('Erro no campo tipoevento do filtro %s ' % str(err), 400)
+    try:
         if dataevento is None:
             eventos = db_session.query(aclass).filter(
                 aclass.IDEvento > IDEvento
@@ -658,6 +674,41 @@ def get_eventosnovos(filtro):
                 return _response('Sem eventos com ID maior que %d.' % IDEvento, 404)
             return _response('Sem eventos com dataevento maior que %s.' % dataevento,
                              404)
+        return dump_eventos(eventos)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return _response(str(err), 405)
+
+
+def filter_eventos(filtro):
+    db_session = current_app.config['db_session']
+    print(filtro)
+    recinto = filtro.get('recinto')
+    datainicial = filtro.get('datainicial')
+    datafinal = filtro.get('datafinal')
+    try:
+        datainicial = parse(datainicial)
+        datafinal = parse(datafinal)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return _response('Datas inválidas, verifique.', 400)
+    try:
+        tipoevento = filtro.get('tipoevento')
+        aclass = getattr(orm, tipoevento)
+    except AttributeError as err:
+        logging.error(err, exc_info=True)
+        return _response('Erro no campo tipoevento do filtro %s ' % str(err), 400)
+    try:
+        filters = [aclass.dataevento.between(datainicial, datafinal)]
+        if recinto:
+            filters.append(aclass.recinto == recinto)
+        eventos = db_session.query(aclass).filter(
+            and_(*filters)
+        ).all()
+        if eventos is None:
+            return _response('Sem eventos tipo %s para recinto %s '
+                             'no intervalo de datas %s a %s.' %
+                             (tipoevento, recinto, datainicial, datafinal), 404)
         return dump_eventos(eventos)
     except Exception as err:
         logging.error(err, exc_info=True)
