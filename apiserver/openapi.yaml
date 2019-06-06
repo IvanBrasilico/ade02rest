@@ -1505,7 +1505,7 @@ components:
           motivacao:
             type: string
             description: Areas permitidas acesso
-    AgendamentoVeiculo:
+    AgendamentoAcessoVeiculo:
       allOf:
       - $ref: '#/components/schemas/Evento'
       - type: object
@@ -1552,7 +1552,7 @@ components:
                   type: string
                 nomeestadia:
                   type: string
-          containers:
+          conteineres:
             type: array
             items:
               type: object

@@ -101,10 +101,70 @@ class UseCases():
                     anexo.dump(exclude=['ID', 'inspecao', 'inspecao_id'])
                 )
         if inspecaonaoinvasiva.identificadores and \
-            len(inspecaonaoinvasiva.identificadores) > 0:
+                len(inspecaonaoinvasiva.identificadores) > 0:
             inspecaonaoinvasiva_dump['identificadores'] = []
             for identificador in inspecaonaoinvasiva.identificadores:
                 inspecaonaoinvasiva_dump['identificadores'].append(
                     identificador.dump(exclude=['ID', 'inspecao', 'inspecao_id'])
                 )
         return inspecaonaoinvasiva_dump
+
+    def insert_agendamentoacessoveiculo(self, evento: dict
+                                        ) -> orm.AgendamentoAcessoVeiculo:
+        logging.info('Creating agendamentoacessoveiculo %s..',
+                     evento.get('IDEvento'))
+        agendamentoacessoveiculo = self.insert_evento(
+            orm.AgendamentoAcessoVeiculo, evento,
+            commit=False)
+        conteineres = evento.get('conteineres', [])
+        for conteiner in conteineres:
+            conteiner['agendamento_id'] = agendamentoacessoveiculo.ID
+            logging.info('Creating conteinergateagendamento %s..',
+                         conteiner.get('numero'))
+            oconteiner = orm.ConteineresGateAgendado(
+                agendamentoacessoveiculo=agendamentoacessoveiculo,
+                **conteiner)
+            self.db_session.add(oconteiner)
+        reboques = evento.get('reboques', [])
+        for reboque in reboques:
+            logging.info('Creating reboquegateagendamento %s..',
+                         reboque.get('identificador'))
+            oreboque = orm.IdentificadorInspecao(
+                agendamentoacessoveiculo=agendamentoacessoveiculo,
+                **reboque)
+            self.db_session.add(oreboque)
+        self.db_session.commit()
+        return agendamentoacessoveiculo
+
+    def load_agendamentoacessoveiculo(self, IDEvento: int
+                                      ) -> orm.AgendamentoAcessoVeiculo:
+        """
+        Retorna AgendamentoAcessoVeiculo encontrada única no filtro recinto E IDEvento.
+
+        :param IDEvento: ID do Evento informado pelo recinto
+        :return: instância objeto orm.AgendamentoAcessoVeiculo
+        """
+        agendamento = orm.AgendamentoAcessoVeiculo.query.filter(
+            orm.AgendamentoAcessoVeiculo.IDEvento == IDEvento,
+            orm.AgendamentoAcessoVeiculo.recinto == self.recinto
+        ).outerjoin(
+            orm.AnexoInspecao
+        ).outerjoin(
+            orm.IdentificadorInspecao
+        ).one()
+        agendamentoacessoveiculo_dump = agendamento.dump()
+        agendamentoacessoveiculo_dump['hash'] = hash(agendamento)
+        if agendamento.conteineres and len(agendamento.conteineres) > 0:
+            agendamentoacessoveiculo_dump['conteineres'] = []
+            for anexo in agendamento.conteineres:
+                agendamentoacessoveiculo_dump['conteineres'].append(
+                    anexo.dump(exclude=['ID', 'inspecao', 'inspecao_id'])
+                )
+        if agendamento.reboques and \
+                len(agendamento.reboques) > 0:
+            agendamentoacessoveiculo_dump['reboques'] = []
+            for reboque in agendamento.reboques:
+                agendamentoacessoveiculo_dump['reboques'].append(
+                    reboque.dump(exclude=['ID', 'inspecao', 'inspecao_id'])
+                )
+        return agendamentoacessoveiculo_dump

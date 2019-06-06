@@ -336,7 +336,7 @@ class AnexoBase(BaseDumpable):
                 file_out.write(file)
         except FileNotFoundError as err:
             logging.error(str(err), exc_info=True)
-            raise(err)
+            raise (err)
         self.contentType = mimetypes.guess_type(filename)[0]
         self.nomearquivo = filename
         return 'Arquivo salvo no anexo'
@@ -546,6 +546,85 @@ class CargaDTSC(BaseDumpable):
     DTSC = relationship(
         'DTSC', backref=backref('cargas')
     )
+
+
+class AgendamentoAcessoVeiculo(EventoBase):
+    __tablename__ = 'agendamentosacessoveiculo'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    tipooperacao = Column(String(10))
+    tipodocumentotransporte = Column(String(20))
+    documentotransporte = Column(String(20))
+    pesoespecial = Column(Boolean)
+    dimensaoespecial = Column(Boolean)
+    placa = Column(String(7))
+    chassi = Column(String(30))
+    cpfmotorista = Column(String(11))
+    nomemotorista = Column(String(50))
+    cpfcnpjtransportador = Column(String(14))
+    nometransportador = Column(String(50))
+    modal = Column(String(20))
+    dataagendada = Column(DateTime)
+    areasacesso = Column(String(100))
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(EventoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.tipooperacao = kwargs.get('tipooperacao')
+        self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
+        self.pesoespecial = kwargs.get('pesoespecial')
+        self.dimensaoespecial = kwargs.get('dimensaoespecial')
+        self.documentotransporte = kwargs.get('documentotransporte')
+        self.placa = kwargs.get('placa')
+        self.chassi = kwargs.get('chassi')
+        self.cpfmotorista = kwargs.get('cpfmotorista')
+        self.nomemotorista = kwargs.get('nomemotorista')
+        self.cpfcnpjtransportador = kwargs.get('cpfcnpjtransportador')
+        self.nometransportador = kwargs.get('nometransportador')
+        self.modal = kwargs.get('modal')
+        if kwargs.get('dataagendada') is not None:
+            self.dataagendada = parse(kwargs.get('dataagendada'))
+        self.areasacesso = kwargs.get('areasacesso')
+
+    class GateAgendado(BaseDumpable):
+        __abstract__ = True
+        lacres = Column(String(50))
+        lacressif = Column(String(50))
+        localsif = Column(String(50))
+        vazio = Column(Boolean())
+
+    class ConteineresGateAgendado(GateAgendado):
+        __tablename__ = 'conteineresgateagendado'
+        __table_args__ = {'sqlite_autoincrement': True}
+        ID = Column(Integer, primary_key=True)
+        numero = Column(String(11))
+        portodescarga = Column(String(30))
+        paisdestino = Column(String(30))
+        navioembarque = Column(String(30))
+        cpfcnpjcliente = Column(String(14))
+        nomecliente = Column(String(30))
+        agendamentosacessoveiculo_id = Column(
+            Integer,
+            ForeignKey('agendamentosacessoveiculo.ID'))
+        agendamentosacessoveiculo = relationship(
+            'AgendamentoAcessoVeiculo', backref=backref('conteineres')
+        )
+
+    class ReboquesGateAgendado(GateAgendado):
+        __tablename__ = 'agendamentoreboquesgate'
+        __table_args__ = {'sqlite_autoincrement': True}
+        ID = Column(Integer, primary_key=True)
+        placa = Column(String(7))
+        cnpjestadia = Column(String(14))
+        nomeestadia = Column(String(50))
+        agendamentosacessoveiculo_id = Column(
+            Integer,
+            ForeignKey('agendamentosacessoveiculo.ID'))
+        agendamentosacessoveiculo = relationship(
+            'AgendamentoAcessoVeiculo', backref=backref('reboques')
+        )
 
 
 class AcessoVeiculo(EventoBase):
