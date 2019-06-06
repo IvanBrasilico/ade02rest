@@ -672,10 +672,11 @@ def bloqueia_cadastro(IDEvento, aclass):
         ).one_or_none()
         if cadastro is None:
             return _response('Evento nao encontrado', 404)
-        cadastro.hash = hash(cadastro)
         cadastro.inativar()
         db_session.commit()
-        return cadastro.dump(), 200
+        db_session.refresh(cadastro)
+        cadastro.hash = hash(cadastro)
+        return cadastro.dump(), 201
     except Exception as err:
         db_session.rollback()
         logging.error(err, exc_info=True)
@@ -690,7 +691,7 @@ def get_cadastrorepresentacao(IDEvento):
     return get_evento(IDEvento, orm.CadastroRepresentacao)
 
 
-def bloqueia_cadastrorepresentacao(IDEvento):
+def encerra_cadastrorepresentacao(IDEvento):
     return bloqueia_cadastro(IDEvento, orm.CadastroRepresentacao)
 
 
@@ -702,7 +703,7 @@ def get_credenciamentoveiculo(IDEvento):
     return get_evento(IDEvento, orm.CredenciamentoVeiculo)
 
 
-def bloqueia_credenciamentoveiculo(IDEvento):
+def inativar_credenciamentoveiculo(IDEvento):
     return bloqueia_cadastro(IDEvento, orm.CredenciamentoVeiculo)
 
 
@@ -714,7 +715,7 @@ def get_credenciamentopessoa(IDEvento):
     return get_evento(IDEvento, orm.CredenciamentoPessoa)
 
 
-def bloqueia_credenciamentopessoa(IDEvento):
+def inativar_credenciamentopessoa(IDEvento):
     return bloqueia_cadastro(IDEvento, orm.CredenciamentoPessoa)
 
 
@@ -726,7 +727,7 @@ def get_informacaobloqueio(IDEvento):
     return get_evento(IDEvento, orm.InformacaoBloqueio)
 
 
-def exclui_informacaobloqueio(IDEvento):
+def desbloqueia_informacaobloqueio(IDEvento):
     return bloqueia_cadastro(IDEvento, orm.InformacaoBloqueio)
 
 

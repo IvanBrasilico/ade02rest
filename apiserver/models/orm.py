@@ -844,9 +844,10 @@ class Cadastro(BaseDumpable):
             # (Salvar em uma tabela as datas de ativacao e inativacao)
             self.fim = datetime.datetime.utcnow()
             self.ativo = False
-        raise Exception('Cadastro já foi inativado em %s' %
-                        datetime.datetime.strftime(self.fim,
-                                                   '%d/%m/%Y %H:%M'))
+        else:
+            raise Exception('Cadastro já foi inativado em %s' %
+                            datetime.datetime.strftime(self.fim,
+                                                       '%d/%m/%Y %H:%M'))
 
 
 class CadastroRepresentacao(EventoBase, Cadastro):
@@ -877,7 +878,7 @@ class CredenciamentoPessoa(EventoBase, Cadastro):
     identidade = Column(String(15), index=True)
     cnh = Column(String(15), index=True)
     nome = Column(String(50), index=True)
-    nascimento = Column(DateTime)
+    datanascimento = Column(DateTime)
     telefone = Column(String(20))
     cpfcnpjrepresentado = Column(String(14), index=True)
     nomerepresentado = Column(String(50), index=True)
@@ -1016,6 +1017,7 @@ class InformacaoBloqueio(EventoBase, Cadastro):
     numero = Column(String(11))
     placa = Column(String(7))
     motivo = Column(String(20))
+    tipobloqueio = Column(String(20))
     solicitante = Column(String(20))
 
     def __init__(self, **kwargs):
@@ -1027,9 +1029,8 @@ class InformacaoBloqueio(EventoBase, Cadastro):
         self.tipodocumentotransporte = kwargs.get('tipodocumentotransporte')
         self.numero = kwargs.get('numero')
         self.placa = kwargs.get('placa')
-        self.placasemireboque = kwargs.get('placasemireboque')
-        self.dataagendamento = parse(kwargs.get('dataagendamento'))
-        self.artefato = kwargs.get('artefato')
+        self.motivo = kwargs.get('motivo')
+        self.solicitante = kwargs.get('solicitante')
 
 
 class Ocorrencia(EventoBase):

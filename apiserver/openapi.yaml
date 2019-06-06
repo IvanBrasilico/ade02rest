@@ -83,6 +83,79 @@ paths:
         default:
           description: Erro inesperado
           content: {}
+  /credenciamentopessoa:
+    post:
+      operationId: api.credenciamentopessoa
+      requestBody:
+        description: Controle de cadastro de pessoas em area
+        content:
+          application/json:
+            schema:
+              x-body-name: evento
+              $ref: '#/components/schemas/CredenciamentoPessoa'
+        required: true
+      responses:
+        201:
+          description: Evento incluido
+          content: {}
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
+          content: {}
+  /credenciamentopessoa/{IDEvento}:
+    get:
+      operationId: api.get_credenciamentopessoa
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredenciamentoPessoa'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /credenciamentopessoa/inativar/{IDEvento}:
+    get:
+      operationId: api.inativar_credenciamentopessoa
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        201:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespostaPadrao'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
   /acessoveiculo:
     post:
       operationId: api.acessoveiculo
@@ -122,6 +195,79 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AcessoVeiculo'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /credenciamentoveiculo:
+    post:
+      operationId: api.credenciamentoveiculo
+      requestBody:
+        description: Controle de cadastro de veiculos em area
+        content:
+          application/json:
+            schema:
+              x-body-name: evento
+              $ref: '#/components/schemas/CredenciamentoVeiculo'
+        required: true
+      responses:
+        201:
+          description: Evento incluido
+          content: {}
+        400:
+          description: Entrada invalida - erro nos campos ou na validacao
+          content: {}
+        409:
+          description: Evento repetido ou outro erro de integridade
+          content: {}
+  /credenciamentoveiculo/{IDEvento}:
+    get:
+      operationId: api.get_credenciamentoveiculo
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredenciamentoVeiculo'
+        400:
+          description: ID inválido
+          content: {}
+        404:
+          description: Evento com ID não encontrado para recinto atual.
+          content: {}
+        default:
+          description: Erro inesperado
+          content: {}
+  /credenciamentoveiculo/inativar/{IDEvento}:
+    get:
+      operationId: api.inativar_credenciamentoveiculo
+      parameters:
+      - name: IDEvento
+        in: path
+        description: ID do Evento no Sistema original
+        required: true
+        schema:
+          type: integer
+      responses:
+        201:
+          description: Evento Base
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredenciamentoVeiculo'
         400:
           description: ID inválido
           content: {}
@@ -866,9 +1012,9 @@ paths:
         default:
           description: Erro inesperado
           content: {}
-  /cadastrorepresentacao/bloqueia/{IDEvento}:
+  /cadastrorepresentacao/encerra/{IDEvento}:
     get:
-      operationId: api.bloqueia_cadastrorepresentacao
+      operationId: api.encerra_cadastrorepresentacao
       parameters:
       - name: IDEvento
         in: path
@@ -882,7 +1028,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RespostaPadrao'
+                $ref: '#/components/schemas/CadastroRepresentacao'
         400:
           description: ID inválido
           content: {}
@@ -942,9 +1088,9 @@ paths:
         default:
           description: Erro inesperado
           content: {}
-  /informacaobloqueio/exclui/{IDEvento}:
+  /informacaobloqueio/desbloqueia/{IDEvento}:
     get:
-      operationId: api.exclui_informacaobloqueio
+      operationId: api.desbloqueia_informacaobloqueio
       parameters:
       - name: IDEvento
         in: path
@@ -1282,7 +1428,7 @@ components:
       - $ref: '#/components/schemas/Evento'
       - type: object
         properties:
-          responsavel:
+          cpfcnpjresponsavel:
             type: string
             description: CNPJ do responsavel pelo veiculo
           placa:
@@ -1615,6 +1761,9 @@ components:
           motivo:
             type: string
             description: Codigo que identifica o artefato no Recinto
+          tipobloqueio:
+            type: string
+            description: Sigla que identifica o tipo de bloqueio
           solicitante:
             $ref: '#/components/schemas/Autoridade'
     Ocorrencia:

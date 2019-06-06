@@ -8,20 +8,25 @@ from dateutil.parser import parse
 from apiserver.models import orm
 
 session = None
-testes = None
 engine = None
+testes = None
+cadastros = None
 
 def create_session():
     global session
-    global testes
     global engine
+    global testes
+    global cadastros
     if session is None:
         print('Creating memory database')
         session, engine = orm.init_db('sqlite:///:memory:')
         with open(os.path.join(os.path.dirname(__file__),
                                'testes.json'), 'r') as json_in:
             testes = json.load(json_in)
-    return session, engine, testes
+        with open(os.path.join(os.path.dirname(__file__),
+                               'cadastros.json'), 'r') as json_in:
+            cadastros = json.load(json_in)
+    return session, engine, testes, cadastros
 
 def extractDictAFromB(A, B):
     return dict([(k, B[k]) for k in A.keys() if k in B.keys()])
@@ -31,7 +36,7 @@ def extractDictAFromB(A, B):
 class BaseTestCase(TestCase):
 
     def setUp(self):
-        self.session, self.engine, self.testes = create_session()
+        self.session, self.engine, self.testes, self.cadastros = create_session()
         orm.Base.metadata.create_all(bind=self.engine)
 
     def tearDown(self) -> None:

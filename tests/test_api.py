@@ -65,7 +65,8 @@ class APITestCase(BaseTestCase):
 
     def compara_eventos(self, teste, response_json):
         for data in ['dataevento', 'dataregistro', 'dataoperacao', 'dataliberacao',
-                     'dataagendamento', 'datamodificacao', 'datacriacao']:
+                     'dataagendamento', 'datamodificacao', 'datacriacao', 'inicio', 'fim',
+                     'datanascimento', 'fimvalidade', 'iniciovalidade']:
             if teste.get(data) is not None:
                 teste.pop(data)
             if response_json.get(data) is not None:
@@ -102,86 +103,65 @@ class APITestCase(BaseTestCase):
             assert rv.status_code == 409
             assert rv.is_json is True
 
-    def cadastro_fluxo(self, cadastro, classe, acao):
+    def _api_insert(self, classe, cadastro):
+        print(classe)
         rv = self.client.post(classe.lower(), json=cadastro)
         assert rv.status_code == 201
         assert rv.is_json is True
-        response_token = rv.json
+
+    def _api_load(self, classe, cadastro):
+        print(classe)
         rv = self.client.get(classe.lower() + '/' + str(cadastro['IDEvento']))
         assert rv.status_code == 200
         assert rv.is_json is True
-        self.compara_eventos(cadastro, rv.json)
-        rv = self.client.post(classe.lower() + '/' +
-                              str(cadastro['IDEvento']) + '/' + acao)
+        self.compara_eventos(deepcopy(cadastro), rv.json)
+
+    def _api_cadastro_fluxo(self, classe, acao):
+        cadastro = self.cadastros[classe]
+        url = classe.lower() + '/' + acao + '/' + str(cadastro['IDEvento'])
+        print(url)
+        rv = self.client.get(url)
         assert rv.status_code == 201
         assert rv.is_json is True
+        rvjson = rv.json
+        print(rvjson)
+        assert rvjson['ativo'] is False
+        assert rvjson['fim'] is not None
+
+    def _cadastro(self, classe):
+        cadastro = self.cadastros[classe]
+        self._api_insert(classe, cadastro)
+        self._api_load(classe, cadastro)
 
     def test_cadastrorepresentacao(self):
-        cadastro = {
-            "IDEvento": 0,
-            "dataevento": "2019-06-03T23:23:02.889Z",
-            "dataregistro": "2019-06-03T23:23:02.889Z",
-            "operadorevento": "string",
-            "operadorregistro": "string",
-            "cpfcnpjrepresentado": "string",
-            "cpfrepresentante": "string",
-            "inicio": "2019-06-03T23:23:02.889Z"
-        }
+        classe = 'CadastroRepresentacao'
+        self._cadastro(classe)
+        self._api_cadastro_fluxo(classe, 'encerra')
 
-    def test_(self):
+    def test_InformacaoBloqueio(self):
+        classe = 'InformacaoBloqueio'
+        self._cadastro(classe)
+        self._api_cadastro_fluxo(classe, 'desbloqueia')
 
-        informacaobloqueio = {
-            "IDEvento": 0,
-            "dataevento": "2019-06-03T23:33:36.294Z",
-            "dataregistro": "2019-06-03T23:33:36.294Z",
-            "operadorevento": "string",
-            "operadorregistro": "string",
-            "retificador": True,
-            "documentotransporte": "string",
-            "motivo": "string",
-            "numero": "string",
-            "placa": "string",
-            "solicitante": "RFB",
-            "tipodocumentotransporte": "CE"
-        }
+    def test_AgendamentoConferencia(self):
+        classe = 'AgendamentoConferencia'
+        self._cadastro(classe)
+        self._api_cadastro_fluxo(classe, 'cancela')
 
-    def test_(self):
+    def test_ArtefatoRecinto(self):
+        classe = 'ArtefatoRecinto'
+        self._cadastro(classe)
 
-        agendamentoconferencia = {
-            "IDEvento": 0,
-            "dataevento": "2019-06-03T23:35:22.842Z",
-            "dataregistro": "2019-06-03T23:35:22.842Z",
-            "operadorevento": "string",
-            "operadorregistro": "string",
-            "retificador": true,
-            "artefato": "string",
-            "dataagendamento": "2019-06-03T23:35:22.842Z",
-            "documentotransporte": "string",
-            "local": "string",
-            "numero": "string",
-            "placa": "string",
-            "placasemireboque": "string",
-            "tipodocumento": "RG"}
 
-    def test_(self):
+    def test_CredenciamentoPessoa(self):
+        classe = 'CredenciamentoPessoa'
+        self._cadastro(classe)
+        self._api_cadastro_fluxo(classe, 'inativar')
 
-        artefatorecinto = {
-            "IDEvento": 0,
-            "dataevento": "2019-06-03T23:35:22.844Z",
-            "dataregistro": "2019-06-03T23:35:22.844Z",
-            "operadorevento": "string",
-            "operadorregistro": "string",
-            "retificador": True,
-            "codigo": "string",
-            "coordenadasartefato": [
-                {
-                    "lat": 0,
-                    "long": 0,
-                    "ordem": 0
-                }
-            ],
-            "tipoartefato": "Area (poligono)"
-        }
+    def test_CredenciamentoVeiculo(self):
+        classe = 'CredenciamentoVeiculo'
+        self._cadastro(classe)
+        self._api_cadastro_fluxo(classe, 'inativar')
 
     def cria_lote(self):
         letras = 'ABCDEFGHIJKLMNOPQRSTUVXZ'
@@ -241,5 +221,3 @@ class APITestCase(BaseTestCase):
         assert r.is_json is True
         assert len(r.json) == 10
         self.compara_eventos(self.pesagens[0], r.json[0])
-
-    # TODO: Testar fluxo de Cadastro Representacao
