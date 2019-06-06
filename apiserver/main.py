@@ -26,3 +26,40 @@ def main():  # pragma: no cover
 
 if __name__ == '__main__':  # pragma: no cover
     main()
+
+
+04.4 – Agendamento de Entrada/Saída de Veículos
+	- Direção [Entrada / Saída]
+	- Documento de Transporte
+	- Tipo de Documento de Transporte
+	- Placa Cavalo-trator/truck/automóvel ou chassi (veículo-mercadoria)
+	- Dimensões que impeçam entrada pelo gate ou passagem pelo scaner (OOG) (S/N)
+	- Peso que impeça entrada pelo gate ou passagem pelo scaner (OOG) (S/N)
+	- Lista de chaves NFE
+	- Lista semirreboques
+		- Placa
+		- Vazio [S/N]
+		- Lacres
+		- Lacre SIF
+		- Local SIF
+		- CNPJ Cliente Estadia
+		- Nome Cliente Estadia
+	- Lista de Contêineres
+		- Número
+		- Vazio [S/N]
+		- Tipo
+		- Lacre Armador
+		- Lacre SIF
+		- Local SIF
+		- CNPJ Local estufagem
+		- Porto de Descarga
+		- Navio de Embarque
+		- CNPJ Cliente Armazenagem
+		- Nome Cliente Armazenagem
+	- CNPJ Transportador
+	- Nome Transportador
+	- CPF Motorista
+	- Nome Motorista
+	- Data e Hora agendada
+	- Modal [Rodoviário/Ferroviário]
+	- ÀreasAcesso (Lista)
