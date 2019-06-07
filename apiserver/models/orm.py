@@ -885,31 +885,6 @@ def must_not_be_blank(data):
         raise ValidationError('Data not provided.')
 
 
-def init_db(uri='sqlite:///test.db'):
-    global db_session
-    global engine
-    if db_session is None:
-        print('Conectando banco %s' % uri)
-        engine = create_engine(uri)
-        db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False,
-                                                 bind=engine))
-        Base.query = db_session.query_property()
-        for table in ['DTSC', 'acessospessoas', 'avariaslote', 'desunitizacoes',
-                      'pesagensterrestres', 'pesagensveiculosvazios', 'posicoeslote',
-                      'posicoesveiculo', 'unitizacoes', 'acessosveiculo',
-                      'pesagensmaritimo', 'posicoesconteiner', 'inspecoesnaoinvasivas',
-                      'artefatosrecinto', 'ocorrencias', 'operacoesnavios']:
-            # print(table)
-            Table(table, Base.metadata,
-                  Index(table + '_ideventorecinto_idx',
-                        'recinto', 'IDEvento',
-                        unique=True,
-                        ),
-                  extend_existing=True
-                  )
-    return db_session, engine
-
-
 # Entidades de cadastro
 # Entidades de cadastro têm um comportamento diferente
 
@@ -931,7 +906,7 @@ class Cadastro(BaseDumpable):
 
 
 class CadastroRepresentacao(EventoBase, Cadastro):
-    __tablename__ = 'representacao'
+    __tablename__ = 'representacoes'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     cpfrepresentante = Column(String(11), index=True)
@@ -1208,6 +1183,34 @@ class Ocorrencia(EventoBase):
         self.codigo = kwargs.get('codigo')
         self.disponivel = kwargs.get('disponivel')
         self.motivo = kwargs.get('motivo')
+
+
+def init_db(uri='sqlite:///test.db'):
+    global db_session
+    global engine
+    if db_session is None:
+        print('Conectando banco %s' % uri)
+        engine = create_engine(uri)
+        db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False,
+                                                 bind=engine))
+        Base.query = db_session.query_property()
+        for table in ['DTSC', 'acessospessoas', 'avariaslote',
+                      'pesagensterrestres', 'pesagensveiculosvazios', 'posicoeslote',
+                      'posicoesveiculo', 'unitizacoes', 'acessosveiculo',
+                      'pesagensmaritimo', 'posicoesconteiner', 'inspecoesnaoinvasivas',
+                      'artefatosrecinto', 'ocorrencias', 'operacoesnavios',
+                      'desunitizacoes', 'representacoes', 'agendamentosconferencia',
+                      'credenciamentoveiculos', 'credenciamentopessoas', 'bloqueios',
+                      'agendamentosacessoveiculo']:
+            # print(table)
+            Table(table, Base.metadata,
+                  Index(table + '_ideventorecinto_idx',
+                        'recinto', 'IDEvento',
+                        unique=True,
+                        ),
+                  extend_existing=True
+                  )
+    return db_session, engine
 
 
 if __name__ == '__main__':
