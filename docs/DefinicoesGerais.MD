@@ -51,7 +51,7 @@ em endpoint REST com nome do evento seguido da expressão 'eventos/list'.
   Este perfil estará disponível para cadastramento no Senha Rede/E-FAU.
 
 Formato do filtro:
- ```json
+ ```
  {
 "IDEvento" : 	integer,
 # IDEvento a partir do qual pesquisar (maior que) OU
@@ -73,7 +73,7 @@ Formato do filtro:
 * TODO Evento pode ser enviado em lista para ser processada de uma só vez,
  através do endpoint 'set_eventos_novos', que receberá um arquivo JSON, opcionalmente
  comprimido no formato gzip. O Arquivo JSON terá o formato:
- ```json
+ ```
   {<TipoEvento> : [<Lista de Eventos>]}
 ```
 Sendo que em "Lista de Eventos" cada item/evento seguirá examente o mesmo formato de JSON definido no endpoint específico
