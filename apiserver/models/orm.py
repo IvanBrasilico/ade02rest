@@ -1021,14 +1021,14 @@ class FotoVeiculo(AnexoBase):
         return FotoVeiculo(credenciamentoveiculo=parent)
 
 
-class ReboquesVeiculo(Base):
+class ReboquesVeiculo(BaseDumpable):
     __tablename__ = 'reboquesveiculos'
     __table_args__ = {'sqlite_autoincrement': True}
     ID = Column(Integer, primary_key=True)
     placa = Column(String(11))
     credenciamentoveiculos_id = Column(Integer, ForeignKey('credenciamentoveiculos.ID'))
     credenciamentoveiculo = relationship(
-        'CredenciamentoVeiculo', backref=backref('fotos')
+        'CredenciamentoVeiculo', backref=backref('reboques')
     )
 
     def __init__(self, **kwargs):
@@ -1041,7 +1041,7 @@ class ReboquesVeiculo(Base):
 
     @classmethod
     def create(cls, parent):
-        return FotoVeiculo(credenciamentoveiculo=parent)
+        return ReboquesVeiculo(credenciamentoveiculo=parent)
 
 
 class CredenciamentoVeiculo(EventoBase, Cadastro):

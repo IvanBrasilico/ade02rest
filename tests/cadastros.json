@@ -60,21 +60,29 @@
   },
   "CredenciamentoPessoa": {
     "IDEvento": 0,
-    "dataevento": "2019-06-06T18:16:00.629Z",
-    "dataregistro": "2019-06-06T18:16:00.629Z",
+    "dataevento": "2019-06-07T13:24:06.444Z",
+    "dataregistro": "2019-06-07T13:24:06.444Z",
     "operadorevento": "string",
     "operadorregistro": "string",
     "retificador": true,
     "cnh": "string",
     "cpf": "string",
     "cpfcnpjrepresentado": "string",
-    "datanascimento": "2019-06-06",
-    "fimvalidade": "2019-06-06T18:16:00.629Z",
+    "datanascimento": "2019-06-07",
+    "fimvalidade": "2019-06-07T13:24:06.444Z",
+    "fotos": [
+      {
+        "nomearquivo": "",
+        "contentType": "",
+        "datacriacao": "2019-06-07T13:24:06.445Z",
+        "datamodificacao": "2019-06-07T13:24:06.445Z"
+      }
+    ],
     "funcao": "string",
     "horaentrada": 0,
     "horasaida": 0,
     "identidade": "string",
-    "iniciovalidade": "2019-06-06T18:16:00.629Z",
+    "iniciovalidade": "2019-06-07T13:24:06.445Z",
     "materiais": "string",
     "motivacao": "string",
     "nome": "string",
@@ -83,25 +91,38 @@
   },
   "CredenciamentoVeiculo": {
     "IDEvento": 0,
-    "dataevento": "2019-06-06T18:17:27.008Z",
-    "dataregistro": "2019-06-06T18:17:27.008Z",
+    "dataevento": "2019-06-07T13:21:23.281Z",
+    "dataregistro": "2019-06-07T13:21:23.281Z",
     "operadorevento": "string",
     "operadorregistro": "string",
     "retificador": true,
     "ano": "string",
-    "fimvalidade": "2019-06-06T18:17:27.008Z",
+    "cpfcnpjresponsavel": "string",
+    "fimvalidade": "2019-06-07T13:21:23.281Z",
     "geolocalizacao": true,
     "horaentrada": 0,
     "horasaida": 0,
-    "iniciovalidade": "2019-06-06T18:17:27.008Z",
+    "fotos": [
+      {
+        "nomearquivo": "",
+        "contentType": "",
+        "datacriacao": "2019-06-07T13:21:23.281Z",
+        "datamodificacao": "2019-06-07T13:21:23.282Z"
+      }
+    ],
+    "iniciovalidade": "2019-06-07T13:21:23.282Z",
     "marca": "string",
     "modelo": "string",
     "motivacao": "string",
     "permissao": "string",
     "placa": "string",
-    "cpfcnpjresponsavel": "string"
+    "reboques": [
+      {
+        "placa": "string"
+      }
+    ]
   },
-    "AgendamentoAcessoVeiculo": {
+  "AgendamentoAcessoVeiculo": {
     "IDEvento": 0,
     "dataevento": "2019-06-06T23:30:10.340Z",
     "dataregistro": "2019-06-06T23:30:10.340Z",
@@ -147,5 +168,4 @@
     "tipodocumentotransporte": "CE",
     "tipooperacao": "Entrada"
   }
-
 }

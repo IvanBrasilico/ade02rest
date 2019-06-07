@@ -50,21 +50,6 @@ class UseCases():
         ).one()
         return evento
 
-    def insert_filhos(self, oevento, campofilhos, classefilho, fk_no_filho):
-        """Processa lista no campo 'campofilhos' para inserir aclasse
-
-        :param oevento: dict com valores recebidos do JSON
-        :param campofilhos: nome do campo que contem filhos do evento
-        :param aclasse: Nome da Classe a criar
-        :param fk_no_filho: Nome do campo que referencia pai na Classe filha
-        :return: None, apenas levanta exceção se acontecer
-        """
-        osfilhos = oevento.get(campofilhos, [])
-        for filho in osfilhos:
-            params = {**{fk_no_filho: oevento}, **filho}
-            novofilho = classefilho(**params)
-            self.db_session.add(novofilho)
-
     def get_filhos(self, osfilhos, campos_excluidos=[]):
         filhos = []
         if osfilhos and len(osfilhos) > 0:
@@ -74,6 +59,48 @@ class UseCases():
                         exclude=campos_excluidos)
                 )
         return filhos
+
+    def insert_filhos(self, oevento, osfilhos, classefilho, fk_no_filho):
+        """Processa lista no campo 'campofilhos' para inserir aclasse
+
+        :param oevento: dict com valores recebidos do JSON
+        :param campofilhos: nome do campo que contem filhos do evento
+        :param aclasse: Nome da Classe a criar
+        :param fk_no_filho: Nome do campo que referencia pai na Classe filha
+        :return: None, apenas levanta exceção se acontecer
+        """
+        for filho in osfilhos:
+            params = {**{fk_no_filho: oevento}, **filho}
+            novofilho = classefilho(**params)
+            self.db_session.add(novofilho)
+
+    def get_anexos(self, osfilhos, campos_excluidos=[]):
+        filhos = []
+        if osfilhos and len(osfilhos) > 0:
+            for filho in osfilhos:
+                filho.load_file(self.basepath)
+                filhos.append(
+                    filho.dump(
+                        exclude=campos_excluidos)
+                )
+        return filhos
+
+    def insert_anexos(self, oevento, osfilhos, classefilho, fk_no_filho):
+        """Processa lista no campo 'campofilhos' para inserir aclasse(AnexoBase)
+
+        :param oevento: dict com valores recebidos do JSON
+        :param campofilhos: nome do campo que contem filhos do evento
+        :param aclasse: Nome da Classe a criar. Deve descender de AnexoBase
+        :param fk_no_filho: Nome do campo que referencia pai na Classe filha
+        :return: None, apenas levanta exceção se acontecer
+        """
+        for filho in osfilhos:
+            params = {**{fk_no_filho: oevento}, **filho}
+            novofilho = classefilho(**params)
+            content = filho.get('content')
+            if content:
+                novofilho.save_file(self.basepath, content)
+            self.db_session.add(novofilho)
 
     @classmethod
     def get_anexo(self, evento, nomearquivo):
@@ -234,7 +261,9 @@ class UseCases():
         credenciamentopessoa = self.insert_evento(
             orm.CredenciamentoPessoa, evento,
             commit=False)
-        self.insert_filhos(evento, 'fotos', orm.FotoPessoa, 'credenciamentopessoa')
+        fotos = evento.get('fotos', [])
+        self.insert_anexos(credenciamentopessoa, fotos,
+                           orm.FotoPessoa, 'credenciamentopessoa')
         self.db_session.commit()
         return credenciamentopessoa
 
@@ -253,7 +282,7 @@ class UseCases():
         ).one()
         credenciamentopessoa_dump = credenciamento.dump()
         credenciamentopessoa_dump['hash'] = hash(credenciamento)
-        credenciamentopessoa_dump['fotos'] = self.get_filhos(
+        credenciamentopessoa_dump['fotos'] = self.get_anexos(
             credenciamento.fotos,
             campos_excluidos=['ID', 'credenciamentopessoa',
                               'credenciamentopessoa_id']
@@ -272,8 +301,12 @@ class UseCases():
         credenciamentoveiculo = self.insert_evento(
             orm.CredenciamentoVeiculo, evento,
             commit=False)
-        self.insert_filhos(evento, 'fotos', orm.FotoVeiculo, 'credenciamentoveiculo')
-        self.insert_filhos(evento, 'reboques', orm.ReboquesVeiculo, 'credenciamentoveiculo')
+        fotos = evento.get('fotos', [])
+        self.insert_anexos(credenciamentoveiculo, fotos,
+                           orm.FotoVeiculo, 'credenciamentoveiculo')
+        reboques = evento.get('reboques', [])
+        self.insert_filhos(credenciamentoveiculo, reboques,
+                           orm.ReboquesVeiculo, 'credenciamentoveiculo')
         self.db_session.commit()
         return credenciamentoveiculo
 
@@ -294,7 +327,7 @@ class UseCases():
         ).one()
         credenciamentoveiculo_dump = credenciamento.dump()
         credenciamentoveiculo_dump['hash'] = hash(credenciamento)
-        credenciamentoveiculo_dump['fotos'] = self.get_filhos(
+        credenciamentoveiculo_dump['fotos'] = self.get_anexos(
             credenciamento.fotos,
             campos_excluidos=['ID', 'credenciamentoveiculo',
                               'credenciamentoveiculo_id']

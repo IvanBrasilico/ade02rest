@@ -1373,7 +1373,7 @@ components:
     Anexos:
       type: object
       properties:
-        caminhoarquivo:
+        nomearquivo:
           type: string
         datacriacao:
           type: string
@@ -1431,6 +1431,10 @@ components:
             type: string
             description: Data de nascimento
             format: date
+          fotos:
+            type: array
+            items:
+              $ref: '#/components/schemas/Anexos'
           cpfcnpjrepresentado:
             type: string
             description: CNPJ/CPF representado
@@ -1516,7 +1520,7 @@ components:
               properties:
                 placa:
                   type: string
-          imagens:
+          fotos:
             type: array
             items:
               $ref: '#/components/schemas/Anexos'
