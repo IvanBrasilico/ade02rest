@@ -36,7 +36,6 @@ def valid_file(file, extensions=['jpg', 'xml', 'json']):
     return True, None
 
 
-
 def getfile():
     db_session = current_app.config['db_session']
     try:

@@ -54,20 +54,18 @@ OU
 ```
 (venv)$python cli/cliente_api.py
 ```
-OU
+O COMANDO ABAIXO GERA UM ARQUIVO EXECUTÁVEL DO VALIDADOR
 ```
+(venv)$pip install pyinstaller
 (venv)$pyinstaller --one-file cli/cliente_api.py
 ```
 
-
-
 #### Rodar testes
-Testes unitários:
+Testes unitários e de integração:
 ```
 $pytest tests/
 ```
-Rodar todos os testes e checagens via tox:
+Rodar todos os testes e checagens via tox (ver tox.ini):
 ```
 $tox
 ```
-
