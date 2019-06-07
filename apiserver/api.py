@@ -769,11 +769,24 @@ def encerra_cadastrorepresentacao(IDEvento):
 
 
 def credenciamentoveiculo(evento):
-    return add_evento(orm.CredenciamentoVeiculo, evento)
+    usecase = create_usecases()
+    try:
+        credenciamentoveiculo = usecase.insert_credenciamentoveiculo(evento)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        usecase.db_session.rollback()
+        return _response_for_exception(err)
+    return _response(credenciamentoveiculo.hash, 201)
 
 
 def get_credenciamentoveiculo(IDEvento):
-    return get_evento(IDEvento, orm.CredenciamentoVeiculo)
+    usecase = create_usecases()
+    try:
+        credenciamentoveiculo = usecase.load_credenciamentoveiculo(IDEvento)
+        return credenciamentoveiculo, 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return _response_for_exception(err)
 
 
 def inativar_credenciamentoveiculo(IDEvento):

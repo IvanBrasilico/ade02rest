@@ -50,6 +50,49 @@ class UseCases():
         ).one()
         return evento
 
+    def insert_filhos(self, oevento, campofilhos, classefilho, fk_no_filho):
+        """Processa lista no campo 'campofilhos' para inserir aclasse
+
+        :param oevento: dict com valores recebidos do JSON
+        :param campofilhos: nome do campo que contem filhos do evento
+        :param aclasse: Nome da Classe a criar
+        :param fk_no_filho: Nome do campo que referencia pai na Classe filha
+        :return: None, apenas levanta exceção se acontecer
+        """
+        osfilhos = oevento.get(campofilhos, [])
+        for filho in osfilhos:
+            params = {**{fk_no_filho: oevento}, **filho}
+            novofilho = classefilho(**params)
+            self.db_session.add(novofilho)
+
+    def get_filhos(self, osfilhos, campos_excluidos=[]):
+        filhos = []
+        if osfilhos and len(osfilhos) > 0:
+            for filho in osfilhos:
+                filhos.append(
+                    filho.dump(
+                        exclude=campos_excluidos)
+                )
+        return filhos
+
+    @classmethod
+    def get_anexo(self, evento, nomearquivo):
+        """Classes que têm anexo precisam deste comportamento comum
+
+
+        :param evento: Base SQLAlchemy que tem campo anexos
+        :param nomearquivo: nomearquivo de um dos anexos
+        :return: um Anexo do EventoBase ou None se não encontrado
+        """
+        if nomearquivo:
+            for anexo in evento.anexos:
+                if anexo.nomearquivo == nomearquivo:
+                    return anexo
+        else:  # Se nomearquivo não foi passado, considera que só tem um anexo
+            if getattr(evento, 'anexos', False) and len(evento.anexos) > 0:
+                return evento.anexos[0]
+        return None
+
     def insert_inspecaonaoinvasiva(self, evento: dict) -> orm.InspecaonaoInvasiva:
         logging.info('Creating inspecaonaoinvasiva %s..', evento.get('IDEvento'))
         inspecaonaoinvasiva = self.insert_evento(orm.InspecaonaoInvasiva, evento,
@@ -179,49 +222,6 @@ class UseCases():
         """
         return agendamentoacessoveiculo_dump
 
-    def insert_filhos(self, oevento, campofilhos, classefilho, fk_no_filho):
-        """Processa lista no campo 'campofilhos' para inserir aclasse
-
-        :param oevento: dict com valores recebidos do JSON
-        :param campofilhos: nome do campo que contem filhos do evento
-        :param aclasse: Nome da Classe a criar
-        :param fk_no_filho: Nome do campo que referencia pai na Classe filha
-        :return: None, apenas levanta exceção se acontecer
-        """
-        osfilhos = oevento.get(campofilhos, [])
-        for filho in osfilhos:
-            params = {**{fk_no_filho: oevento}, **filho}
-            novofilho = classefilho(**params)
-            self.db_session.add(novofilho)
-
-    def get_filhos(self, osfilhos, campos_excluidos=[]):
-        filhos = []
-        if osfilhos and len(osfilhos) > 0:
-            for filho in osfilhos:
-                filhos.append(
-                    filho.dump(
-                        exclude=campos_excluidos)
-                )
-        return filhos
-
-    @classmethod
-    def get_anexo(self, evento, nomearquivo):
-        """Classes que têm anexo precisam deste comportamento comum
-
-
-        :param evento: Base SQLAlchemy que tem campo anexos
-        :param nomearquivo: nomearquivo de um dos anexos
-        :return: um Anexo do EventoBase ou None se não encontrado
-        """
-        if nomearquivo:
-            for anexo in evento.anexos:
-                if anexo.nomearquivo == nomearquivo:
-                    return anexo
-        else:  # Se nomearquivo não foi passado, considera que só tem um anexo
-            if getattr(evento, 'anexos', False) and len(evento.anexos) > 0:
-                return evento.anexos[0]
-        return None
-
     def insert_credenciamentopessoa(self, evento: dict) -> orm.CredenciamentoPessoa:
         """
         Insere CredenciamentoPessoa no Banco de Dados
@@ -259,3 +259,49 @@ class UseCases():
                               'credenciamentopessoa_id']
         )
         return credenciamentopessoa_dump
+
+    def insert_credenciamentoveiculo(self, evento: dict) -> orm.CredenciamentoVeiculo:
+        """
+        Insere CredenciamentoVeiculo no Banco de Dados
+
+        :param evento: Dicionário contendo valores do JSON passado
+        :return: Objeto orm.CredenciamentoVeiculo
+        """
+        logging.info('Creating credenciamentoveiculo %s..',
+                     evento['IDEvento'])
+        credenciamentoveiculo = self.insert_evento(
+            orm.CredenciamentoVeiculo, evento,
+            commit=False)
+        self.insert_filhos(evento, 'fotos', orm.FotoVeiculo, 'credenciamentoveiculo')
+        self.insert_filhos(evento, 'reboques', orm.ReboquesVeiculo, 'credenciamentoveiculo')
+        self.db_session.commit()
+        return credenciamentoveiculo
+
+    def load_credenciamentoveiculo(self, IDEvento):
+        """
+        Retorna CredenciamentoVeiculo encontrado única no filtro recinto E IDEvento.
+
+        :param IDEvento: ID do Evento informado pelo recinto
+        :return: instância objeto orm.CredenciamentoVeiculo
+        """
+        credenciamento = orm.CredenciamentoVeiculo.query.filter(
+            orm.CredenciamentoVeiculo.IDEvento == IDEvento,
+            orm.CredenciamentoVeiculo.recinto == self.recinto
+        ).outerjoin(
+            orm.FotoVeiculo
+        ).outerjoin(
+            orm.ReboquesVeiculo
+        ).one()
+        credenciamentoveiculo_dump = credenciamento.dump()
+        credenciamentoveiculo_dump['hash'] = hash(credenciamento)
+        credenciamentoveiculo_dump['fotos'] = self.get_filhos(
+            credenciamento.fotos,
+            campos_excluidos=['ID', 'credenciamentoveiculo',
+                              'credenciamentoveiculo_id']
+        )
+        credenciamentoveiculo_dump['reboques'] = self.get_filhos(
+            credenciamento.reboques,
+            campos_excluidos=['ID', 'credenciamentoveiculo',
+                              'credenciamentoveiculo_id']
+        )
+        return credenciamentoveiculo_dump
