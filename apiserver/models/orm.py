@@ -912,8 +912,6 @@ def init_db(uri='sqlite:///test.db'):
 
 # Entidades de cadastro
 # Entidades de cadastro têm um comportamento diferente
-# TODO: definir comportamento Eventos para entidade de cadastro
-#  (previa na classe Cadastro)
 
 class Cadastro(BaseDumpable):
     __abstract__ = True
@@ -994,6 +992,33 @@ class CredenciamentoPessoa(EventoBase, Cadastro):
         self.permissao = kwargs.get('permissao')
         self.materiais = kwargs.get('materiais')
         self.motivacao = kwargs.get('motivacao')
+
+
+class FotoPessoa(AnexoBase):
+    __tablename__ = 'fotospessoas'
+    __table_args__ = {'sqlite_autoincrement': True}
+    ID = Column(Integer, primary_key=True)
+    credenciamentopessoas_id = Column(Integer, ForeignKey('credenciamentopessoas.ID'))
+    credenciamentopessoa = relationship(
+        'CredenciamentoPessoa', backref=backref('fotos')
+    )
+
+    def __init__(self, **kwargs):
+        superkwargs = dict([
+            (k, v) for k, v in kwargs.items() if k in vars(AnexoBase).keys()
+        ])
+        super().__init__(**superkwargs)
+        self.credenciamentopessoa = kwargs.get('credenciamentopessoa')
+
+    def save_file(self, basepath, file, filename=None) -> (str, bool):
+        return super().save_file(basepath, file, filename, self.credenciamentopessoa)
+
+    def load_file(self, basepath):
+        return super().load_file(basepath, self.credenciamentopessoa)
+
+    @classmethod
+    def create(cls, parent):
+        return FotoPessoa(credenciamentopessoa=parent)
 
 
 class CredenciamentoVeiculo(EventoBase, Cadastro):

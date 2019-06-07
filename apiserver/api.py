@@ -781,11 +781,24 @@ def inativar_credenciamentoveiculo(IDEvento):
 
 
 def credenciamentopessoa(evento):
-    return add_evento(orm.CredenciamentoPessoa, evento)
+    usecase = create_usecases()
+    try:
+        credenciamentopessoa = usecase.insert_credenciamentopessoa(evento)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        usecase.db_session.rollback()
+        return _response_for_exception(err)
+    return _response(credenciamentopessoa.hash, 201)
 
 
 def get_credenciamentopessoa(IDEvento):
-    return get_evento(IDEvento, orm.CredenciamentoPessoa)
+    usecase = create_usecases()
+    try:
+        credenciamentopessoa = usecase.load_credenciamentopessoa(IDEvento)
+        return credenciamentopessoa, 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return _response_for_exception(err)
 
 
 def inativar_credenciamentopessoa(IDEvento):

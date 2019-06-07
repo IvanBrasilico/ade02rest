@@ -8,6 +8,7 @@ from flask import current_app, request, render_template, jsonify, Response
 from apiserver.api import dump_eventos, RECINTO, _response, _commit
 from apiserver.logconf import logger
 from apiserver.models import orm
+from apiserver.use_cases.usecases import UseCases
 
 
 def home():
@@ -35,22 +36,20 @@ def valid_file(file, extensions=['jpg', 'xml', 'json']):
     return True, None
 
 
+
 def getfile():
-    # TODO: Tratar nomearquivo, mover o código de procurar anexo
-    # deste metodo e do upload para use case
-    # Ver se dá para deixar generico para qualquer AnexoBase
     db_session = current_app.config['db_session']
-    # basepath = current_app.config.get('UPLOAD_FOLDER')
     try:
         IDEvento = request.form.get('IDEvento')
         tipoevento = request.form.get('tipoevento')
+        nomearquivo = request.form.get('nomearquivo')
         aclass = getattr(orm, tipoevento)
         evento = db_session.query(aclass).filter(
             aclass.IDEvento == IDEvento
         ).one_or_none()
         if evento is None:
             return jsonify(_response('Evento não encontrado.', 404)), 404
-        oanexo = evento.anexos[0]
+        oanexo = UseCases.get_anexo(evento, nomearquivo)
         basepath = current_app.config.get('UPLOAD_FOLDER')
         oanexo.load_file(basepath)
         print(oanexo.content)
@@ -81,15 +80,7 @@ def uploadfile():
         if evento is None:
             return jsonify(_response('Evento não encontrado.', 404)), 404
         db_session.add(evento)
-        oanexo = None
-        if nomearquivo:
-            for anexo in evento.anexos:
-                if anexo.nomearquivo == nomearquivo:
-                    oanexo = anexo
-                    break
-        else:
-            if getattr(evento, 'anexos', False) and len(evento.anexos) > 0:
-                oanexo = evento.anexos[0]
+        oanexo = UseCases.get_anexo(evento, nomearquivo)
         if oanexo is None:
             classeanexo = getattr(orm, tipoanexo)
             oanexo = classeanexo.create(
