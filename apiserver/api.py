@@ -57,11 +57,11 @@ def _response_for_exception(exception, title=None):
         status_code = 404
     if title is None:
         title = titles[status_code]
-    return {'detail': str(exception),
-            'status': status_code,
-            'title': title,
-            'type': exception.__class__.__name__}, \
-           status_code
+    response = {'detail': str(exception),
+                'status': status_code,
+                'title': title,
+                'type': exception.__class__.__name__}
+    return response, status_code
 
 
 def _commit(evento):
@@ -105,7 +105,7 @@ def get_evento(IDEvento, aclass):
         return evento.dump(), 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 400)
+        return _response(err, 400)
 
 
 def add_evento(aclass, evento):
@@ -247,7 +247,7 @@ def get_acessoveiculo(IDEvento):
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 400)
+        return _response(err, 400)
 
 
 def acessoveiculo(evento):
@@ -287,7 +287,7 @@ def acessoveiculo(evento):
     except Exception as err:
         logging.error(err, exc_info=True)
         db_session.rollback()
-        return _response(str(err), 400)
+        return _response(err, 400)
     return _commit(acessoveiculo)
 
 
@@ -310,7 +310,7 @@ def dtsc(evento):
     except Exception as err:
         logging.error(err, exc_info=True)
         db_session.rollback()
-        return _response(str(err), 400)
+        return _response(err, 400)
     return _commit(dtsc)
 
 
@@ -331,7 +331,7 @@ def get_dtsc(IDEvento):
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 400)
+        return _response(err, 400)
 
 
 def pesagemveiculovazio(evento):
@@ -353,7 +353,7 @@ def pesagemveiculovazio(evento):
     except Exception as err:
         logging.error(err, exc_info=True)
         db_session.rollback()
-        return _response(str(err), 400)
+        return _response(err, 400)
     return _commit(pesagemveiculovazio)
 
 
@@ -403,7 +403,7 @@ def posicaoveiculo(evento):
     except Exception as err:
         logging.error(err, exc_info=True)
         db_session.rollback()
-        return _response(str(err), 400)
+        return _response(err, 400)
     return _commit(posicaoveiculo)
 
 
@@ -426,7 +426,7 @@ def get_posicaoveiculo(IDEvento):
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 400)
+        return _response(err, 400)
 
 
 def unitizacao(evento):
@@ -459,7 +459,7 @@ def unitizacao(evento):
     except Exception as err:
         logging.error(err, exc_info=True)
         db_session.rollback()
-        return _response(str(err), 400)
+        return _response(err, 400)
     return _commit(unitizacao)
 
 
@@ -482,7 +482,7 @@ def get_unitizacao(IDEvento):
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 400)
+        return _response(err, 400)
 
 
 def desunitizacao(evento):
@@ -515,7 +515,7 @@ def desunitizacao(evento):
     except Exception as err:
         logging.error(err, exc_info=True)
         db_session.rollback()
-        return _response(str(err), 400)
+        return _response(err, 400)
     return _commit(desunitizacao)
 
 
@@ -538,7 +538,7 @@ def get_desunitizacao(IDEvento):
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 400)
+        return _response(err, 400)
 
 
 def pesagemterrestre(evento):
@@ -569,7 +569,7 @@ def pesagemterrestre(evento):
     except Exception as err:
         logging.error(err, exc_info=True)
         db_session.rollback()
-        return _response(str(err), 400)
+        return _response(err, 400)
     return _commit(pesagemterrestre)
 
 
@@ -592,7 +592,7 @@ def get_pesagemterrestre(IDEvento):
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 400)
+        return _response(err, 400)
 
 
 def get_artefatorecinto(IDEvento):
@@ -611,7 +611,7 @@ def get_artefatorecinto(IDEvento):
         return data, 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 400)
+        return _response(err, 400)
 
 
 def artefatorecinto(evento):
@@ -634,7 +634,7 @@ def artefatorecinto(evento):
     except Exception as err:
         logging.error(err, exc_info=True)
         db_session.rollback()
-        return _response(str(err), 400)
+        return _response(err, 400)
     return _commit(artefatorecinto)
 
 
@@ -662,15 +662,11 @@ def list_posicaoconteiner(filtro):
         return dump_eventos(eventos)
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 405)
+        return _response(err, 405)
 
 
 def get_eventosnovos(filtro):
-    # TODO: Fazer para Eventos complexos, que possuem filhos
-    # Um modo possível é refatorar as "views" que já estão na api para
-    # Use Cases e chamar a view adequada para gerar a representacao de cada evento
-    # é necessario fazer isso aqui e também no setter
-    db_session = current_app.config['db_session']
+    usecase = create_usecases()
     print(filtro)
     IDEvento = filtro.get('IDEvento')
     dataevento = filtro.get('dataevento')
@@ -688,15 +684,9 @@ def get_eventosnovos(filtro):
     except AttributeError as err:
         logging.error(err, exc_info=True)
         return _response('Erro no campo tipoevento do filtro %s ' % str(err), 400)
+    fields = filtro.get('fields')
+    eventos = usecase.load_eventosnovos(aclass, IDEvento, dataevento, fields)
     try:
-        if dataevento is None:
-            eventos = db_session.query(aclass).filter(
-                aclass.IDEvento > IDEvento
-            ).all()
-        else:
-            eventos = db_session.query(aclass).filter(
-                aclass.dataevento > dataevento
-            ).all()
         if eventos is None or len(eventos) == 0:
             if dataevento is None:
                 return _response('Sem eventos com ID maior que %d.' % IDEvento, 404)
@@ -705,7 +695,8 @@ def get_eventosnovos(filtro):
         return dump_eventos(eventos)
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 405)
+        return _response(err, 405)
+        return _response(err, 405)
 
 
 def filter_eventos(filtro):
@@ -740,7 +731,7 @@ def filter_eventos(filtro):
         return dump_eventos(eventos)
     except Exception as err:
         logging.error(err, exc_info=True)
-        return _response(str(err), 405)
+        return _response(err, 405)
 
 
 def bloqueia_cadastro(IDEvento, aclass):
@@ -759,7 +750,7 @@ def bloqueia_cadastro(IDEvento, aclass):
     except Exception as err:
         db_session.rollback()
         logging.error(err, exc_info=True)
-        return _response(str(err), 400)
+        return _response(err, 400)
 
 
 def cadastrorepresentacao(evento):

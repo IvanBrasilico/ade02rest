@@ -68,6 +68,10 @@ class UseCases():
         :param fields: Trazer apenas estes campos
         :return: lista de objetos
         """
+        # TODO: Fazer para Eventos complexos, que possuem filhos
+        # Um modo possível é refatorar as "views" que já estão na api para
+        # Use Cases e chamar a view adequada para gerar a representacao de cada evento
+        # é necessario fazer isso aqui e também no setter
         if dataevento is None:
             query = self.db_session.query(aclass).filter(
                 aclass.IDEvento > IDEvento

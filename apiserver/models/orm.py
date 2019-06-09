@@ -927,7 +927,6 @@ class CadastroRepresentacao(EventoBase, Cadastro):
 class CredenciamentoPessoa(EventoBase, Cadastro):
     __tablename__ = 'credenciamentopessoas'
     __table_args__ = {'sqlite_autoincrement': True}
-    # TODO: Anexos - fotos/documentos
     ID = Column(Integer, primary_key=True)
     cpf = Column(String(11), index=True)
     identidade = Column(String(15), index=True)
@@ -1022,7 +1021,6 @@ class ReboquesVeiculo(BaseDumpable):
 class CredenciamentoVeiculo(EventoBase, Cadastro):
     __tablename__ = 'credenciamentoveiculos'
     __table_args__ = {'sqlite_autoincrement': True}
-    # TODO: Anexos - imagens e reboques
     ID = Column(Integer, primary_key=True)
     cpfcnpjresponsavel = Column(String(14), index=True)
     placa = Column(String(7), index=True)
