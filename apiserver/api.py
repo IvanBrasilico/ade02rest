@@ -37,12 +37,16 @@ def create_usecases():
 
 
 def _response(msg, status_code, title=None):
+    response = {'status': status_code}
+    if isinstance(msg, Exception):
+        response['type'] = msg.__class__.__name__
+        response['detail'] = str(msg)
+    else:
+        response['detail'] = msg
     if title is None:
         title = titles[status_code]
-    return {'detail': msg,
-            'status': status_code,
-            'title': title}, \
-           status_code
+    response['title'] = title
+    return response, status_code
 
 
 def _response_for_exception(exception, title=None):
@@ -55,7 +59,9 @@ def _response_for_exception(exception, title=None):
         title = titles[status_code]
     return {'detail': str(exception),
             'status': status_code,
-            'title': title}, status_code
+            'title': title,
+            'type': exception.__class__.__name__}, \
+           status_code
 
 
 def _commit(evento):

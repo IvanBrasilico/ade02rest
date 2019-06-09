@@ -1,5 +1,7 @@
 import logging
 
+from sqlalchemy.orm import load_only
+
 from apiserver.models import orm
 
 
@@ -34,21 +36,49 @@ class UseCases():
         novo_evento.hash = hash(novo_evento)
         return novo_evento
 
-    def load_evento(self, aclass, IDEvento: int) -> orm.EventoBase:
+    def load_evento(self, aclass, IDEvento: int, fields: list = None) -> orm.EventoBase:
         """
         Retorna Evento classe aclass encontrado único com recinto E IDEvento.
 
         Levanta exceção NoResultFound(não encontrado) ou MultipleResultsFound.
 
+        :param aclass: Classe ORM que acessa o BD
         :param IDEvento: ID do Evento informado pelo recinto
+        :param fields: Trazer apenas estes campos
         :return: objeto
         """
-
-        evento = self.db_session.query(aclass).filter(
+        query = self.db_session.query(aclass).filter(
             aclass.IDEvento == IDEvento,
             aclass.recinto == self.recinto
-        ).one()
+        )
+        if fields and isinstance(fields, list) and len(fields) > 0:
+            query = query.options(load_only(fields))
+        evento = query.one()
         return evento
+
+    def load_eventosnovos(self, aclass, IDEvento, dataevento,
+                          fields: list = None) -> list:
+        """
+        Retorna Evento classe aclass encontrado único com recinto E IDEvento.
+
+        Levanta exceção NoResultFound(não encontrado) ou MultipleResultsFound.
+
+        :param IDEvento: ID a partir do qual buscar
+        :param IDEvento: data a partir da qual buscar
+        :param fields: Trazer apenas estes campos
+        :return: lista de objetos
+        """
+        if dataevento is None:
+            query = self.db_session.query(aclass).filter(
+                aclass.IDEvento > IDEvento
+            )
+        else:
+            query = self.db_session.query(aclass).filter(
+                aclass.dataevento > dataevento
+            )
+        if fields is not None:
+            query = query.options(load_only(fields))
+        return query.all()
 
     def get_filhos(self, osfilhos, campos_excluidos=[]):
         filhos = []
