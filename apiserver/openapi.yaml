@@ -1886,12 +1886,12 @@ components:
         properties:
           documentotransporte:
             type: string
-            description: Numero do conteiner
+            description: Numero do documento que embasa o Transporte
           tipodocumentotransporte:
             $ref: '#/components/schemas/TipoDocumentoTransporte'
           numero:
             type: string
-            description: Numero do conteiner
+            description: Numero do conteiner maritimo ou do ULD aereo
           placa:
             type: string
             description: Placa do caminhao/truck/cavalo
@@ -2140,7 +2140,7 @@ components:
           $ref: '#/components/schemas/TipoVolume'
         marca:
           type: string
-          description: Marcas em embalagens, mercadoria ou etiquetas que identificam o lote
+          description: Marcas em embalagens, mercadoria ou etiquetas que identificam o lote e contramarca
         acrescimo:
           type: boolean
           description: Indica se este e um lote de acrescimo (informar falta total nos campos de falta)
@@ -2165,7 +2165,7 @@ components:
             $ref: '#/components/schemas/TipoDocumentoTransporte'
           numero:
             type: string
-            description: Numero do conteiner
+            description: Numero do conteiner maritimo ou do ULD aereo
           placa:
             type: string
             description: Placa do caminhao/truck/cavalo
@@ -2260,7 +2260,7 @@ components:
             description: IMO Navio
           viagem:
             type: string
-            description: Viagem Navio
+            description: Viagem Navio - Escala Siscomex CARGA
           cargas:
             type: array
             description: Lista de cargas DTSC
@@ -2302,13 +2302,16 @@ components:
               description: IMO Navio
             viagem:
               type: string
-              description: Viagem Navio
+              description:  Viagem Navio - Escala Siscomex CARGA
             numero:
               type: string
               description: Numero do conteiner
-            peso:
+            pesomanifestado:
               type: integer
-              description: Peso bruto do conteiner pesado no equipamento de operacao portuaria
+              description: Peso bruto do conteiner manifestado no plano do armador
+            pesovgm:
+              type: integer
+              description: Peso bruto do conteiner pesado no equipamento de operacao portuaria - Verified Gross Mass
             posicao:
               type: string
               description: Posicao no navio
