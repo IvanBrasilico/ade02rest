@@ -5,7 +5,7 @@ import os
 from dateutil.parser import parse
 from flask import current_app, request, render_template, jsonify, Response
 
-from apiserver.api import dump_eventos, RECINTO, _response, _commit
+from apiserver.api import dump_eventos, RECINTO, _response, _commit, create_usecases
 from apiserver.logconf import logger
 from apiserver.models import orm
 from apiserver.use_cases.usecases import UseCases
@@ -151,11 +151,7 @@ def seteventosnovos():
 
 
 def geteventosnovos():
-    # TODO: Fazer para Eventos complexos, que possuem filhos
-    # Um modo possível é refatorar as "views" que já estão na api para
-    # Use Cases e chamar a view adequada para gerar a representacao de cada evento
-    # é necessario fazer isso aqui e também no setter
-    db_session = current_app.config['db_session']
+    usecase = create_usecases()
     try:
         try:
             IDEvento = int(request.form.get('IDEvento'))
@@ -170,14 +166,8 @@ def geteventosnovos():
             dataevento = None
         tipoevento = request.form.get('tipoevento')
         aclass = getattr(orm, tipoevento)
-        if dataevento is None:
-            eventos = db_session.query(aclass).filter(
-                aclass.IDEvento > IDEvento
-            ).all()
-        else:
-            eventos = db_session.query(aclass).filter(
-                aclass.dataevento > dataevento
-            ).all()
+        fields = request.form.get('fields')
+        eventos = usecase.load_eventosnovos(aclass, IDEvento, dataevento, fields)
         if eventos is None:
             if dataevento is None:
                 return jsonify(_response('Sem eventos com ID maior que %d.' %
