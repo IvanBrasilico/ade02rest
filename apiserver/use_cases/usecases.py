@@ -391,7 +391,7 @@ class UseCases():
                                               extensions=['json', 'bson', 'zip'])
         if not validfile:
             raise Exception(mensagem)
-        if zip in file.filename:
+        if 'zip' in file.filename:
             file = ZipFile(file)
         content = file.read()
         content = content.decode('utf-8')
@@ -403,17 +403,14 @@ class UseCases():
         return '.' in filename and \
                filename.rsplit('.', 1)[-1].lower() in extensions
 
-    def valid_file(self, file, extensions=['jpg', 'xml', 'json']):
-        """Valida arquivo passado e retorna validade e mensagem."""
-        if ((not file or file.filename == '') or
-                (not self.allowed_file(file.filename, extensions))):
-            if not file:
-                mensagem = 'Arquivo nao informado'
-            elif not file.filename:
-                mensagem = 'Nome do arquivo vazio'
-            else:
-                mensagem = 'Nome de arquivo não permitido: ' + \
-                           file.filename
-                # print(file)
-            return False, mensagem
-        return True, None
+    def valid_file(self, file, extensions=['jpg', 'xml', 'json']) -> [bool, str]:
+        """Valida arquivo. Retorna resultado(True/False) e mensagem de erro."""
+        erro = None
+        if not file:
+            erro = 'Arquivo nao informado'
+        elif not file.filename:
+            erro = 'Nome do arquivo vazio'
+        elif not self.allowed_file(file.filename, extensions):
+            erro = 'Nome de arquivo não permitido: ' + \
+                   file.filename
+        return erro is None, erro
