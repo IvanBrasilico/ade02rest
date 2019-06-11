@@ -6,8 +6,39 @@ info:
     e demais intervenientes em carga sobre controle aduaneiro.
   version: "0.9"
 servers:
-- url: /
+- url: http://localhost:8000
 paths:
+  /auth:
+    post:
+      summary: retorna token JWT
+      operationId: authentication.generate_token
+      requestBody:
+        description: Terminal e senha
+        content:
+          application/json:
+            schema:
+              x-body-name: recinto
+              $ref: '#/components/schemas/AuthenticationJson'
+      responses:
+        '200':
+          description: JWT token
+          content:
+            'text/plain':
+              schema:
+                type: string
+  /secret:
+    get:
+      summary: Return secret string
+      operationId: authentication.get_secret
+      responses:
+        '200':
+          description: secret response
+          content:
+            'text/plain':
+              schema:
+                type: string
+      security:
+      - jwt: ['secret']
   /eventos/filter:
     post:
       operationId: api.filter_eventos
@@ -84,6 +115,8 @@ paths:
         409:
           description: Evento repetido ou outro erro de integridade
           content: {}
+      security:
+      - jwt: ['secret']
   /acessopessoa/{IDEvento}:
     get:
       operationId: api.get_acessopessoa
@@ -110,6 +143,8 @@ paths:
         default:
           description: Erro inesperado
           content: {}
+      security:
+      - jwt: ['secret']
   /credenciamentopessoa:
     post:
       operationId: api.credenciamentopessoa
@@ -1266,7 +1301,20 @@ paths:
           description: Erro inesperado
           content: {}
 components:
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: authentication.decode_token
   schemas:
+    AuthenticationJson:
+      type: object
+      properties:
+        recinto:
+          type: string
+        senha:
+          type: string
     EntradaSaida:
       type: string
       description: Operação de entrada ou de saída de carga

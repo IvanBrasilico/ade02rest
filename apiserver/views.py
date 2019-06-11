@@ -57,7 +57,7 @@ def getfile():
                         ), 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return jsonify(_response(str(err), 400)), 400
+        return jsonify(_response(err, 400)), 400
 
 
 def uploadfile():
@@ -94,7 +94,7 @@ def uploadfile():
         return jsonify(_commit(evento)), 201
     except Exception as err:
         logger.error(str(err), exc_info=True)
-        return jsonify(_response(str(err), 400)), 400
+        return jsonify(_response(err, 400)), 400
 
 
 def seteventosnovos():
@@ -174,10 +174,10 @@ def geteventosnovos():
                                          IDEvento, 404)), 404
             return jsonify(_response('Sem eventos com dataevento maior que %s.' %
                                      dataevento, 404)), 404
-        return dump_eventos(eventos)
+        return dump_eventos(eventos), 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return jsonify(_response(str(err), 400)), 400
+        return jsonify(_response(err, 400)), 400
 
 
 def recriatedb():  # pragma: no cover
@@ -187,8 +187,8 @@ def recriatedb():  # pragma: no cover
         orm.Base.metadata.drop_all(bind=engine)
         orm.Base.metadata.create_all(bind=engine)
     except Exception as err:
-        return err, 405
-    return 'Banco recriado!!!'
+        return jsonify(_response(err, 405)), 405
+    return jsonify(_response('Banco recriado!!!', 201)), 201
 
 
 def create_views(app):
