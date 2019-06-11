@@ -18,6 +18,12 @@ class UseCases():
         self.recinto = recinto
         self.request_IP = request_IP
         self.basepath = basepath
+        self.eventos_com_filhos = {
+            orm.InspecaonaoInvasiva: self.load_inspecaonaoinvasiva,
+            orm.AgendamentoAcessoVeiculo: self.load_agendamentoacessoveiculo,
+            orm.CredenciamentoPessoa: self.load_credenciamentopessoa,
+            orm.CredenciamentoVeiculo: self.load_credenciamentoveiculo,
+        }
 
     def insert_evento(self, aclass, evento: dict, commit=True) -> orm.EventoBase:
         logging.info('Creating evento %s %s' %
@@ -68,10 +74,7 @@ class UseCases():
         :param fields: Trazer apenas estes campos
         :return: lista de objetos
         """
-        # TODO: Fazer para Eventos complexos, que possuem filhos
-        # Um modo possível é refatorar as "views" que já estão na api para
-        # Use Cases e chamar a view adequada para gerar a representacao de cada evento
-        # é necessario fazer isso aqui e também no setter
+        # TODO: Fazer para Todos os Eventos complexos, que possuem filhos
         if dataevento is None:
             query = self.db_session.query(aclass).filter(
                 aclass.IDEvento > IDEvento
@@ -80,9 +83,16 @@ class UseCases():
             query = self.db_session.query(aclass).filter(
                 aclass.dataevento > dataevento
             )
-        if fields is not None:
-            query = query.options(load_only(fields))
-        return query.all()
+        if aclass in self.eventos_com_filhos:
+            loader_func = self.eventos_com_filhos[aclass]
+            idseventos = query.options(load_only(['ID'])).all()
+            result = []
+            for id in idseventos:
+                result.append(loader_func(id))
+        else:
+            if fields is not None:
+                query = query.options(load_only(fields))
+            return query.all()
 
     def get_filhos(self, osfilhos, campos_excluidos=[]):
         filhos = []

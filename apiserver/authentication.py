@@ -1,15 +1,30 @@
 import logging
+import os
+import pickle
 import time
 
 import six
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 from jose import JWTError, jwt
 from werkzeug.exceptions import Unauthorized
 
-from api import _response
+from apiserver.api import _response
+from assinador import read_public_key, verify
+
+
+def make_secret():
+    try:
+        with open('SECRET', 'rb') as secret:
+            secret = pickle.load(secret)
+    except (FileNotFoundError, pickle.PickleError):
+        secret = os.urandom(24)
+        with open('SECRET', 'wb') as out:
+            pickle.dump(secret, out, pickle.HIGHEST_PROTOCOL)
+    return secret
+
 
 JWT_ISSUER = 'com.zalando.connexion'
-JWT_SECRET = 'change_this'
+JWT_SECRET = make_secret()
 JWT_LIFETIME_SECONDS = 600
 JWT_ALGORITHM = 'HS256'
 
@@ -17,10 +32,10 @@ JWT_ALGORITHM = 'HS256'
 def generate_token(recinto):
     timestamp = _current_timestamp()
     payload = {
-        "iss": JWT_ISSUER,
-        "iat": int(timestamp),
-        "exp": int(timestamp + JWT_LIFETIME_SECONDS),
-        "sub": str(recinto['recinto']),
+        'iss': JWT_ISSUER,
+        'iat': int(timestamp),
+        'exp': int(timestamp + JWT_LIFETIME_SECONDS),
+        'sub': str(recinto['recinto']),
     }
 
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
@@ -35,10 +50,10 @@ def decode_token(token):
 
 
 def get_secret(user, token_info) -> str:
-    return '''
+    return """
     You are user_id {user} and the secret is 'wbevuec'.
     Decoded token claims: {token_info}.
-    '''.format(user=user, token_info=token_info)
+    """.format(user=user, token_info=token_info)
 
 
 def _current_timestamp() -> int:
@@ -53,10 +68,16 @@ def valida_assinatura(request):
             token = token[1]
         decoded_token = decode_token(token)
         if request.json and decoded_token and isinstance(decoded_token, dict):
-            assinado = request.json.get('assinado')
             recinto = decoded_token.get('sub')
-            # TODO: Usar assinador para selecionar chave
-            return recinto == assinado
+            current_app.config['recinto'] = recinto
+            assinado = request.json.get('assinado')
+            public_key = read_public_key()
+            try:
+                verify(assinado, recinto, public_key)
+                # TODO: Usar assinador para selecionar chave
+            except Exception as err:
+                logging.error(err, exc_info=True)
+                return False
     return True
 
 

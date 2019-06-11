@@ -115,8 +115,6 @@ paths:
         409:
           description: Evento repetido ou outro erro de integridade
           content: {}
-      security:
-      - jwt: ['secret']
   /acessopessoa/{IDEvento}:
     get:
       operationId: api.get_acessopessoa
@@ -143,8 +141,6 @@ paths:
         default:
           description: Erro inesperado
           content: {}
-      security:
-      - jwt: ['secret']
   /credenciamentopessoa:
     post:
       operationId: api.credenciamentopessoa

@@ -1,8 +1,13 @@
+import os
+
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import rsa
+
+PRIVATE_KEY = 'private_key.pem'
+PUBLIC_KEY = 'public_key.pem'
 
 
 def generate_keys():
@@ -16,14 +21,14 @@ def generate_keys():
 
 
 def save_keys(private_key, public_key):
-    with open('private_key.pem', 'wb') as f:
+    with open(PRIVATE_KEY, 'wb') as f:
         pem = private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption()
         )
         f.write(pem)
-    with open('public_key.pem', 'wb') as f:
+    with open(PUBLIC_KEY, 'wb') as f:
         pem = public_key.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
@@ -33,7 +38,7 @@ def save_keys(private_key, public_key):
 
 
 def read_private_key():
-    with open('private_key.pem', 'rb') as key_file:
+    with open(PRIVATE_KEY, 'rb') as key_file:
         return serialization.load_pem_private_key(
             key_file.read(),
             password=None,
@@ -42,7 +47,7 @@ def read_private_key():
 
 
 def read_public_key():
-    with open('public_key.pem', 'rb') as key_file:
+    with open(PUBLIC_KEY, 'rb') as key_file:
         return serialization.load_pem_public_key(
             key_file.read(),
             backend=default_backend()
@@ -82,7 +87,8 @@ def sign(message, private_key):
     )
 
 
-def verify(signature, message, public_key):
+def verify(signed_message, message, public_key):
+    """Retorna exceção se não for possível validar a assinatura"""
     public_key.verify(
         signature,
         message,
@@ -94,17 +100,16 @@ def verify(signature, message, public_key):
     )
 
 
-private_key = read_private_key()
-public_key = read_public_key()
-
-message = 'TESTE'.encode('utf-8')
-print(message)
-encrypted = encript(message, public_key)
-print(encrypted)
-
-print(decript(encrypted, private_key))
-
-
-signature = sign(message, private_key)
-
-verify(signature, message, public_key)
+if __name__ == '__main__':
+    if not os.path.exists(PRIVATE_KEY):
+        save_keys(*generate_keys())
+    private_key = read_private_key()
+    public_key = read_public_key()
+    message = 'TESTE'.encode('utf-8')
+    print(message)
+    encrypted = encript(message, public_key)
+    print(encrypted)
+    print(decript(encrypted, private_key))
+    signature = sign(message, private_key)
+    print(signature)
+    print(verify(signature, message, public_key))

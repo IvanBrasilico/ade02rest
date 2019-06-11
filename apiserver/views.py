@@ -5,7 +5,7 @@ import os
 from dateutil.parser import parse
 from flask import current_app, request, render_template, jsonify, Response
 
-from apiserver.api import dump_eventos, RECINTO, _response, _commit, create_usecases
+from apiserver.api import dump_eventos, _response, _commit, create_usecases
 from apiserver.logconf import logger
 from apiserver.models import orm
 from apiserver.use_cases.usecases import UseCases
@@ -98,7 +98,7 @@ def uploadfile():
 
 
 def seteventosnovos():
-    db_session = current_app.config['db_session']
+    usecase = create_usecases()
     try:
         file = request.files.get('file')
         validfile, mensagem = valid_file(file,
@@ -112,31 +112,22 @@ def seteventosnovos():
             aclass = getattr(orm, tipoevento)
             for evento in eventos:
                 try:
-                    evento['request_IP'] = request.environ.get('HTTP_X_REAL_IP',
-                                                               request.remote_addr)
-                    evento['recinto'] = RECINTO
-                    novo_evento = aclass(**evento)
-                    db_session.add(novo_evento)
+                    novo_evento = usecase.insert_evento(aclass, evento, commit=False)
                 # Ignora exceções porque vai comparar no Banco de Dados
                 except Exception as err:
                     logging.error(str(err))
             try:
-                db_session.commit()
+                usecase.db_session.commit()
             except Exception as err:
                 logging.error(str(err))
             result = []
             for evento in eventos:
                 try:
                     IDEvento = evento.get('IDEvento')
-                    evento_recuperado = db_session.query(aclass).filter(
-                        aclass.IDEvento == IDEvento
-                    ).one_or_none()
-                    if evento_recuperado is None:
-                        ohash = 'ERRO!!!'
-                    else:
-                        ohash = hash(evento_recuperado)
+                    evento_recuperado = usecase.load_evento(aclass, IDEvento)
+                    ohash = hash(evento_recuperado)
                     result.append({'IDEvento': IDEvento, 'hash': ohash})
-                    logger.info('Recinto: %s IDEvento: %d ID: %d Token: %d' %
+                    logger.info('Recinto: %s IDEvento: %d ID: %d hash: %d' %
                                 (evento_recuperado.recinto, IDEvento,
                                  evento_recuperado.ID, ohash))
                 except Exception as err:

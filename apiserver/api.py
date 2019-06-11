@@ -31,7 +31,9 @@ titles = {200: 'Evento encontrado',
 def create_usecases():
     db_session = current_app.config['db_session']
     request_IP = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-    recinto = RECINTO
+    recinto = current_app.config.get('recinto')
+    if recinto is None:
+        recinto = RECINTO
     basepath = current_app.config['UPLOAD_FOLDER']
     return UseCases(db_session, recinto, request_IP, basepath)
 
@@ -75,7 +77,7 @@ def _commit(evento):
         db_session.refresh(evento)
         ohash = hash(evento)
         db_session.commit()
-        logger.info('Recinto: %s Classe: %s IDEvento: %d ID: %d Token: %d' %
+        logger.info('Recinto: %s Classe: %s IDEvento: %d ID: %d hash: %d' %
                     (evento.recinto, evento.__class__.__name__,
                      evento.IDEvento, evento.ID, ohash))
     except IntegrityError as err:

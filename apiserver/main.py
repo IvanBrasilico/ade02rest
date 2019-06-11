@@ -1,9 +1,8 @@
 import connexion
 
-from apiserver import authentication
 from apiserver.models import orm
 from apiserver.views import create_views
-from authentication import configure_signature
+from apiserver.authentication import configure_signature
 
 
 def create_app(session, engine):  # pragma: no cover
