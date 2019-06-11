@@ -1,4 +1,6 @@
+import json
 import logging
+from zipfile import ZipFile
 
 from sqlalchemy.orm import load_only
 
@@ -382,3 +384,36 @@ class UseCases():
                               'credenciamentoveiculo_id']
         )
         return credenciamentoveiculo_dump
+
+    def load_arquivo_eventos(self, file):
+        """Valida e carrega arquivo JSON de eventos."""
+        validfile, mensagem = self.valid_file(file,
+                                              extensions=['json', 'bson', 'zip'])
+        if not validfile:
+            raise Exception(mensagem)
+        if zip in file.filename:
+            file = ZipFile(file)
+        content = file.read()
+        content = content.decode('utf-8')
+        eventos = json.loads(content)
+        return eventos
+
+    def allowed_file(self, filename, extensions):
+        """Checa extensões permitidas."""
+        return '.' in filename and \
+               filename.rsplit('.', 1)[-1].lower() in extensions
+
+    def valid_file(self, file, extensions=['jpg', 'xml', 'json']):
+        """Valida arquivo passado e retorna validade e mensagem."""
+        if ((not file or file.filename == '') or
+                (not self.allowed_file(file.filename, extensions))):
+            if not file:
+                mensagem = 'Arquivo nao informado'
+            elif not file.filename:
+                mensagem = 'Nome do arquivo vazio'
+            else:
+                mensagem = 'Nome de arquivo não permitido: ' + \
+                           file.filename
+                # print(file)
+            return False, mensagem
+        return True, None

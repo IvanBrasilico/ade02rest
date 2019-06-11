@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 
@@ -13,27 +12,6 @@ from apiserver.use_cases.usecases import UseCases
 
 def home():
     return render_template('home.html')
-
-
-def allowed_file(filename, extensions):
-    """Checa extensões permitidas."""
-    return '.' in filename and \
-           filename.rsplit('.', 1)[-1].lower() in extensions
-
-
-def valid_file(file, extensions=['jpg', 'xml', 'json']):
-    """Valida arquivo passado e retorna validade e mensagem."""
-    if not file or file.filename == '' or not allowed_file(file.filename, extensions):
-        if not file:
-            mensagem = 'Arquivo nao informado'
-        elif not file.filename:
-            mensagem = 'Nome do arquivo vazio'
-        else:
-            mensagem = 'Nome de arquivo não permitido: ' + \
-                       file.filename
-            # print(file)
-        return False, mensagem
-    return True, None
 
 
 def getfile():
@@ -63,13 +41,14 @@ def getfile():
 def uploadfile():
     """Função simplificada para upload de arquivo para um Evento."""
     db_session = current_app.config['db_session']
+    usecase = create_usecases()
     try:
         file = request.files.get('file')
         IDEvento = request.form.get('IDEvento')
         tipoevento = request.form.get('tipoevento')
         nomearquivo = request.form.get('nomearquivo')
         tipoanexo = request.form.get('tipoanexo')
-        validfile, mensagem = valid_file(file)
+        validfile, mensagem = usecase.valid_file(file)
         if not validfile:
             return jsonify(_response(mensagem, 400)), 400
         aclass = getattr(orm, tipoevento)
@@ -101,18 +80,12 @@ def seteventosnovos():
     usecase = create_usecases()
     try:
         file = request.files.get('file')
-        validfile, mensagem = valid_file(file,
-                                         extensions=['json', 'bson', 'zip'])
-        if not validfile:
-            return mensagem, 405
-        content = file.read()
-        content = content.decode('utf-8')
-        eventos = json.loads(content)
+        eventos = usecase.load_arquivo_eventos(file)
         for tipoevento, eventos in eventos.items():
             aclass = getattr(orm, tipoevento)
             for evento in eventos:
                 try:
-                    novo_evento = usecase.insert_evento(aclass, evento, commit=False)
+                    usecase.insert_evento(aclass, evento, commit=False)
                 # Ignora exceções porque vai comparar no Banco de Dados
                 except Exception as err:
                     logging.error(str(err))
