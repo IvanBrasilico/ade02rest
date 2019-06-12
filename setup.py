@@ -14,7 +14,7 @@ VERSION = "0.9"
 
 REQUIRES = ["connexion[swagger-ui]",
             "dateutils",
-            "python - jose[cryptography]",
+            "python-jose[cryptography]",
             "gunicorn",
             "marshmallow-sqlalchemy",
             "mysql-connector",
