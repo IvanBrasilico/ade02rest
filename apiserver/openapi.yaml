@@ -6,7 +6,7 @@ info:
     e demais intervenientes em carga sobre controle aduaneiro.
   version: "0.9"
 servers:
-- url: http://localhost:8000
+- url: /
 paths:
   /auth:
     post:
