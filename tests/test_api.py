@@ -29,7 +29,7 @@ class APITestCase(BaseTestCase):
 
     def setUp(self):
         super().setUp()
-        app = create_app(self.session, self.engine)
+        app = create_app(self.db_session, self.engine)
         self.client = app.app.test_client()
 
     def tearDown(self) -> None:

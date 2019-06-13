@@ -1,5 +1,3 @@
-import os
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
@@ -11,6 +9,10 @@ PUBLIC_KEY = 'public_key.pem'
 
 
 def generate_keys():
+    """Gera chaves aleatórias RSA 2048
+
+    :return: private_key, public_key
+    """
     private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
@@ -20,37 +22,58 @@ def generate_keys():
     return private_key, public_key
 
 
+def private_bytes(private_key, senha: str = None):
+    pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+    return pem
+
+def public_bytes(public_key):
+    pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    return pem
+
+
 def save_keys(private_key, public_key):
     with open(PRIVATE_KEY, 'wb') as f:
-        pem = private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption()
-        )
+        pem = private_bytes(private_key)
         f.write(pem)
     with open(PUBLIC_KEY, 'wb') as f:
-        pem = public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
+        pem = public_bytes(public_key)
         f.write(pem)
     return True
 
 
+def load_private_key(pem):
+    return serialization.load_pem_private_key(
+        pem,
+        password=None,
+        backend=default_backend()
+    )
+
+
 def read_private_key():
     with open(PRIVATE_KEY, 'rb') as key_file:
-        return serialization.load_pem_private_key(
-            key_file.read(),
-            password=None,
-            backend=default_backend()
+        return load_private_key(
+            key_file.read()
         )
+
+
+def load_public_key(pem):
+    return serialization.load_pem_public_key(
+        pem,
+        backend=default_backend()
+    )
 
 
 def read_public_key():
     with open(PUBLIC_KEY, 'rb') as key_file:
-        return serialization.load_pem_public_key(
-            key_file.read(),
-            backend=default_backend()
+        return load_public_key(
+            key_file.read()
         )
 
 
@@ -90,7 +113,7 @@ def sign(message, private_key):
 def verify(signed_message, message, public_key):
     """Retorna exceção se não for possível validar a assinatura"""
     public_key.verify(
-        signature,
+        signed_message,
         message,
         padding.PSS(
             mgf=padding.MGF1(hashes.SHA256()),
@@ -101,6 +124,7 @@ def verify(signed_message, message, public_key):
 
 
 if __name__ == '__main__':
+    # TESTS
     if not os.path.exists(PRIVATE_KEY):
         save_keys(*generate_keys())
     private_key = read_private_key()

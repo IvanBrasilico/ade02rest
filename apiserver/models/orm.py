@@ -1183,6 +1183,36 @@ class Ocorrencia(EventoBase):
         self.motivo = kwargs.get('motivo')
 
 
+class ChavePublicaRecinto(Base):
+    __tablename__ = 'chavepublicarecintos'
+    recinto = Column(String(10), primary_key=True)
+    public_key = Column(String(200))
+
+    def __init__(self, recinto, public_key):
+        self.recinto = recinto
+        self.public_key = public_key
+
+    @classmethod
+    def get_public_key(cls, db_session, recinto):
+        umrecinto = db_session.query(ChavePublicaRecinto).filter(
+            ChavePublicaRecinto.recinto == recinto
+        ).one()
+        return umrecinto.public_key
+
+    @classmethod
+    def set_public_key(cls, db_session, recinto, public_key):
+        umrecinto = ChavePublicaRecinto.query.filter(
+            ChavePublicaRecinto.recinto == recinto
+        ).one_or_none()
+        if umrecinto is None:
+            umrecinto = ChavePublicaRecinto(recinto, public_key)
+        else:
+            umrecinto.public_key = public_key
+        db_session.add(umrecinto)
+        db_session.commit()
+        return umrecinto
+
+
 def init_db(uri='sqlite:///test.db'):
     global db_session
     global engine

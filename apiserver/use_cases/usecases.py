@@ -4,10 +4,24 @@ from zipfile import ZipFile
 
 from sqlalchemy.orm import load_only
 
+import assinador
 from apiserver.models import orm
 
 
-class UseCases():
+class UseCases:
+    @classmethod
+    def gera_chaves_recinto(cls, db_session, recinto):
+        """Chama gerador de chaves, armazena chave publica, retorna chave privada."""
+        private_key, public_key = assinador.generate_keys()
+        public_pem = assinador.public_bytes(public_key)
+        orm.ChavePublicaRecinto.set_public_key(db_session, recinto, public_pem)
+        private_pem = assinador.private_bytes(private_key)
+        return private_pem
+
+    @classmethod
+    def get_public_key(cls, db_session, recinto):
+        return orm.ChavePublicaRecinto.get_public_key(db_session, recinto)
+
     def __init__(self, db_session, recinto: str, request_IP: str, basepath: str):
         """Init
 
@@ -26,6 +40,23 @@ class UseCases():
             orm.CredenciamentoPessoa: self.load_credenciamentopessoa,
             orm.CredenciamentoVeiculo: self.load_credenciamentoveiculo,
         }
+
+    def allowed_file(self, filename, extensions):
+        """Checa extensões permitidas."""
+        return '.' in filename and \
+               filename.rsplit('.', 1)[-1].lower() in extensions
+
+    def valid_file(self, file, extensions=['jpg', 'xml', 'json']) -> [bool, str]:
+        """Valida arquivo. Retorna resultado(True/False) e mensagem de erro."""
+        erro = None
+        if not file:
+            erro = 'Arquivo nao informado'
+        elif not file.filename:
+            erro = 'Nome do arquivo vazio'
+        elif not self.allowed_file(file.filename, extensions):
+            erro = 'Nome de arquivo não permitido: ' + \
+                   file.filename
+        return erro is None, erro
 
     def insert_evento(self, aclass, evento: dict, commit=True) -> orm.EventoBase:
         logging.info('Creating evento %s %s' %
@@ -397,20 +428,3 @@ class UseCases():
         content = content.decode('utf-8')
         eventos = json.loads(content)
         return eventos
-
-    def allowed_file(self, filename, extensions):
-        """Checa extensões permitidas."""
-        return '.' in filename and \
-               filename.rsplit('.', 1)[-1].lower() in extensions
-
-    def valid_file(self, file, extensions=['jpg', 'xml', 'json']) -> [bool, str]:
-        """Valida arquivo. Retorna resultado(True/False) e mensagem de erro."""
-        erro = None
-        if not file:
-            erro = 'Arquivo nao informado'
-        elif not file.filename:
-            erro = 'Nome do arquivo vazio'
-        elif not self.allowed_file(file.filename, extensions):
-            erro = 'Nome de arquivo não permitido: ' + \
-                   file.filename
-        return erro is None, erro

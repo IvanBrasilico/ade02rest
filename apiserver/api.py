@@ -1,7 +1,7 @@
 import logging
 
 from dateutil.parser import parse
-from flask import current_app, request, jsonify
+from flask import current_app, request, jsonify, g
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
@@ -31,7 +31,7 @@ titles = {200: 'Evento encontrado',
 def create_usecases():
     db_session = current_app.config['db_session']
     request_IP = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-    recinto = current_app.config.get('recinto')
+    recinto = g.get('recinto')
     if recinto is None:
         recinto = RECINTO
     basepath = current_app.config['UPLOAD_FOLDER']

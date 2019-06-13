@@ -14,7 +14,7 @@ class ViewTestCase(BaseTestCase):
 
     def setUp(self):
         super().setUp()
-        app = create_app(self.session, self.engine)
+        app = create_app(self.db_session, self.engine)
         self.client = app.app.test_client()
         self.inspecao_modelo = {
             "IDEvento": 1001,

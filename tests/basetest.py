@@ -16,27 +16,27 @@ def random_str(num, fila):
     return result
 
 
-session = None
+db_session = None
 engine = None
 testes = None
 cadastros = None
 
 
 def create_session():
-    global session
+    global db_session
     global engine
     global testes
     global cadastros
-    if session is None:
+    if db_session is None:
         print('Creating memory database')
-        session, engine = orm.init_db('sqlite:///:memory:')
+        db_session, engine = orm.init_db('sqlite:///:memory:')
         with open(os.path.join(os.path.dirname(__file__),
                                'testes.json'), 'r') as json_in:
             testes = json.load(json_in)
         with open(os.path.join(os.path.dirname(__file__),
                                'cadastros.json'), 'r') as json_in:
             cadastros = json.load(json_in)
-    return session, engine, testes, cadastros
+    return db_session, engine, testes, cadastros
 
 
 def extractDictAFromB(A, B):
@@ -46,7 +46,7 @@ def extractDictAFromB(A, B):
 class BaseTestCase(TestCase):
 
     def setUp(self):
-        self.session, self.engine, self.testes, self.cadastros = create_session()
+        self.db_session, self.engine, self.testes, self.cadastros = create_session()
         orm.Base.metadata.create_all(bind=self.engine)
 
     def tearDown(self) -> None:

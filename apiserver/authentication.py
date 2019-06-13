@@ -4,12 +4,13 @@ import pickle
 import time
 
 import six
-from flask import request, jsonify, current_app
+from flask import request, jsonify, g, current_app
 from jose import JWTError, jwt
 from werkzeug.exceptions import Unauthorized
 
+import assinador
 from apiserver.api import _response
-from assinador import read_public_key, verify
+from apiserver.models.orm import ChavePublicaRecinto
 
 
 def make_secret():
@@ -23,8 +24,8 @@ def make_secret():
     return secret
 
 
-JWT_ISSUER = 'com.zalando.connexion'
-JWT_SECRET = make_secret()
+JWT_ISSUER = 'api-recintos'
+JWT_SECRET = str(make_secret())
 JWT_LIFETIME_SECONDS = 600
 JWT_ALGORITHM = 'HS256'
 
@@ -35,7 +36,7 @@ def generate_token(recinto):
         'iss': JWT_ISSUER,
         'iat': int(timestamp),
         'exp': int(timestamp + JWT_LIFETIME_SECONDS),
-        'sub': str(recinto['recinto']),
+        'recinto': str(recinto['recinto']),
     }
 
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
@@ -60,21 +61,27 @@ def _current_timestamp() -> int:
     return int(time.time())
 
 
-def valida_assinatura(request):
+def valida_assinatura(request, db_session=None):
     token = request.headers.get('Authorization')
+    if db_session is None:
+        db_session = current_app.config['db_session']
     if token:
         token = token.split()
         if len(token) == 2:
             token = token[1]
+        print(token)
         decoded_token = decode_token(token)
         if request.json and decoded_token and isinstance(decoded_token, dict):
-            recinto = decoded_token.get('sub')
-            current_app.config['recinto'] = recinto
+            recinto = decoded_token.get('recinto')
+            if g:
+                g['recinto'] = recinto
             assinado = request.json.get('assinado')
-            public_key = read_public_key()
+            print('recinto: %s' % recinto)
+            print('assinado: %s' % assinado)
+            public_key_pem = ChavePublicaRecinto.get_public_key(db_session, recinto)
+            public_key = assinador.load_public_key(public_key_pem)
             try:
-                verify(assinado, recinto, public_key)
-                # TODO: Usar assinador para selecionar chave
+                assinador.verify(assinado, recinto.encode('utf8'), public_key)
             except Exception as err:
                 logging.error(err, exc_info=True)
                 return False
