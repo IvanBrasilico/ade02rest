@@ -1,10 +1,10 @@
 import datetime
-import json
-import random
 import sys
+from base64 import b85encode
 from copy import deepcopy
 from io import BytesIO
 
+import assinador
 from apiserver.main import create_app
 from basetest import BaseTestCase
 
@@ -13,16 +13,6 @@ sys.path.insert(0, 'apiserver')
 
 def extractDictAFromB(A, B):
     return dict([(k, B[k]) for k in A.keys() if k in B.keys()])
-
-
-"""
-print('Creating memory database')
-session, engine = orm.init_db('sqlite:///:memory:')
-orm.Base.metadata.create_all(bind=engine)
-with open(os.path.join(os.path.dirname(__file__),
-                       'testes.json'), 'r') as json_in:
-    testes = json.load(json_in)
-"""
 
 
 class APITestCase(BaseTestCase):
@@ -191,3 +181,51 @@ class APITestCase(BaseTestCase):
         print(r.data)
         assert r.is_json is True
         assert len(r.json) == 10
+
+    def test_auth(self):
+        recinto = '00001'
+        recinto_senha = {'recinto': recinto,
+                         'senha': 'certificado'}
+        rv = self.client.post('/auth', json=recinto_senha)
+        assert rv is not None
+        assert rv.status_code == 200
+        token = rv.data
+        assert token is not None
+        assert isinstance(token, bytes)
+        assert len(token) > 40
+
+    def test_signed_payload(self):
+        # TWO WAY authentication
+        recinto = '00001'
+        recinto_senha = {'recinto': recinto,
+                         'senha': 'certificado'}
+        posicaolote = {
+            "IDEvento": 42,
+            "dataevento": "2019-06-14T11:18:43.287Z",
+            "dataregistro": "2019-06-14T11:18:43.287Z",
+            "operadorevento": "string",
+            "operadorregistro": "string",
+            "retificador": False,
+            "numerolote": 0,
+            "posicao": "string",
+            "qtdevolumes": "string"
+        }
+        # TODO: Em outra aplicação ou nesta, o Representante Legal deve efetuar
+        # logon para definir a senha do recinto, gerar as chaves e baixar
+        # a chave privada
+        # 1. Faz dowload da chave privada, assina codigo recinto com ela
+        rv = self.client.post('/privatekey', json=recinto_senha)
+        assert rv.json
+        pem = rv.json.get('pem')
+        private_key = assinador.load_private_key(pem.encode('utf-8'))
+        assinado = assinador.sign(recinto.encode('utf-8'),
+                                  private_key)
+        # 2. Faz autenticação na aplicação local e pega token
+        rv = self.client.post('/auth', json=recinto_senha)
+        token = rv.data
+        headers = {'Authorization': 'Bearer %s' % token}
+        # 3. Manda recinto encriptado com chave junto com Evento. Codigo recinto vai no token
+        # Assim, a validação é pelo token e pelo certificado digital(chave privada)
+        posicaolote['assinado'] = b85encode(assinado).decode('utf-8')
+        rv = self.client.post('/posicaolote', json=posicaolote)
+        assert rv.status_code == 201

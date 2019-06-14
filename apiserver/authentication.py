@@ -2,6 +2,7 @@ import logging
 import os
 import pickle
 import time
+from base64 import b85decode
 
 import six
 from flask import request, jsonify, g, current_app
@@ -31,6 +32,7 @@ JWT_ALGORITHM = 'HS256'
 
 
 def generate_token(recinto):
+    # TODO: Validar usuario e senha
     timestamp = _current_timestamp()
     payload = {
         'iss': JWT_ISSUER,
@@ -61,30 +63,48 @@ def _current_timestamp() -> int:
     return int(time.time())
 
 
-def valida_assinatura(request, db_session=None):
-    token = request.headers.get('Authorization')
-    if db_session is None:
-        db_session = current_app.config['db_session']
+def recorta_token_header(headers):
+    token = headers.get('Authorization')
     if token:
         token = token.split()
         if len(token) == 2:
             token = token[1]
-        print(token)
+    return token
+
+
+def valida_assinatura(request, db_session=None) -> bool:
+    """Analisa request e retorna True ou False
+
+    1. Retira token do header
+    2. Decodifica token
+    3. Pega campo recinto e recupera chave publica do recinto do banco
+    4. Valida assinatura (campo assinado tem que estar no request e corresponder
+    ao codigo do recinto assinado com sua chave privada)
+
+    """
+    token = recorta_token_header(request.headers)
+    # TODO: A linha abaixo "faz bypass" caso não seja passado o token
+    # Definir como e onde ativar a autenticacao por duas etapas
+    if token is None:
+        return True
+    try:
+        if db_session is None:
+            db_session = current_app.config['db_session']
         decoded_token = decode_token(token)
         if request.json and decoded_token and isinstance(decoded_token, dict):
             recinto = decoded_token.get('recinto')
             if g:
                 g['recinto'] = recinto
             assinado = request.json.get('assinado')
+            assinado = b85decode(assinado.encode('utf-8'))
             print('recinto: %s' % recinto)
             print('assinado: %s' % assinado)
             public_key_pem = ChavePublicaRecinto.get_public_key(db_session, recinto)
             public_key = assinador.load_public_key(public_key_pem)
-            try:
-                assinador.verify(assinado, recinto.encode('utf8'), public_key)
-            except Exception as err:
-                logging.error(err, exc_info=True)
-                return False
+            assinador.verify(assinado, recinto.encode('utf8'), public_key)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return False
     return True
 
 
