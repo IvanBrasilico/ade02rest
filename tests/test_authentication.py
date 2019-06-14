@@ -1,3 +1,4 @@
+from base64 import b85encode
 from unittest import TestCase
 
 from cryptography.exceptions import InvalidSignature
@@ -34,6 +35,7 @@ class AuthenticationTestCase(BaseTestCase):
         private_key = assinador.load_private_key(private_key_pem)
         assinado = assinador.sign(recinto.encode('utf-8'),
                                   private_key)
+        assinado = b85encode(assinado).decode('utf-8')
         # manda recinto encriptado com chave
         # recebe OK com chave correta
         payload = {'assinado': assinado, 'recinto': recinto}
@@ -47,6 +49,15 @@ class AuthenticationTestCase(BaseTestCase):
         request = Request({'Authorization':  'Bearer %s' % token},
                           payload)
         assert authentication.valida_assinatura(request, self.db_session) is False
+        # manda assinado com outra chave, recebe erro
+        private_key2, _ = assinador.generate_keys()
+        assinado2 = assinador.sign(recinto.encode('utf-8'),
+                                  private_key2)
+        payload2 = {'assinado': assinado2, 'recinto': recinto}
+        token2 = authentication.generate_token(payload2)
+        request2 = Request({'Authorization':  'Bearer %s' % token2},
+                          payload2)
+        assert authentication.valida_assinatura(request2, self.db_session) is False
 
 
 

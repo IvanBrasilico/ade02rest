@@ -10,8 +10,13 @@ from apiserver.models import orm
 
 class UseCases:
     @classmethod
-    def gera_chaves_recinto(cls, db_session, recinto):
-        """Chama gerador de chaves, armazena chave publica, retorna chave privada."""
+    def gera_chaves_recinto(cls, db_session, recinto: str) -> bytes:
+        """Chama gerador de chaves, armazena chave publica, retorna chave privada.
+
+        :param db_session: Conexão ao BD
+        :param recinto: codigo do recinto
+        :return: chave privada gerada em bytes
+        """
         private_key, public_key = assinador.generate_keys()
         public_pem = assinador.public_bytes(public_key)
         orm.ChavePublicaRecinto.set_public_key(db_session, recinto, public_pem)

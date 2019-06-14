@@ -2,6 +2,7 @@ import logging
 import os
 import pickle
 import time
+from base64 import b85decode
 
 import six
 from flask import request, jsonify, g, current_app
@@ -31,6 +32,7 @@ JWT_ALGORITHM = 'HS256'
 
 
 def generate_token(recinto):
+    # TODO: Validar usuario e senha
     timestamp = _current_timestamp()
     payload = {
         'iss': JWT_ISSUER,
@@ -85,23 +87,24 @@ def valida_assinatura(request, db_session=None) -> bool:
     # Definir como e onde ativar a autenticacao por duas etapas
     if token is None:
         return True
-    if db_session is None:
-        db_session = current_app.config['db_session']
-    decoded_token = decode_token(token)
-    if request.json and decoded_token and isinstance(decoded_token, dict):
-        recinto = decoded_token.get('recinto')
-        if g:
-            g['recinto'] = recinto
-        assinado = request.json.get('assinado')
-        print('recinto: %s' % recinto)
-        print('assinado: %s' % assinado)
-        public_key_pem = ChavePublicaRecinto.get_public_key(db_session, recinto)
-        public_key = assinador.load_public_key(public_key_pem)
-        try:
+    try:
+        if db_session is None:
+            db_session = current_app.config['db_session']
+        decoded_token = decode_token(token)
+        if request.json and decoded_token and isinstance(decoded_token, dict):
+            recinto = decoded_token.get('recinto')
+            if g:
+                g['recinto'] = recinto
+            assinado = request.json.get('assinado')
+            assinado = b85decode(assinado.encode('utf-8'))
+            print('recinto: %s' % recinto)
+            print('assinado: %s' % assinado)
+            public_key_pem = ChavePublicaRecinto.get_public_key(db_session, recinto)
+            public_key = assinador.load_public_key(public_key_pem)
             assinador.verify(assinado, recinto.encode('utf8'), public_key)
-        except Exception as err:
-            logging.error(err, exc_info=True)
-            return False
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return False
     return True
 
 

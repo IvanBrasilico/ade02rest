@@ -1,3 +1,6 @@
+import os
+from base64 import b64encode, b64decode, b85decode, b85encode
+
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
@@ -131,9 +134,13 @@ if __name__ == '__main__':
     public_key = read_public_key()
     message = 'TESTE'.encode('utf-8')
     print(message)
-    encrypted = encript(message, public_key)
-    print(encrypted)
-    print(decript(encrypted, private_key))
+    # encrypted = encript(message, public_key)
+    # print(encrypted)
+    # print(decript(encrypted, private_key))
     signature = sign(message, private_key)
-    print(signature)
     print(verify(signature, message, public_key))
+    print(type(signature), signature)
+    S = b85encode(signature).decode('utf-8')
+    print(S)
+    recuperado = b85decode(S.encode('utf-8'))
+    print(type(recuperado), recuperado)

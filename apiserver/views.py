@@ -144,6 +144,19 @@ def geteventosnovos():
         return jsonify(_response(err, 400)), 400
 
 
+def get_private_key():
+    recinto = request.json.get('recinto')
+    try:
+        private_key_pem = UseCases.gera_chaves_recinto(
+            current_app.config['db_session'],
+            recinto
+        )
+        return jsonify({'pem': private_key_pem.decode('utf-8')}), 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return jsonify(_response(err, 400)), 400
+
+
 def recriatedb():  # pragma: no cover
     # db_session = current_app.config['db_session']
     engine = current_app.config['engine']
@@ -166,5 +179,7 @@ def create_views(app):
     app.add_url_rule('/eventosnovos/get', 'geteventosnovos', geteventosnovos)
     app.add_url_rule('/eventosnovos/upload', 'seteventosnovos',
                      seteventosnovos, methods=['POST'])
+    app.add_url_rule('/privatekey', 'get_private_key',
+                     get_private_key, methods=['POST'])
     app.add_url_rule('/recriatedb', 'recriatedb', recriatedb)
     return app
