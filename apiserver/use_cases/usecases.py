@@ -115,11 +115,13 @@ class UseCases:
         # TODO: Fazer para Todos os Eventos complexos, que possuem filhos
         if dataevento is None:
             query = self.db_session.query(aclass).filter(
-                aclass.IDEvento > IDEvento
+                aclass.IDEvento > IDEvento,
+                aclass.recinto == self.recinto
             )
         else:
             query = self.db_session.query(aclass).filter(
-                aclass.dataevento > dataevento
+                aclass.dataevento > dataevento,
+                aclass.recinto == self.recinto
             )
         if aclass in self.eventos_com_filhos:
             loader_func = self.eventos_com_filhos[aclass]
