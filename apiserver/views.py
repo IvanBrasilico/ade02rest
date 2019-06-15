@@ -1,5 +1,6 @@
 import logging
 import os
+from base64 import b85encode
 
 from dateutil.parser import parse
 from flask import current_app, request, render_template, jsonify, Response
@@ -147,11 +148,12 @@ def geteventosnovos():
 def get_private_key():
     recinto = request.json.get('recinto')
     try:
-        private_key_pem = UseCases.gera_chaves_recinto(
+        private_key_pem, assinado = UseCases.gera_chaves_recinto(
             current_app.config['db_session'],
             recinto
         )
-        return jsonify({'pem': private_key_pem.decode('utf-8')}), 200
+        return jsonify({'pem': private_key_pem.decode('utf-8'),
+                        'assinado': b85encode(assinado).decode('utf-8')}), 200
     except Exception as err:
         logging.error(err, exc_info=True)
         return jsonify(_response(err, 400)), 400

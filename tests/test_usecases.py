@@ -108,7 +108,7 @@ class UseCaseTestCase(BaseTestCase):
 
     def test_gerachaverecinto_and_sign(self):
         recinto = '00001'
-        private_key_pem = UseCases.gera_chaves_recinto(self.db_session, recinto)
+        private_key_pem, assinado = UseCases.gera_chaves_recinto(self.db_session, recinto)
         public_key_pem = UseCases.get_public_key(self.db_session, recinto)
         private_key = assinador.load_private_key(private_key_pem)
         public_key = assinador.load_public_key(public_key_pem)

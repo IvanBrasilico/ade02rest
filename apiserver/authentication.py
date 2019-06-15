@@ -94,14 +94,15 @@ def valida_assinatura(request, db_session=None) -> bool:
         if request.json and decoded_token and isinstance(decoded_token, dict):
             recinto = decoded_token.get('recinto')
             if g:
-                g['recinto'] = recinto
+                g.recinto = recinto
             assinado = request.json.get('assinado')
-            assinado = b85decode(assinado.encode('utf-8'))
-            print('recinto: %s' % recinto)
-            print('assinado: %s' % assinado)
-            public_key_pem = ChavePublicaRecinto.get_public_key(db_session, recinto)
-            public_key = assinador.load_public_key(public_key_pem)
-            assinador.verify(assinado, recinto.encode('utf8'), public_key)
+            if assinado:
+                assinado = b85decode(assinado.encode('utf-8'))
+                print('recinto: %s' % recinto)
+                print('assinado: %s' % assinado)
+                public_key_pem = ChavePublicaRecinto.get_public_key(db_session, recinto)
+                public_key = assinador.load_public_key(public_key_pem)
+                assinador.verify(assinado, recinto.encode('utf8'), public_key)
     except Exception as err:
         logging.error(err, exc_info=True)
         return False
