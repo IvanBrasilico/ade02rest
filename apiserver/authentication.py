@@ -119,7 +119,12 @@ def valida_assinatura(request, db_session=None) -> [bool, str]:
 
 
 def configure_signature(app):
-    @app.before_request
+    app.app.config['authenticate'] = os.environ.get('AUTHENTICATE', 'NO') == 'YES'
+    if app.app.config.get('authenticate', False) is False:
+        logging.warning('Sem autenticação!'
+         ' Configure a variável de ambiente ($export AUTHENTICATE=YES) para ativar.')
+        return
+    @app.app.before_request
     def before_request():
         print(request.path)
         if request.path in ['/auth', '/privatekey']:

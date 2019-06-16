@@ -184,4 +184,3 @@ def create_views(app):
     app.add_url_rule('/privatekey', 'get_private_key',
                      get_private_key, methods=['POST'])
     app.add_url_rule('/recriatedb', 'recriatedb', recriatedb)
-    return app
