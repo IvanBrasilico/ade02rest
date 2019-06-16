@@ -124,6 +124,7 @@ def configure_signature(app):
         logging.warning('Sem autenticação!'
          ' Configure a variável de ambiente ($export AUTHENTICATE=YES) para ativar.')
         return
+
     @app.app.before_request
     def before_request():
         print(request.path)
