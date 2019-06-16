@@ -67,7 +67,8 @@ class BaseTestCase(TestCase):
         recinto_senha = {'recinto': self.recinto,
                          'senha': 'senha'}
         rv = self.client.post('/auth', json=recinto_senha)
-        token = rv.data.decode('utf-8')
+        # assert rv.status_code == 200
+        token = rv.data.decode('utf-8').strip()
         self.headers = {'Authorization': 'Bearer %s' % token}
 
     def compare_dict(self, adict, bdict):

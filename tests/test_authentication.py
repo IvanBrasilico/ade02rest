@@ -29,12 +29,7 @@ class AuthenticationTestCase(BaseTestCase):
         super().setUp()
         app = create_app(self.db_session, self.engine)
         self.client = app.app.test_client()
-
-    def tearDown(self) -> None:
-        super().tearDown()
-
-    def test_token(self):
-        posicaolote = {
+        self.posicaolote = {
             "IDEvento": 42,
             "dataevento": "2019-06-14T11:18:43.287Z",
             "dataregistro": "2019-06-14T11:18:43.287Z",
@@ -45,12 +40,31 @@ class AuthenticationTestCase(BaseTestCase):
             "posicao": "string",
             "qtdevolumes": "string"
         }
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+    def test_token(self):
         self.get_token()
-        print(self.headers)
         rv = self.client.post('posicaolote',
-                              json=posicaolote,
+                              json=self.posicaolote,
                               headers=self.headers)
+        print(rv.json)
         assert rv.status_code == 201
+        assert rv.is_json is True
+
+
+    def test_api_is_blocked(self):
+        rv = self.client.post('posicaolote',
+                              json=self.posicaolote,
+                              headers=self.headers)
+        assert rv.status_code == 401
+        assert rv.is_json is True
+
+
+    def test_view_is_blocked(self):
+        rv = self.client.get('inspecaonaoinvasiva/1001', headers=self.headers)
+        assert rv.status_code == 401
         assert rv.is_json is True
 
     def test_recinto1(self):
@@ -73,13 +87,13 @@ class AuthenticationTestCase(BaseTestCase):
         token = authentication.generate_token(payload)
         request = Request({'Authorization': 'Bearer %s' % token},
                           payload)
-        assert authentication.valida_assinatura(request, self.db_session) is True
+        assert authentication.valida_assinatura(request, self.db_session)[0] is True
         # manda recinto sem encriptar, recebe erro
         payload = {'assinado': recinto, 'recinto': recinto}
         token = authentication.generate_token(payload)
         request = Request({'Authorization': 'Bearer %s' % token},
                           payload)
-        assert authentication.valida_assinatura(request, self.db_session) is False
+        assert authentication.valida_assinatura(request, self.db_session)[0] is False
         # manda assinado com outra chave, recebe erro
         private_key2, _ = assinador.generate_keys()
         assinado2 = assinador.sign(recinto.encode('utf-8'),
@@ -88,7 +102,7 @@ class AuthenticationTestCase(BaseTestCase):
         token2 = authentication.generate_token(payload2)
         request2 = Request({'Authorization': 'Bearer %s' % token2},
                            payload2)
-        assert authentication.valida_assinatura(request2, self.db_session) is False
+        assert authentication.valida_assinatura(request2, self.db_session)[0] is False
 
 
 if __name__ == '__main__':

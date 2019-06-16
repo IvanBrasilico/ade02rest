@@ -50,19 +50,21 @@ class ViewTestCase(BaseTestCase):
         self.base64_bytes = b64encode(self.image.read())
         # base64_string = base64_bytes.decode('utf-8')
         self.file = (BytesIO(self.base64_bytes), self.filename)
+        self.get_token()
 
     def tearDown(self) -> None:
         super().tearDown()
 
     def test0_home(self):
-        response = self.client.get('/')
+        response = self.client.get('/', headers=self.headers)
         assert response.status_code == 200
         assert response.is_json is False
         assert b'html' in response.data
 
     def test1_inclui_inspecao(self):
         r = self.client.post('inspecaonaoinvasiva',
-                             json=self.inspecao_modelo)
+                             json=self.inspecao_modelo,
+                             headers=self.headers)
         assert r.status_code == 201
         assert r.is_json
         r = self.client.get('inspecaonaoinvasiva/1001', headers=self.headers)
@@ -85,14 +87,14 @@ class ViewTestCase(BaseTestCase):
                              json=self.inspecao_modelo,
                              headers=self.headers)
         file = (None, None, 'image/jpeg')
-        headers = {}
+
         data = {'IDEvento': '1001',
                 'tipoevento': 'InspecaonaoInvasiva',
                 'file': file}
         # headers['Content-Type'] = 'image/jpeg'
         response = self.client.post('upload_file',
                                     data=data,
-                                    headers=headers)
+                                    headers=self.headers)
         assert response.status_code == 400
         assert response.is_json is True
 
@@ -101,14 +103,13 @@ class ViewTestCase(BaseTestCase):
                              json=self.inspecao_modelo,
                              headers=self.headers)
         file = (b'', '')
-        headers = {}
         data = {'IDEvento': '1001',
                 'tipoevento': 'InspecaonaoInvasiva',
                 'file': file}
         # headers['Content-Type'] = 'image/jpeg'
         r = self.client.post('upload_file',
                              data=data,
-                             headers=headers)
+                             headers=self.headers)
         assert r.status_code == 400
         assert r.is_json
 
@@ -120,12 +121,10 @@ class ViewTestCase(BaseTestCase):
         data = {'IDEvento': '100000',
                 'tipoevento': 'InspecaonaoInvasiva',
                 'file': self.file}
-        headers = {}
-        # headers['Content-Type'] = 'image/jpeg'
         r = self.client.post('upload_file',
                              data=data,
                              content_type='multipart/form-data',
-                             headers=headers)
+                             headers=self.headers)
         assert r.status_code == 404
         assert r.is_json is True
 
@@ -138,12 +137,12 @@ class ViewTestCase(BaseTestCase):
         data = {'IDEvento': '1001',
                 'tipoevento': 'InspecaonaoInvasiva',
                 'file': self.file}
-        headers = {}
+
         # headers['Content-Type'] = 'image/jpeg'
         r = self.client.post('upload_file',
                              data=data,
                              content_type='multipart/form-data',
-                             headers=headers)
+                             headers=self.headers)
         print(r.data)
         assert r.status_code == 201
         assert r.is_json

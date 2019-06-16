@@ -50,6 +50,10 @@ def decode_token(token):
     except JWTError as e:
         logging.error(e, exc_info=True)
         six.raise_from(Unauthorized, e)
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        raise Exception('Erro ao analisar token: %s Mensagem de erro: %s' %
+                        (token, (str(err))))
 
 
 def get_secret(user, token_info) -> str:
@@ -72,7 +76,7 @@ def recorta_token_header(headers):
     return token
 
 
-def valida_assinatura(request, db_session=None) -> bool:
+def valida_assinatura(request, db_session=None) -> [bool, str]:
     """Analisa request e retorna True ou False
 
     1. Retira token do header
@@ -81,15 +85,20 @@ def valida_assinatura(request, db_session=None) -> bool:
     4. Valida assinatura (campo assinado tem que estar no request e corresponder
     ao codigo do recinto assinado com sua chave privada)
 
+    :param request: Objeto request
+    :param db_session: Conexão ao BD
+    :return: Sucesso(True, False), mensagem
+
     """
     token = recorta_token_header(request.headers)
     # TODO: A linha abaixo "faz bypass" caso não seja passado o token
     # Definir como e onde ativar a autenticacao por duas etapas
     if token is None:
-        return True
+        return False, 'Token não fornecido'
     try:
         if db_session is None:
             db_session = current_app.config['db_session']
+        # print(token)
         decoded_token = decode_token(token)
         if request.json and decoded_token and isinstance(decoded_token, dict):
             recinto = decoded_token.get('recinto')
@@ -105,12 +114,18 @@ def valida_assinatura(request, db_session=None) -> bool:
                 assinador.verify(assinado, recinto.encode('utf8'), public_key)
     except Exception as err:
         logging.error(err, exc_info=True)
-        return False
-    return True
+        return False, str(err)
+    return True, None
 
 
 def configure_signature(app):
     @app.before_request
     def before_request():
-        if not valida_assinatura(request):
-            return jsonify(_response('Assinatura inválida', 400)), 400
+        print(request.path)
+        if request.path in ['/auth', '/privatekey']:
+            return
+        sucesso, err_msg = valida_assinatura(request)
+        if sucesso is False:
+            return jsonify(
+                _response('Token inválido ou Assinatura inválida: %s' % err_msg, 401)
+            ), 401

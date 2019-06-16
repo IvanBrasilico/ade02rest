@@ -24,6 +24,7 @@ def dump_eventos(eventos):
 titles = {200: 'Evento encontrado',
           201: 'Evento incluido',
           400: 'Evento ou consulta invalidos (BAD Request)',
+          401: 'Não autorizado',
           404: 'Evento ou recurso nao encontrado',
           409: 'Erro de integridade'}
 

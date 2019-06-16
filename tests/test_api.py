@@ -27,23 +27,25 @@ class APITestCase(BaseTestCase):
         super().tearDown()
 
     def test_health(self):
-        response = self.client.get('/non_ecxiste')
+        response = self.client.get('/non_ecxiste', headers=self.headers)
         assert response.status_code == 404
 
     def test1_evento_invalido_400(self):
         for classe, teste in self.testes.items():
             print(classe)
-            rv = self.client.post(classe.lower(), json={'IDEEvento': 1})
+            rv = self.client.post(classe.lower(),
+                                  json={'IDEEvento': 1},
+                                  headers=self.headers)
             assert rv.status_code == 400
             assert rv.is_json is True
-            rv = self.client.get(classe.lower() + '/1')
+            rv = self.client.get(classe.lower() + '/1', headers=self.headers)
             assert rv.status_code == 404
             assert rv.is_json is True
 
     def test2_evento_nao_encontrado_404(self):
         for classe, teste in self.testes.items():
             print(classe)
-            rv = self.client.get(classe.lower() + '/1')
+            rv = self.client.get(classe.lower() + '/1', headers=self.headers)
             assert rv.status_code == 404
             assert rv.is_json is True
 
@@ -170,7 +172,9 @@ class APITestCase(BaseTestCase):
         query = {'IDEvento': 0,
                  'tipoevento': 'PesagemMaritimo'}
         r = self.client.post('eventosnovos/list',
-                             json=query)
+                             json=query,
+                             headers=self.headers)
+
         assert r.status_code == 200
 
         print(r.data)
@@ -189,9 +193,9 @@ class APITestCase(BaseTestCase):
                  'datafinal': datetime.datetime.now().isoformat(),
                  'tipoevento': 'PesagemMaritimo'}
         r = self.client.post('eventos/filter',
-                             json=query)
+                             json=query,
+                             headers=self.headers)
         assert r.status_code == 200
-
         print(r.data)
         assert r.is_json is True
         assert len(r.json) == 10
