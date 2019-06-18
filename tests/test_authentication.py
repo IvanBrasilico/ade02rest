@@ -1,3 +1,4 @@
+import os
 import sys
 from base64 import b85encode
 
@@ -27,6 +28,7 @@ class AuthenticationTestCase(BaseTestCase):
 
     def setUp(self):
         super().setUp()
+        os.environ['AUTHENTICATE'] = "YES"
         app = create_app(self.db_session, self.engine)
         self.client = app.app.test_client()
         self.posicaolote = {
@@ -54,7 +56,8 @@ class AuthenticationTestCase(BaseTestCase):
         assert rv.is_json is True
 
 
-    def test_api_is_blocked(self):
+    def test_1api_is_blocked(self):
+        # Não pega o token, headers vazios....
         rv = self.client.post('posicaolote',
                               json=self.posicaolote,
                               headers=self.headers)
@@ -62,8 +65,13 @@ class AuthenticationTestCase(BaseTestCase):
         assert rv.is_json is True
 
 
-    def test_view_is_blocked(self):
-        rv = self.client.get('inspecaonaoinvasiva/1001', headers=self.headers)
+    def test_2view_is_blocked(self):
+        # Não pega o token, headers vazios....
+        query = {'IDEvento': 0,
+                 'tipoevento': 'PosicaoLote'}
+        rv = self.client.get('eventosnovos/get',
+                            data=query,
+                            headers=self.headers)
         assert rv.status_code == 401
         assert rv.is_json is True
 
