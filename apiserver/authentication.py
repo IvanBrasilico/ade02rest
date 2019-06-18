@@ -123,9 +123,6 @@ def configure_signature(app):
     app.app.config['authenticate'] = os.environ.get('AUTHENTICATE', 'NO') == 'YES'
     if app.app.config.get('authenticate', False) is False:
         logging.warning(
-            'Sem autenticação! '
-            'Configure a variável de ambiente ($export AUTHENTICATE=YES) para ativar.')
-        logging.warning(
             'Sem autenticação!'
             ' Configure a variável de ambiente ($export AUTHENTICATE=YES) para ativar.'
         )
