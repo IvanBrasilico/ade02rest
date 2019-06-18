@@ -128,7 +128,11 @@ def configure_signature(app):
     @app.app.before_request
     def before_request():
         print(request.path)
-        if request.path in ['/auth', '/privatekey']:
+        if request.path in ['/', '/ui', '/auth', '/privatekey']:
+            return
+        if 'site' in request.path:
+            return
+        if '/ui' in request.path:
             return
         sucesso, err_msg = valida_assinatura(request)
         if sucesso is False:
