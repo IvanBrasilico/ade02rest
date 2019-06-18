@@ -3,7 +3,8 @@ import os
 from base64 import b85encode
 
 from dateutil.parser import parse
-from flask import current_app, request, render_template, jsonify, Response, send_from_directory
+from flask import current_app, request, render_template, \
+    jsonify, Response, send_from_directory
 
 from apiserver.api import dump_eventos, _response, _commit, create_usecases
 from apiserver.logconf import logger
@@ -147,6 +148,7 @@ def geteventosnovos():
 
 def site(path):
     return send_from_directory('site', path)
+
 
 def get_private_key():
     recinto = request.json.get('recinto')
