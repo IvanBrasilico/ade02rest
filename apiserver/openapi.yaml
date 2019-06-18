@@ -4,7 +4,7 @@ info:
   description: API para prestação de informações sobre eventos de controle aduaneiro
     a cargo dos Redex, Recintos, Administradores e Operadores Aeroportuários, Portuários
     e demais intervenientes em carga sobre controle aduaneiro.
-  version: "0.9"
+  version: "1.0b"
 servers:
 - url: /
 paths:

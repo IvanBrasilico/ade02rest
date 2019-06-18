@@ -1,0 +1,7 @@
+site_name: API Recintos
+site_description: API de recebimento e centralização dos dados de controle de carga
+
+nav:
+    - Resumo: index.md
+    - "Definições gerais": DefinicoesGerais.md
+    - "Perguntas e Respostas": PerguntaseRespostas.md

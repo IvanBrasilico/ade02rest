@@ -33,6 +33,7 @@ setup(
     extras_require={
         'dev': [
             'jupyter',
+            'mkdocs',
             'pytest',
             'pytest-pep8',
             'pytest-cov',

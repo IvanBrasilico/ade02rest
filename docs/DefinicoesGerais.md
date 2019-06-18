@@ -3,7 +3,7 @@ Sistema de registro das operações de entrada e saída de pessoas e veículos,
  movimentação de carga e armazenamento de mercadorias em recintos alfandegados, 
  áreas alfandegadas ou recintos autorizados a operar com mercadorias sob controle aduaneiro  
  
-# *Definições gerais*
+## Definições gerais
 
 * A modelagem das Entidades/Eventos está definida em formato OpenAPI3, versão yaml
 * A modelagem dos "endpoints" (funções da API) também está definida neste arquivo.
@@ -30,18 +30,23 @@ no Sistema assim que este seja restabelecido.
 sem máscaras ou caracteres especiais
 
 * O Servidor que recebe os eventos DEVE adicionar as seguintes informações:
-1) Data e hora da transmissão do evento
-2) Identificação do código do recinto que transmitiu evento
-3) IP do computador que transmitiu o evento
-4) Hash do JSON completo do Evento, visando prevenir modificações. Deve haver uma função para conferir o Hash do Evento 
+
+1. Data e hora da transmissão do evento
+2. Identificação do código do recinto que transmitiu evento
+3. IP do computador que transmitiu o evento
+4. Hash do JSON completo do Evento, visando prevenir modificações. Deve haver uma função para conferir o Hash do Evento 
 e este deve ser transmitido na resposta, bem como gravado em um log de sistema de registro de eventos recebidos
+5. Haverá função no Portal Único do Comércio Exterior para representante com Certificado digital gerar chaves pública e privada
+ do interveniente para acesso ao Sistema, definindo senha da chave privada. O representante então deve baixar a chave privada e utilizar para transmissão.
+ Na transmissão, deve ser incluído um campo intitulado "assinado" que conterá o código do recinto assinado com esta chave privada RSA.
+ O Servidor irá usar a chave privada gerada para descriptografar no recebimento, garantindo assim não repúdio e autenticidade.
+6. Além disso, o representante cadastrará a senha para acesso ao sistema no Portal único. Assim,
+ o sistema do recinto ou área que efetuará a conexão primeiro informa recinto e senha no endpoint de autenticação e receberá
+ um token. Então, a cada evento transmitido, enviará nos headers o token e no conteúdo o campo assinado. Esta forma de 
+ autenticação de dois modos (senha e certificado criptografado) permitirá maior segurança na conexão.
+ 
 
-* Haverá função no portal para representante com Certificado digital gerar chaves pública e privada
- do interveniente para acesso ao Sistema. O representante então deve baixar a chave privada e utilizar para transmissão,
- criptografando o conteúdo ou parte do conteúdo do JSON do Evento transmitido. O Servidor irá usar a chave privada 
- gerada para descriptografar no recebimento, garantindo assim sigilo, não repúdio e autenticidade.
-
-# Endpoints especiais
+## Endpoints especiais
 
 * TODO Evento deve estar acessível para consulta por usuários da Receita, 
 em endpoint REST com nome do evento seguido da expressão 'eventos/list'.
@@ -51,21 +56,14 @@ em endpoint REST com nome do evento seguido da expressão 'eventos/list'.
   Este perfil estará disponível para cadastramento no Senha Rede/E-FAU.
 
 Formato do filtro:
- ```
- {
-"IDEvento" : 	integer,
-# IDEvento a partir do qual pesquisar (maior que) OU
 
-"recinto":	"string",
-# Codigo do Recinto a pesquisar
-
-"tipoevento":	"string"
-# Nome da classe de Evento
-"datainicial":	"string($date-time)",
-# Data de ocorrência física do evento - final de pesquisa IANA UTC DateTime
-
-"datafinal"	: "string($date-time)",
-# Data de ocorrência física do evento - final de pesquisa IANA UTC DateTime
+```
+{
+"IDEvento": integer,                 # IDEvento a partir do qual pesquisar (maior que) OU'''
+"recinto": "string",                 # Codigo do Recinto a pesquisar
+"tipoevento": "string"               # Nome da classe de Evento
+"datainicial": "string($date-time)", # Data de ocorrência física do evento - final de pesquisa IANA UTC DateTime
+"datafinal"	: "string($date-time)"   # Data de ocorrência física do evento - final de pesquisa IANA UTC DateTime
 }
 ```
 
@@ -73,10 +71,12 @@ Formato do filtro:
 * TODO Evento pode ser enviado em lista para ser processada de uma só vez,
  através do endpoint 'set_eventos_novos', que receberá um arquivo JSON, opcionalmente
  comprimido no formato gzip. O Arquivo JSON terá o formato:
- ```
+ 
+```
   {<TipoEvento> : [<Lista de Eventos>]}
 ```
-Sendo que em "Lista de Eventos" cada item/evento seguirá examente o mesmo formato de JSON definido no endpoint específico
+
+* Sendo que em <Lista de Eventos> cada item/evento seguirá examente o mesmo formato de JSON definido no endpoint específico
 de cada Evento no arquivo OpenAPI.
  
 * Arquivos multimídia terão endpoint 'upload_file' para adição a Evento existente 
