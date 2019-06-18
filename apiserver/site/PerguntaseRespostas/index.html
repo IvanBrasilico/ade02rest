@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Perguntas e Respostas - API Recintos</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="..">API Recintos</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li >
+                                <a href="..">Resumo</a>
+                            </li>
+                            <li >
+                                <a href="../DefinicoesGerais/">Definições gerais</a>
+                            </li>
+                            <li class="active">
+                                <a href="./">Perguntas e Respostas</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li >
+                                <a rel="next" href="../DefinicoesGerais/">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="disabled">
+                                <a rel="prev" >
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#api-de-recebimento-e-centralizacao-dos-dados-de-controle-de-carga">API de recebimento e centralização dos dados de controle de carga</a></li>
+        <li class="main "><a href="#perguntas-e-respostas">Perguntas e respostas</a></li>
+            <li><a href="#1-devo-guardar-os-dados-transmitidos">1. Devo guardar os dados transmitidos?</a></li>
+            <li><a href="#2-como-sera-a-autenticacao">2. Como será a autenticação?</a></li>
+            <li><a href="#3-continuara-existindo-a-auditoria-de-sistemas-obrigatoria-e-periodica">3. Continuará existindo a Auditoria de Sistemas obrigatória e periódica?</a></li>
+            <li><a href="#4-como-ficam-os-sistemas-atuais-que-possuem-funcoes-desenvolvidas-especificamente-para-a-unidade-local-bloqueios-mensagerias-e-outras-comunicacoes">4. Como ficam os sistemas atuais que possuem funções desenvolvidas especificamente para a Unidade Local (bloqueios, mensagerias e outras comunicações)?</a></li>
+            <li><a href="#5-quem-sao-as-pessoas-habituais-sujeita-a-biometria">5. Quem são as "pessoas habituais" sujeita a biometria?</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="api-de-recebimento-e-centralizacao-dos-dados-de-controle-de-carga">API de recebimento e centralização dos dados de controle de carga</h1>
+<p>Sistema de registro das operações de entrada e saída de pessoas e veículos,
+ movimentação de carga e armazenamento de mercadorias em recintos alfandegados, 
+ áreas alfandegadas ou recintos autorizados a operar com mercadorias sob controle aduaneiro  </p>
+<h1 id="perguntas-e-respostas"><em>Perguntas e respostas</em></h1>
+<h2 id="1-devo-guardar-os-dados-transmitidos">1. Devo guardar os dados transmitidos?</h2>
+<p>A API de dados de controle de carga e áreas sob controle aduaneiro foi
+modelada de forma a capturar os eventos que ocorrem fisicamente e precisam ser controlados
+nas diversas etapas da logística/controle de cargas, veículos e pessoas. Assim, as informações
+são as mínimas necessárias para este tipo de controle e procuram espelhar o que seria necessário
+nos sistemas de controle diversos.</p>
+<ul>
+<li>O interveniente que envia eventos para esta API deve possuir estes dados em seus sistemas de
+controle, o que é necessário para operar o seu negócio. </li>
+<li>A prova de cumprimento da obrigação de transmitir o Evento se dá pelo recebimento 
+de um recibo formado por um hash matemático das informações transmitidas</li>
+<li>O controle de Eventos é pelo próprio identificador de cada registro/evento do sistema interno.</li>
+</ul>
+<p>Assim, o Recinto deve guardar os dados transmitidos pelo prazo mínimo de seis anos mais o corrente,
+além de ser recomendado guardar também o número de recibo fornecido pelo Sistema em cada registro.
+Isto não deve gerar custo adicional para o interveniente, visto que estas informações transmitidas 
+são necessárias para seu próprio sistema de controle.</p>
+<p>Em caso da correspondência das entidades no sistema do interveniente não ser exata com a informação 
+transmitida, o interveniente, ao montar pacote de transmissão, deve enviar o identificador do
+registro da entidade com maior coincidência de informação, e gravar o recibo também nesta mesma
+entidade de seu sistema de controle.</p>
+<h2 id="2-como-sera-a-autenticacao">2. Como será a autenticação?</h2>
+<p>Haverá função no portal para representante com Certificado digital gerar chaves pública e privada
+ do interveniente para acesso ao Sistema. O representante então deve baixar a chave privada e utilizar para transmissão,
+ criptografando o conteúdo. O Servidor irá usar a chave privada gerada para descriptografar no recebimento,
+ garantindo assim sigilo, não repúdio e autenticidade.</p>
+<h2 id="3-continuara-existindo-a-auditoria-de-sistemas-obrigatoria-e-periodica">3. Continuará existindo a Auditoria de Sistemas obrigatória e periódica?</h2>
+<p>Com a nova sistemática, a necessidade de auditoria de sistemas diminui, portanto as normas serão revisadas.
+Será recomendada a diminuição da periodicidade e complexidade da auditoria de sistemas. Em contrapartida,
+será necessário uma auditoria simplificada feita durante a própria avaliação de alfandegamento e a vigilância
+da Receita Federal poderá, a qualquer momento, solicitar acesso aos Sistemas dos intervenientes para
+cotejar os dados destes com os dados transmitidos.</p>
+<h2 id="4-como-ficam-os-sistemas-atuais-que-possuem-funcoes-desenvolvidas-especificamente-para-a-unidade-local-bloqueios-mensagerias-e-outras-comunicacoes">4. Como ficam os sistemas atuais que possuem funções desenvolvidas especificamente para a Unidade Local (bloqueios, mensagerias e outras comunicações)?</h2>
+<p>As realidades locais devem ser avaliadas localmente. Sendo funcṍes possíveis de serem transferidas para a API,
+recomenda-se a centralização. É necessário que a Unidade Local avalie o caso específico.</p>
+<h2 id="5-quem-sao-as-pessoas-habituais-sujeita-a-biometria">5. Quem são as "pessoas habituais" sujeita a biometria?</h2>
+<p>Consta na redação da nova norma Art. 5º.: “ As pessoas habituais no recinto 
+ou área deverão ser identificadas por reconhecimento biométrico...".
+Por pessoas habituais entende-se todos que tenham alguma frequência/repetição neste
+acesso. Assim, acesso de passageiros de cruzeiros, passageiros de vôos, por exemplo,
+ são acessos eventuais. Acesso de funcionários, prestadores de serviços, terceirizados,
+ motoristas, despachantes, são exemplos acessos frequentes/habituais.</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

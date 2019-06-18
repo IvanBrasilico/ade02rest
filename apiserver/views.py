@@ -2,7 +2,7 @@ import logging
 import os
 
 from dateutil.parser import parse
-from flask import current_app, request, render_template, jsonify, Response
+from flask import current_app, request, render_template, jsonify, Response, send_from_directory
 
 from apiserver.api import dump_eventos, _response, _commit, create_usecases
 from apiserver.logconf import logger
@@ -144,6 +144,9 @@ def geteventosnovos():
         return jsonify(_response(err, 400)), 400
 
 
+def site(path):
+    return send_from_directory('site', path)
+
 def get_private_key():
     recinto = request.json.get('recinto')
     try:
@@ -181,5 +184,6 @@ def create_views(app):
                      seteventosnovos, methods=['POST'])
     app.add_url_rule('/privatekey', 'get_private_key',
                      get_private_key, methods=['POST'])
+    app.add_url_rule('/site/<path:path>', 'site', site)
     app.add_url_rule('/recriatedb', 'recriatedb', recriatedb)
     return app
