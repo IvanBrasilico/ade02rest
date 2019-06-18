@@ -1,5 +1,5 @@
 import os
-from base64 import b64encode, b64decode, b85decode, b85encode
+from base64 import b85decode, b85encode
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -26,12 +26,18 @@ def generate_keys():
 
 
 def private_bytes(private_key, senha: str = None):
+    if senha is None:
+        encryption_algorithm = serialization.NoEncryption()
+    else:
+        senha = senha.encode('utf-8')
+        encryption_algorithm = serialization.BestAvailableEncryption(senha)
     pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
+        encryption_algorithm=encryption_algorithm
     )
     return pem
+
 
 def public_bytes(public_key):
     pem = public_key.public_bytes(
@@ -144,3 +150,10 @@ if __name__ == '__main__':
     print(S)
     recuperado = b85decode(S.encode('utf-8'))
     print(type(recuperado), recuperado)
+
+    import requests
+    recinto = '86'
+    rv = requests.post('http://localhost:8000/privatekey', json={'recinto': recinto})
+    pem = rv.json().get('pem')
+    private_key = load_private_key(pem.encode('utf-8'))
+    assinado = sign(recinto.encode('utf-8'), private_key)

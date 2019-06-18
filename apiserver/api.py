@@ -24,18 +24,23 @@ def dump_eventos(eventos):
 titles = {200: 'Evento encontrado',
           201: 'Evento incluido',
           400: 'Evento ou consulta invalidos (BAD Request)',
+          401: 'Não autorizado',
           404: 'Evento ou recurso nao encontrado',
           409: 'Erro de integridade'}
+
+
+def get_recinto():
+    recinto = g.get('recinto')
+    if recinto is None:
+        recinto = RECINTO
+    return recinto
 
 
 def create_usecases():
     db_session = current_app.config['db_session']
     request_IP = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-    recinto = g.get('recinto')
-    if recinto is None:
-        recinto = RECINTO
     basepath = current_app.config['UPLOAD_FOLDER']
-    return UseCases(db_session, recinto, request_IP, basepath)
+    return UseCases(db_session, get_recinto(), request_IP, basepath)
 
 
 def _response(msg, status_code, title=None):
@@ -71,7 +76,7 @@ def _commit(evento):
     try:
         evento.request_IP = request.environ.get('HTTP_X_REAL_IP',
                                                 request.remote_addr)
-        evento.recinto = RECINTO
+        evento.recinto = get_recinto()
         # evento.time_created = datetime.datetime.utcnow()
         db_session.flush()
         db_session.refresh(evento)
@@ -97,7 +102,7 @@ def get_evento(IDEvento, aclass):
     try:
         evento = db_session.query(aclass).filter(
             aclass.IDEvento == IDEvento,
-            aclass.recinto == RECINTO
+            aclass.recinto == get_recinto()
         ).one_or_none()
         # print(evento.dump() if evento is not None else 'None')
         # print(hash(evento) if evento is not None else 'None')

@@ -9,5 +9,8 @@ build/*
 *.log
 .tox/*
 htmlcov/*
-SECRET
 *.pem
+*.bson
+*.gzip
+SECRET
+apiserver/files/*

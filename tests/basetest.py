@@ -48,9 +48,28 @@ class BaseTestCase(TestCase):
     def setUp(self):
         self.db_session, self.engine, self.testes, self.cadastros = create_session()
         orm.Base.metadata.create_all(bind=self.engine)
+        self.recinto = '00001'
+        self.assinado = ''
+        self.headers = {}
 
     def tearDown(self) -> None:
         orm.Base.metadata.drop_all(bind=self.engine)
+
+
+    def get_keys(self):
+        """Acessa endpoint para gerar chave, guarda codigo recinto assinado."""
+        rv = self.client.post('/privatekey', json={'recinto': self.recinto})
+        assert rv.json
+        pem = rv.json.get('pem')
+        self.assinado = rv.json.get('assinado')
+
+    def get_token(self):
+        recinto_senha = {'recinto': self.recinto,
+                         'senha': 'senha'}
+        rv = self.client.post('/auth', json=recinto_senha)
+        # assert rv.status_code == 200
+        token = rv.data.decode('utf-8').strip()
+        self.headers = {'Authorization': 'Bearer %s' % token}
 
     def compare_dict(self, adict, bdict):
         for k, v in adict.items():
