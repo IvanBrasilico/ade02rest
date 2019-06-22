@@ -91,8 +91,6 @@ def valida_assinatura(request, db_session=None) -> [bool, str]:
 
     """
     token = recorta_token_header(request.headers)
-    # TODO: A linha abaixo "faz bypass" caso não seja passado o token
-    # Definir como e onde ativar a autenticacao por duas etapas
     if token is None:
         return False, 'Token não fornecido'
     try:
@@ -105,6 +103,8 @@ def valida_assinatura(request, db_session=None) -> [bool, str]:
             if g:
                 g.recinto = recinto
             assinado = request.json.get('assinado')
+            # TODO: A linha abaixo "faz bypass" caso não seja passado o campo assinado
+            # Definir como e onde ativar a autenticacao por duas etapas
             if assinado:
                 assinado = b85decode(assinado.encode('utf-8'))
                 print('recinto: %s' % recinto)
@@ -120,7 +120,8 @@ def valida_assinatura(request, db_session=None) -> [bool, str]:
 
 def configure_signature(app):
     # Caso autenticação esteja desligada, sai sem configurar nada
-    app.app.config['authenticate'] = os.environ.get('AUTHENTICATE', 'NO') == 'YES'
+    app.app.config['authenticate'] = \
+        os.environ.get('AUTHENTICATE', 'NO').lower() == 'yes'
     if app.app.config.get('authenticate', False) is False:
         logging.warning(
             'Sem autenticação!'
@@ -131,7 +132,7 @@ def configure_signature(app):
     @app.app.before_request
     def before_request():
         print(request.path)
-        if request.path in ['/', '/ui', '/auth', '/privatekey']:
+        if request.path in ['/', '/openapi.json', '/auth', '/privatekey']:
             return
         if 'site' in request.path:
             return
