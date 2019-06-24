@@ -12,6 +12,20 @@ from werkzeug.exceptions import Unauthorized
 import assinador
 from apiserver.api import _response
 from apiserver.models.orm import ChavePublicaRecinto
+import logging
+import os
+import pickle
+import time
+from base64 import b85decode
+
+import six
+from flask import request, jsonify, g, current_app
+from jose import JWTError, jwt
+from werkzeug.exceptions import Unauthorized
+
+import assinador
+from apiserver.api import _response
+from apiserver.models.orm import ChavePublicaRecinto
 
 
 def make_secret():
@@ -91,8 +105,6 @@ def valida_assinatura(request, db_session=None) -> [bool, str]:
 
     """
     token = recorta_token_header(request.headers)
-    # TODO: A linha abaixo "faz bypass" caso não seja passado o token
-    # Definir como e onde ativar a autenticacao por duas etapas
     if token is None:
         return False, 'Token não fornecido'
     try:

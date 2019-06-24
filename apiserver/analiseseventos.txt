@@ -3,12 +3,6 @@ Eventos a receber lista:
 
 -> Mapa Instantâneo do Pátio de Contêineres (necessário discutir/detalhar)
   Obs.: Parece ser na verdade a junção de Eventos AcessoVeiculo e PosicaoConteiner
--> Lista de Pessoas Cadastradas
-  OK - Precisa apenas de endpoint para pegar e receber com anexos, ou o desenvolvimento de um list próprio
--> Lista de Veículos Cadastrados
-  OK - Precisa apenas de endpoint para pegar e receber com anexos, ou o desenvolvimento de um list próprio
--> Lista de Representantes Cadastrados
-  OK, funciona com set_eventos e get_eventos genérico
 
 
 Eventos mutáveis:
