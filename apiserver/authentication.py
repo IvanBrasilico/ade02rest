@@ -76,7 +76,19 @@ def recorta_token_header(headers):
     return token
 
 
-def valida_assinatura(request, db_session=None) -> [bool, str]:
+def valida_assinatura(decoded_token, assinado, db_session):
+    recinto = decoded_token.get('recinto')
+    if g:
+        g.recinto = recinto
+    assinado = b85decode(assinado.encode('utf-8'))
+    print('recinto: %s' % recinto)
+    print('assinado: %s' % assinado)
+    public_key_pem = ChavePublicaRecinto.get_public_key(db_session, recinto)
+    public_key = assinador.load_public_key(public_key_pem)
+    assinador.verify(assinado, recinto.encode('utf8'), public_key)
+
+
+def valida_token_e_assinatura(request, db_session=None) -> [bool, str]:
     """Analisa request e retorna True ou False
 
     1. Retira token do header
@@ -98,18 +110,17 @@ def valida_assinatura(request, db_session=None) -> [bool, str]:
             db_session = current_app.config['db_session']
         # print(token)
         decoded_token = decode_token(token)
-        if request.json and decoded_token and isinstance(decoded_token, dict):
-            recinto = decoded_token.get('recinto')
-            if g:
-                g.recinto = recinto
+        verify_sign = os.environ.get('VERIFY_SIGN', 'NO').lower() == 'yes'
+        if current_app and verify_sign:
             assinado = request.json.get('assinado')
-            if assinado:
-                assinado = b85decode(assinado.encode('utf-8'))
-                print('recinto: %s' % recinto)
-                print('assinado: %s' % assinado)
-                public_key_pem = ChavePublicaRecinto.get_public_key(db_session, recinto)
-                public_key = assinador.load_public_key(public_key_pem)
-                assinador.verify(assinado, recinto.encode('utf8'), public_key)
+            valida_assinatura(decoded_token, assinado, db_session)
+        else:
+            logging.warning(
+                'Sem verificação de assinatura digital! '
+                'Configure a variável de ambiente '
+                '($export VERIFY_SIGN=YES) para ativar.'
+            )
+
     except Exception as err:
         logging.error(err, exc_info=True)
         return False, str(err)
@@ -118,7 +129,8 @@ def valida_assinatura(request, db_session=None) -> [bool, str]:
 
 def configure_signature(app):
     # Caso autenticação esteja desligada, sai sem configurar nada
-    app.app.config['authenticate'] = os.environ.get('AUTHENTICATE', 'NO') == 'YES'
+    app.app.config['authenticate'] = \
+        os.environ.get('AUTHENTICATE', 'NO').lower() == 'yes'
     if app.app.config.get('authenticate', False) is False:
         logging.warning(
             'Sem autenticação!'
@@ -128,14 +140,11 @@ def configure_signature(app):
 
     @app.app.before_request
     def before_request():
-        print(request.path)
-        if request.path in ['/', '/ui', '/auth', '/privatekey']:
+        if request.path in ['/', '/openapi.json', '/auth', '/privatekey']:
             return
-        if 'site' in request.path:
+        if 'site' in request.path or '/ui' in request.path:
             return
-        if '/ui' in request.path:
-            return
-        sucesso, err_msg = valida_assinatura(request)
+        sucesso, err_msg = valida_token_e_assinatura(request)
         if sucesso is False:
             return jsonify(
                 _response('Token inválido ou Assinatura inválida: %s' % err_msg, 401)

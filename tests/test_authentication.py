@@ -29,8 +29,8 @@ class AuthenticationTestCase(BaseTestCase):
     def setUp(self):
         super().setUp()
         os.environ['AUTHENTICATE'] = "YES"
-        app = create_app(self.db_session, self.engine)
-        self.client = app.app.test_client()
+        self.app = create_app(self.db_session, self.engine)
+        self.client = self.app.app.test_client()
         self.posicaolote = {
             "IDEvento": 42,
             "dataevento": "2019-06-14T11:18:43.287Z",
@@ -45,6 +45,7 @@ class AuthenticationTestCase(BaseTestCase):
 
     def tearDown(self) -> None:
         super().tearDown()
+        os.environ['VERIFY_SIGN'] = "NO"
 
     def test_token(self):
         self.get_token()
@@ -55,7 +56,6 @@ class AuthenticationTestCase(BaseTestCase):
         assert rv.status_code == 201
         assert rv.is_json is True
 
-
     def test_1api_is_blocked(self):
         # Não pega o token, headers vazios....
         rv = self.client.post('posicaolote',
@@ -64,14 +64,13 @@ class AuthenticationTestCase(BaseTestCase):
         assert rv.status_code == 401
         assert rv.is_json is True
 
-
     def test_2view_is_blocked(self):
         # Não pega o token, headers vazios....
         query = {'IDEvento': 0,
                  'tipoevento': 'PosicaoLote'}
         rv = self.client.get('eventosnovos/get',
-                            data=query,
-                            headers=self.headers)
+                             data=query,
+                             headers=self.headers)
         assert rv.status_code == 401
         assert rv.is_json is True
 
@@ -82,35 +81,37 @@ class AuthenticationTestCase(BaseTestCase):
         # login
         # manda recinto, senha
         # recebe chaveprivada, assina recinto
-        recinto = '00001'
-        private_key_pem, assinado = UseCases.gera_chaves_recinto(
-            self.db_session, recinto)
-        private_key = assinador.load_private_key(private_key_pem)
-        assinado = assinador.sign(recinto.encode('utf-8'),
-                                  private_key)
-        assinado = b85encode(assinado).decode('utf-8')
-        # manda recinto encriptado com chave
-        # recebe OK com chave correta
-        payload = {'assinado': assinado, 'recinto': recinto}
-        token = authentication.generate_token(payload)
-        request = Request({'Authorization': 'Bearer %s' % token},
-                          payload)
-        assert authentication.valida_assinatura(request, self.db_session)[0] is True
-        # manda recinto sem encriptar, recebe erro
-        payload = {'assinado': recinto, 'recinto': recinto}
-        token = authentication.generate_token(payload)
-        request = Request({'Authorization': 'Bearer %s' % token},
-                          payload)
-        assert authentication.valida_assinatura(request, self.db_session)[0] is False
-        # manda assinado com outra chave, recebe erro
-        private_key2, _ = assinador.generate_keys()
-        assinado2 = assinador.sign(recinto.encode('utf-8'),
-                                   private_key2)
-        payload2 = {'assinado': assinado2, 'recinto': recinto}
-        token2 = authentication.generate_token(payload2)
-        request2 = Request({'Authorization': 'Bearer %s' % token2},
-                           payload2)
-        assert authentication.valida_assinatura(request2, self.db_session)[0] is False
+        os.environ['VERIFY_SIGN'] = "YES"
+        with self.app.app.app_context():
+            recinto = '00001'
+            private_key_pem, assinado = UseCases.gera_chaves_recinto(
+                self.db_session, recinto)
+            private_key = assinador.load_private_key(private_key_pem)
+            assinado = assinador.sign(recinto.encode('utf-8'),
+                                      private_key)
+            assinado = b85encode(assinado).decode('utf-8')
+            # manda recinto encriptado com chave
+            # recebe OK com chave correta
+            payload = {'assinado': assinado, 'recinto': recinto}
+            token = authentication.generate_token(payload)
+            request = Request({'Authorization': 'Bearer %s' % token},
+                              payload)
+            assert authentication.valida_token_e_assinatura(request, self.db_session)[0] is True
+            # manda recinto sem encriptar, recebe erro
+            payload = {'assinado': recinto, 'recinto': recinto}
+            token = authentication.generate_token(payload)
+            request = Request({'Authorization': 'Bearer %s' % token},
+                              payload)
+            assert authentication.valida_token_e_assinatura(request, self.db_session)[0] is False
+            # manda assinado com outra chave, recebe erro
+            private_key2, _ = assinador.generate_keys()
+            assinado2 = assinador.sign(recinto.encode('utf-8'),
+                                       private_key2)
+            payload2 = {'assinado': assinado2, 'recinto': recinto}
+            token2 = authentication.generate_token(payload2)
+            request2 = Request({'Authorization': 'Bearer %s' % token2},
+                               payload2)
+            assert authentication.valida_token_e_assinatura(request2, self.db_session)[0] is False
 
 
 if __name__ == '__main__':
