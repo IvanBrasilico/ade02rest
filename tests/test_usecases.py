@@ -1,3 +1,6 @@
+from sqlalchemy.exc import IntegrityError
+
+import assinador
 from apiserver.models import orm
 from apiserver.use_cases.usecases import UseCases
 from tests.basetest import BaseTestCase
@@ -10,7 +13,7 @@ class UseCaseTestCase(BaseTestCase):
 
     def setUp(self):
         super().setUp()
-        self.usecase = UseCases(self.session, RECINTO, REQUEST_IP, '')
+        self.usecase = UseCases(self.db_session, RECINTO, REQUEST_IP, '')
 
     def _insert(self, classe_evento):
         evento = self.testes[classe_evento.__name__]
@@ -59,3 +62,56 @@ class UseCaseTestCase(BaseTestCase):
 
     def test_DTSC(self):
         self._insert_and_load(orm.DTSC)
+
+    def test_ChavePublicaRecinto(self):
+        """Adiciona dois recintos de numero diferente e checa chaves"""
+        chave_recinto1 = orm.ChavePublicaRecinto('00001', b'MIIBIjANBgkqhkiG9w0B')
+        chave_recinto2 = orm.ChavePublicaRecinto('00002', b'TESTE123')
+        self.db_session.add(chave_recinto1)
+        self.db_session.add(chave_recinto2)
+        self.db_session.commit()
+        assert chave_recinto1.public_key == \
+               orm.ChavePublicaRecinto.get_public_key(self.db_session,
+                                                      chave_recinto1.recinto)
+        assert chave_recinto2.public_key == \
+               orm.ChavePublicaRecinto.get_public_key(self.db_session,
+                                                      chave_recinto2.recinto)
+        assert chave_recinto1.public_key != \
+               orm.ChavePublicaRecinto.get_public_key(self.db_session,
+                                                      chave_recinto2.recinto)
+
+    def test_ChavePublicaRecinto_change(self):
+        """Adiciona dois recintos de numero igual.
+        Usando classe, dará erro de integridade.
+        Usando set_public_key, chave deve ser editada."""
+        chave_recinto1 = orm.ChavePublicaRecinto('00001', b'MIIBIjANBgkqhkiG9w0B')
+        chave_recinto2 = orm.ChavePublicaRecinto('00001', b'TESTE123')
+        self.db_session.add(chave_recinto1)
+        self.db_session.add(chave_recinto2)
+        try:
+            self.db_session.commit()
+            assert False  # Deveria ter dado exceção
+        except IntegrityError:
+            self.db_session.rollback()
+        chave_recinto1 = orm.ChavePublicaRecinto.set_public_key(
+            self.db_session,
+            '00001', b'MIIBIjANBgkqhkiG9w0B')
+        assert chave_recinto1.public_key == \
+               orm.ChavePublicaRecinto.get_public_key(self.db_session,
+                                                      chave_recinto1.recinto)
+        chave_recinto2 = orm.ChavePublicaRecinto.set_public_key(
+            self.db_session,
+            '00001', b'TESTE123')
+        assert chave_recinto2.public_key == \
+               orm.ChavePublicaRecinto.get_public_key(self.db_session,
+                                                      chave_recinto2.recinto)
+
+    def test_gerachaverecinto_and_sign(self):
+        recinto = '00001'
+        private_key_pem, assinado = UseCases.gera_chaves_recinto(self.db_session, recinto)
+        public_key_pem = UseCases.get_public_key(self.db_session, recinto)
+        private_key = assinador.load_private_key(private_key_pem)
+        public_key = assinador.load_public_key(public_key_pem)
+        message = b'TESTE'
+        signed = assinador.sign(message, private_key)
+        assinador.verify(signed, message, public_key)

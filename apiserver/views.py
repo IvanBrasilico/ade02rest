@@ -1,11 +1,12 @@
-import json
 import logging
 import os
+from base64 import b85encode
 
 from dateutil.parser import parse
-from flask import current_app, request, render_template, jsonify, Response
+from flask import current_app, request, render_template, \
+    jsonify, Response, send_from_directory
 
-from apiserver.api import dump_eventos, RECINTO, _response, _commit, create_usecases
+from apiserver.api import dump_eventos, _response, _commit, create_usecases
 from apiserver.logconf import logger
 from apiserver.models import orm
 from apiserver.use_cases.usecases import UseCases
@@ -13,27 +14,6 @@ from apiserver.use_cases.usecases import UseCases
 
 def home():
     return render_template('home.html')
-
-
-def allowed_file(filename, extensions):
-    """Checa extensões permitidas."""
-    return '.' in filename and \
-           filename.rsplit('.', 1)[-1].lower() in extensions
-
-
-def valid_file(file, extensions=['jpg', 'xml', 'json']):
-    """Valida arquivo passado e retorna validade e mensagem."""
-    if not file or file.filename == '' or not allowed_file(file.filename, extensions):
-        if not file:
-            mensagem = 'Arquivo nao informado'
-        elif not file.filename:
-            mensagem = 'Nome do arquivo vazio'
-        else:
-            mensagem = 'Nome de arquivo não permitido: ' + \
-                       file.filename
-            # print(file)
-        return False, mensagem
-    return True, None
 
 
 def getfile():
@@ -57,19 +37,20 @@ def getfile():
                         ), 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return jsonify(_response(str(err), 400)), 400
+        return jsonify(_response(err, 400)), 400
 
 
 def uploadfile():
     """Função simplificada para upload de arquivo para um Evento."""
     db_session = current_app.config['db_session']
+    usecase = create_usecases()
     try:
         file = request.files.get('file')
         IDEvento = request.form.get('IDEvento')
         tipoevento = request.form.get('tipoevento')
         nomearquivo = request.form.get('nomearquivo')
         tipoanexo = request.form.get('tipoanexo')
-        validfile, mensagem = valid_file(file)
+        validfile, mensagem = usecase.valid_file(file)
         if not validfile:
             return jsonify(_response(mensagem, 400)), 400
         aclass = getattr(orm, tipoevento)
@@ -94,49 +75,34 @@ def uploadfile():
         return jsonify(_commit(evento)), 201
     except Exception as err:
         logger.error(str(err), exc_info=True)
-        return jsonify(_response(str(err), 400)), 400
+        return jsonify(_response(err, 400)), 400
 
 
 def seteventosnovos():
-    db_session = current_app.config['db_session']
+    usecase = create_usecases()
     try:
         file = request.files.get('file')
-        validfile, mensagem = valid_file(file,
-                                         extensions=['json', 'bson', 'zip'])
-        if not validfile:
-            return mensagem, 405
-        content = file.read()
-        content = content.decode('utf-8')
-        eventos = json.loads(content)
+        eventos = usecase.load_arquivo_eventos(file)
         for tipoevento, eventos in eventos.items():
             aclass = getattr(orm, tipoevento)
             for evento in eventos:
                 try:
-                    evento['request_IP'] = request.environ.get('HTTP_X_REAL_IP',
-                                                               request.remote_addr)
-                    evento['recinto'] = RECINTO
-                    novo_evento = aclass(**evento)
-                    db_session.add(novo_evento)
+                    usecase.insert_evento(aclass, evento, commit=False)
                 # Ignora exceções porque vai comparar no Banco de Dados
                 except Exception as err:
                     logging.error(str(err))
             try:
-                db_session.commit()
+                usecase.db_session.commit()
             except Exception as err:
                 logging.error(str(err))
             result = []
             for evento in eventos:
                 try:
                     IDEvento = evento.get('IDEvento')
-                    evento_recuperado = db_session.query(aclass).filter(
-                        aclass.IDEvento == IDEvento
-                    ).one_or_none()
-                    if evento_recuperado is None:
-                        ohash = 'ERRO!!!'
-                    else:
-                        ohash = hash(evento_recuperado)
+                    evento_recuperado = usecase.load_evento(aclass, IDEvento)
+                    ohash = hash(evento_recuperado)
                     result.append({'IDEvento': IDEvento, 'hash': ohash})
-                    logger.info('Recinto: %s IDEvento: %d ID: %d Token: %d' %
+                    logger.info('Recinto: %s IDEvento: %d ID: %d hash: %d' %
                                 (evento_recuperado.recinto, IDEvento,
                                  evento_recuperado.ID, ohash))
                 except Exception as err:
@@ -174,10 +140,28 @@ def geteventosnovos():
                                          IDEvento, 404)), 404
             return jsonify(_response('Sem eventos com dataevento maior que %s.' %
                                      dataevento, 404)), 404
-        return dump_eventos(eventos)
+        return dump_eventos(eventos), 200
     except Exception as err:
         logging.error(err, exc_info=True)
-        return jsonify(_response(str(err), 400)), 400
+        return jsonify(_response(err, 400)), 400
+
+
+def site(path):
+    return send_from_directory('site', path)
+
+
+def get_private_key():
+    recinto = request.json.get('recinto')
+    try:
+        private_key_pem, assinado = UseCases.gera_chaves_recinto(
+            current_app.config['db_session'],
+            recinto
+        )
+        return jsonify({'pem': private_key_pem.decode('utf-8'),
+                        'assinado': b85encode(assinado).decode('utf-8')}), 200
+    except Exception as err:
+        logging.error(err, exc_info=True)
+        return jsonify(_response(err, 400)), 400
 
 
 def recriatedb():  # pragma: no cover
@@ -187,8 +171,8 @@ def recriatedb():  # pragma: no cover
         orm.Base.metadata.drop_all(bind=engine)
         orm.Base.metadata.create_all(bind=engine)
     except Exception as err:
-        return err, 405
-    return 'Banco recriado!!!'
+        return jsonify(_response(err, 405)), 405
+    return jsonify(_response('Banco recriado!!!', 201)), 201
 
 
 def create_views(app):
@@ -202,5 +186,7 @@ def create_views(app):
     app.add_url_rule('/eventosnovos/get', 'geteventosnovos', geteventosnovos)
     app.add_url_rule('/eventosnovos/upload', 'seteventosnovos',
                      seteventosnovos, methods=['POST'])
+    app.add_url_rule('/privatekey', 'get_private_key',
+                     get_private_key, methods=['POST'])
+    app.add_url_rule('/site/<path:path>', 'site', site)
     app.add_url_rule('/recriatedb', 'recriatedb', recriatedb)
-    return app

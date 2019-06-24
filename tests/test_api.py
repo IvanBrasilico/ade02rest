@@ -1,10 +1,10 @@
 import datetime
-import json
-import random
 import sys
+from base64 import b85encode
 from copy import deepcopy
 from io import BytesIO
 
+import assinador
 from apiserver.main import create_app
 from basetest import BaseTestCase
 
@@ -15,44 +15,37 @@ def extractDictAFromB(A, B):
     return dict([(k, B[k]) for k in A.keys() if k in B.keys()])
 
 
-"""
-print('Creating memory database')
-session, engine = orm.init_db('sqlite:///:memory:')
-orm.Base.metadata.create_all(bind=engine)
-with open(os.path.join(os.path.dirname(__file__),
-                       'testes.json'), 'r') as json_in:
-    testes = json.load(json_in)
-"""
-
-
 class APITestCase(BaseTestCase):
 
     def setUp(self):
         super().setUp()
-        app = create_app(self.session, self.engine)
+        app = create_app(self.db_session, self.engine)
         self.client = app.app.test_client()
+        self.get_token()
 
     def tearDown(self) -> None:
         super().tearDown()
 
     def test_health(self):
-        response = self.client.get('/non_ecxiste')
+        response = self.client.get('/non_ecxiste', headers=self.headers)
         assert response.status_code == 404
 
     def test1_evento_invalido_400(self):
         for classe, teste in self.testes.items():
             print(classe)
-            rv = self.client.post(classe.lower(), json={'IDEEvento': 1})
+            rv = self.client.post(classe.lower(),
+                                  json={'IDEEvento': 1},
+                                  headers=self.headers)
             assert rv.status_code == 400
             assert rv.is_json is True
-            rv = self.client.get(classe.lower() + '/1')
+            rv = self.client.get(classe.lower() + '/1', headers=self.headers)
             assert rv.status_code == 404
             assert rv.is_json is True
 
     def test2_evento_nao_encontrado_404(self):
         for classe, teste in self.testes.items():
             print(classe)
-            rv = self.client.get(classe.lower() + '/1')
+            rv = self.client.get(classe.lower() + '/1', headers=self.headers)
             assert rv.status_code == 404
             assert rv.is_json is True
 
@@ -79,11 +72,14 @@ class APITestCase(BaseTestCase):
     def test3_api(self):
         for classe, teste in self.testes.items():
             print(classe)
-            rv = self.client.post(classe.lower(), json=teste)
+            rv = self.client.post(classe.lower(),
+                                  json=teste,
+                                  headers=self.headers)
             assert rv.status_code == 201
             assert rv.is_json is True
             response_token = rv.json
-            rv = self.client.get(classe.lower() + '/' + str(teste['IDEvento']))
+            rv = self.client.get(classe.lower() + '/' + str(teste['IDEvento']),
+                                 headers=self.headers)
             assert rv.status_code == 200
             assert rv.is_json is True
             self.compara_eventos(deepcopy(teste), rv.json)
@@ -91,20 +87,27 @@ class APITestCase(BaseTestCase):
     def test4_evento_duplicado_409(self):
         for classe, teste in self.testes.items():
             print(classe)
-            rv = self.client.post(classe.lower(), json=teste)
-            rv = self.client.post(classe.lower(), json=teste)
+            rv = self.client.post(classe.lower(),
+                                  json=teste,
+                                  headers=self.headers)
+            rv = self.client.post(classe.lower(),
+                                  json=teste,
+                                  headers=self.headers)
             assert rv.status_code == 409
             assert rv.is_json is True
 
     def _api_insert(self, classe, cadastro):
         print(classe)
-        rv = self.client.post(classe.lower(), json=cadastro)
+        rv = self.client.post(classe.lower(),
+                              json=cadastro,
+                              headers=self.headers)
         assert rv.status_code == 201
         assert rv.is_json is True
 
     def _api_load(self, classe, cadastro):
         print(classe)
-        rv = self.client.get(classe.lower() + '/' + str(cadastro['IDEvento']))
+        rv = self.client.get(classe.lower() + '/' + str(cadastro['IDEvento']),
+                             headers=self.headers)
         assert rv.status_code == 200
         assert rv.is_json is True
         self.compara_eventos(deepcopy(cadastro), rv.json)
@@ -112,8 +115,9 @@ class APITestCase(BaseTestCase):
     def _api_cadastro_fluxo(self, classe, acao):
         cadastro = self.cadastros[classe]
         url = classe.lower() + '/' + acao + '/' + str(cadastro['IDEvento'])
+
         print(url)
-        rv = self.client.get(url)
+        rv = self.client.get(url, headers=self.headers)
         assert rv.status_code == 201
         assert rv.is_json is True
         rvjson = rv.json
@@ -162,12 +166,15 @@ class APITestCase(BaseTestCase):
     def test_eventos_lote(self):
         self.cria_lote()
         data = {'file': (BytesIO(open('test.json', 'rb').read()), 'test.json')}
-        r = self.client.post('eventosnovos/upload', data=data)
+        r = self.client.post('eventosnovos/upload', data=data,
+                             headers=self.headers)
         assert r.status_code == 201
         query = {'IDEvento': 0,
                  'tipoevento': 'PesagemMaritimo'}
         r = self.client.post('eventosnovos/list',
-                             json=query)
+                             json=query,
+                             headers=self.headers)
+
         assert r.status_code == 200
 
         print(r.data)
@@ -178,16 +185,67 @@ class APITestCase(BaseTestCase):
     def test_eventos_filter(self):
         self.cria_lote()
         data = {'file': (BytesIO(open('test.json', 'rb').read()), 'test.json')}
-        r = self.client.post('eventosnovos/upload', data=data)
+        r = self.client.post('eventosnovos/upload', data=data,
+                             headers=self.headers)
         assert r.status_code == 201
         datainicial = datetime.datetime.now() - datetime.timedelta(days=1)
         query = {'datainicial': datainicial.isoformat(),
                  'datafinal': datetime.datetime.now().isoformat(),
                  'tipoevento': 'PesagemMaritimo'}
         r = self.client.post('eventos/filter',
-                             json=query)
+                             json=query,
+                             headers=self.headers)
         assert r.status_code == 200
-
         print(r.data)
         assert r.is_json is True
         assert len(r.json) == 10
+
+    def test_auth(self):
+        recinto_senha = {'recinto': self.recinto,
+                         'senha': 'certificado'}
+        rv = self.client.post('/auth', json=recinto_senha)
+        assert rv is not None
+        assert rv.status_code == 200
+        token = rv.data
+        assert token is not None
+        assert isinstance(token, bytes)
+        assert len(token) > 40
+
+    def test_signed_payload(self):
+        # TODO: Este é um exemplo da sequência de TWO WAY authentication
+        # Em outra aplicação ou nesta, o Representante Legal deve efetuar
+        # logon para definir a senha do recinto, gerar as chaves e baixar
+        # a chave privada
+        recinto = '00001'
+        recinto_senha = {'recinto': recinto,
+                         'senha': 'senha'}
+        posicaolote = {
+            "IDEvento": 42,
+            "dataevento": "2019-06-14T11:18:43.287Z",
+            "dataregistro": "2019-06-14T11:18:43.287Z",
+            "operadorevento": "string",
+            "operadorregistro": "string",
+            "retificador": False,
+            "numerolote": 0,
+            "posicao": "string",
+            "qtdevolumes": "string"
+        }
+        # 1. Faz dowload da chave privada, assina codigo recinto com ela
+        # Este endpoint deverá ser acessado pelo Representante Legal com e-CPF,
+        # preferencialmente
+        rv = self.client.post('/privatekey', json={'recinto': recinto})
+        assert rv.json
+        pem = rv.json.get('pem')
+        private_key = assinador.load_private_key(pem.encode('utf-8'))
+        assinado = assinador.sign(recinto.encode('utf-8'),
+                                  private_key)
+        # 2. Faz autenticação na aplicação local e pega token
+        rv = self.client.post('/auth', json=recinto_senha)
+        token = rv.data
+        headers = {'Authorization': 'Bearer %s' % token.decode('utf8')}
+        # 3. Manda recinto encriptado com chave junto com Evento. Codigo recinto vai no token
+        # Assim, a validação é pelo token e pelo certificado digital(chave privada)
+        posicaolote['assinado'] = b85encode(assinado).decode('utf-8')
+        rv = self.client.post('/posicaolote', json=posicaolote,
+                              headers=headers)
+        assert rv.status_code == 201

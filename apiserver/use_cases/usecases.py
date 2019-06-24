@@ -1,11 +1,33 @@
+import json
 import logging
+from zipfile import ZipFile
 
 from sqlalchemy.orm import load_only
 
+import assinador
 from apiserver.models import orm
 
 
-class UseCases():
+class UseCases:
+    @classmethod
+    def gera_chaves_recinto(cls, db_session, recinto: str) -> (bytes, bytes):
+        """Chama gerador de chaves, armazena chave publica, retorna chave privada.
+
+        :param db_session: Conexão ao BD
+        :param recinto: codigo do recinto
+        :return: chave privada gerada em bytes, recinto assinado em bytes
+        """
+        private_key, public_key = assinador.generate_keys()
+        assinado = assinador.sign(recinto.encode('utf-8'), private_key)
+        public_pem = assinador.public_bytes(public_key)
+        orm.ChavePublicaRecinto.set_public_key(db_session, recinto, public_pem)
+        private_pem = assinador.private_bytes(private_key)
+        return private_pem, assinado
+
+    @classmethod
+    def get_public_key(cls, db_session, recinto):
+        return orm.ChavePublicaRecinto.get_public_key(db_session, recinto)
+
     def __init__(self, db_session, recinto: str, request_IP: str, basepath: str):
         """Init
 
@@ -18,6 +40,29 @@ class UseCases():
         self.recinto = recinto
         self.request_IP = request_IP
         self.basepath = basepath
+        self.eventos_com_filhos = {
+            orm.InspecaonaoInvasiva: self.load_inspecaonaoinvasiva,
+            orm.AgendamentoAcessoVeiculo: self.load_agendamentoacessoveiculo,
+            orm.CredenciamentoPessoa: self.load_credenciamentopessoa,
+            orm.CredenciamentoVeiculo: self.load_credenciamentoveiculo,
+        }
+
+    def allowed_file(self, filename, extensions):
+        """Checa extensões permitidas."""
+        return '.' in filename and \
+               filename.rsplit('.', 1)[-1].lower() in extensions
+
+    def valid_file(self, file, extensions=['jpg', 'xml', 'json']) -> [bool, str]:
+        """Valida arquivo. Retorna resultado(True/False) e mensagem de erro."""
+        erro = None
+        if not file:
+            erro = 'Arquivo nao informado'
+        elif not file.filename:
+            erro = 'Nome do arquivo vazio'
+        elif not self.allowed_file(file.filename, extensions):
+            erro = 'Nome de arquivo não permitido: ' + \
+                   file.filename
+        return erro is None, erro
 
     def insert_evento(self, aclass, evento: dict, commit=True) -> orm.EventoBase:
         logging.info('Creating evento %s %s' %
@@ -68,21 +113,27 @@ class UseCases():
         :param fields: Trazer apenas estes campos
         :return: lista de objetos
         """
-        # TODO: Fazer para Eventos complexos, que possuem filhos
-        # Um modo possível é refatorar as "views" que já estão na api para
-        # Use Cases e chamar a view adequada para gerar a representacao de cada evento
-        # é necessario fazer isso aqui e também no setter
+        # TODO: Fazer para Todos os Eventos complexos, que possuem filhos
         if dataevento is None:
             query = self.db_session.query(aclass).filter(
-                aclass.IDEvento > IDEvento
+                aclass.IDEvento > IDEvento,
+                aclass.recinto == self.recinto
             )
         else:
             query = self.db_session.query(aclass).filter(
-                aclass.dataevento > dataevento
+                aclass.dataevento > dataevento,
+                aclass.recinto == self.recinto
             )
-        if fields is not None:
-            query = query.options(load_only(fields))
-        return query.all()
+        if aclass in self.eventos_com_filhos:
+            loader_func = self.eventos_com_filhos[aclass]
+            idseventos = query.options(load_only(['ID'])).all()
+            result = []
+            for id in idseventos:
+                result.append(loader_func(id))
+        else:
+            if fields is not None:
+                query = query.options(load_only(fields))
+            return query.all()
 
     def get_filhos(self, osfilhos, campos_excluidos=[]):
         filhos = []
@@ -372,3 +423,16 @@ class UseCases():
                               'credenciamentoveiculo_id']
         )
         return credenciamentoveiculo_dump
+
+    def load_arquivo_eventos(self, file):
+        """Valida e carrega arquivo JSON de eventos."""
+        validfile, mensagem = self.valid_file(file,
+                                              extensions=['json', 'bson', 'zip'])
+        if not validfile:
+            raise Exception(mensagem)
+        if 'zip' in file.filename:
+            file = ZipFile(file)
+        content = file.read()
+        content = content.decode('utf-8')
+        eventos = json.loads(content)
+        return eventos

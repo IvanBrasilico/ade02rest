@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Definições gerais - API Recintos</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="..">API Recintos</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li >
+                                <a href="../index.html">Resumo</a>
+                            </li>
+                            <li class="active">
+                                <a href="./index.html">Definições gerais</a>
+                            </li>
+                            <li >
+                                <a href="../PerguntaseRespostas/index.html">Perguntas e Respostas</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li >
+                                <a rel="next" href="../index.html">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li >
+                                <a rel="prev" href="../PerguntaseRespostas/index.html">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#api-de-recebimento-e-centralizacao-dos-dados-de-controle-de-carga">API de recebimento e centralização dos dados de controle de carga</a></li>
+            <li><a href="#definicoes-gerais">Definições gerais</a></li>
+            <li><a href="#endpoints-especiais">Endpoints especiais</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="api-de-recebimento-e-centralizacao-dos-dados-de-controle-de-carga">API de recebimento e centralização dos dados de controle de carga</h1>
+<p>Sistema de registro das operações de entrada e saída de pessoas e veículos,
+ movimentação de carga e armazenamento de mercadorias em recintos alfandegados, 
+ áreas alfandegadas ou recintos autorizados a operar com mercadorias sob controle aduaneiro  </p>
+<h2 id="definicoes-gerais">Definições gerais</h2>
+<ul>
+<li>A modelagem das Entidades/Eventos está definida em formato OpenAPI3, versão yaml</li>
+<li>A modelagem dos "endpoints" (funções da API) também está definida neste arquivo.</li>
+<li>Os endpoints transmitirão JSON conforme especificado no arquivo OpenAPI.</li>
+<li>Os endpoints retornarão JSON conforme especificado no arquivo OpenAPI.</li>
+<li>O IDEvento é um campo transmitido pelo interveniente, e DEVE ser o identificador sequencial
+ da informação no Sistema de origem.</li>
+<li>Alguns "endpoints especiais" não definidos ou detalhados na API estarão definidos e detalhados
+ aqui na seção "endpoints especiais". Nestes haverá funcionalidade para enviar e receber
+ lista de eventos. As listas são arquivos JSON que poderão ser compactados no formato gzip.</li>
+<li>Em caso de contingência(indisponibilidade ou falha do sistema informatizado), 
+a medida de contingência adotada pelo interveniente deve prover os mesmos dados 
+que seriam coletados pelo fluxo normal do sistema e devem ser alimentados 
+no Sistema assim que este seja restabelecido.</li>
+<li>Os Eventos devem ser armazenados pelo prazo mínimo de 6 anos no sistema original,
+ juntamente de dados adicionais que tenham dado origem aos Eventos. 
+ A cada recepção de Evento será fornecido um recibo digital que deve ser guardado 
+ no registro correspondente do Sistema do Recinto.</li>
+<li>
+<p>Sempre que o tipo for "Data/date-time" significa data UTC no formato ISO:</p>
+<p>UTC Data ISO 8601 - AAAA-MM-DDThh:mmZ Ex.  2019-04-17T09:52:01Z</p>
+</li>
+<li>
+<p>Os campos com número de documento (CPF, CNPJ, CNH, etc) devem conter somente números, 
+sem máscaras ou caracteres especiais</p>
+</li>
+<li>
+<p>O Servidor que recebe os eventos DEVE adicionar as seguintes informações:</p>
+</li>
+<li>
+<p>Data e hora da transmissão do evento</p>
+</li>
+<li>Identificação do código do recinto que transmitiu evento</li>
+<li>IP do computador que transmitiu o evento</li>
+<li>Hash do JSON completo do Evento, visando prevenir modificações. Deve haver uma função para conferir o Hash do Evento 
+e este deve ser transmitido na resposta, bem como gravado em um log de sistema de registro de eventos recebidos</li>
+<li>Haverá função no Portal Único do Comércio Exterior para representante com Certificado digital gerar chaves pública e privada
+ do interveniente para acesso ao Sistema, definindo senha da chave privada. O representante então deve baixar a chave privada e utilizar para transmissão.
+ Na transmissão, deve ser incluído um campo intitulado "assinado" que conterá o código do recinto assinado com esta chave privada RSA.
+ O Servidor irá usar a chave privada gerada para descriptografar no recebimento, garantindo assim não repúdio e autenticidade.</li>
+<li>Além disso, o representante cadastrará a senha para acesso ao sistema no Portal único. Assim,
+ o sistema do recinto ou área que efetuará a conexão primeiro informa recinto e senha no endpoint de autenticação e receberá
+ um token. Então, a cada evento transmitido, enviará nos headers o token e no conteúdo o campo assinado. Esta forma de 
+ autenticação de dois modos (senha e certificado criptografado) permitirá maior segurança na conexão.</li>
+</ul>
+<h2 id="endpoints-especiais">Endpoints especiais</h2>
+<ul>
+<li>TODO Evento deve estar acessível para consulta por usuários da Receita, 
+em endpoint REST com nome do evento seguido da expressão 'eventos/list'.
+ O Endpoint receberá com opção de filtragem por intervalo de datas de transmissão
+  ou por IDEvento inicial,
+  e opcionalmente também por Unidade ou Recinto. 
+  Este perfil estará disponível para cadastramento no Senha Rede/E-FAU.</li>
+</ul>
+<p>Formato do filtro:</p>
+<pre><code>{
+&quot;IDEvento&quot;: integer,                 # IDEvento a partir do qual pesquisar (maior que) OU'''
+&quot;recinto&quot;: &quot;string&quot;,                 # Codigo do Recinto a pesquisar
+&quot;tipoevento&quot;: &quot;string&quot;               # Nome da classe de Evento
+&quot;datainicial&quot;: &quot;string($date-time)&quot;, # Data de ocorrência física do evento - final de pesquisa IANA UTC DateTime
+&quot;datafinal&quot; : &quot;string($date-time)&quot;   # Data de ocorrência física do evento - final de pesquisa IANA UTC DateTime
+}
+</code></pre>
+
+<ul>
+<li>TODO Evento pode ser enviado em lista para ser processada de uma só vez,
+ através do endpoint 'set_eventos_novos', que receberá um arquivo JSON, opcionalmente
+ comprimido no formato gzip. O Arquivo JSON terá o formato:</li>
+</ul>
+<pre><code>  {&lt;TipoEvento&gt; : [&lt;Lista de Eventos&gt;]}
+</code></pre>
+
+<ul>
+<li>
+<p>Sendo que em <Lista de Eventos> cada item/evento seguirá examente o mesmo formato de JSON definido no endpoint específico
+de cada Evento no arquivo OpenAPI.</p>
+</li>
+<li>
+<p>Arquivos multimídia terão endpoint 'upload_file' para adição a Evento existente 
+e 'get_file' para recuperação do arquivo. Neste caso a transmissão de dados segue o padrão
+HTTP "multipartform/data"</p>
+</li>
+</ul></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

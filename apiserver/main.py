@@ -2,6 +2,7 @@ import connexion
 
 from apiserver.models import orm
 from apiserver.views import create_views
+from apiserver.authentication import configure_signature
 
 
 def create_app(session, engine):  # pragma: no cover
@@ -10,7 +11,8 @@ def create_app(session, engine):  # pragma: no cover
     app.app.config['db_session'] = session
     app.app.config['engine'] = engine
     print('Configurou app')
-    app = create_views(app)
+    create_views(app)
+    configure_signature(app)
     print('Configurou views')
     return app
 
