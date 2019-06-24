@@ -387,7 +387,7 @@
     "direcao": "Arrumacao",
     "imonavio": "string",
     "numero": "string",
-    "peso": 0,
+    "pesovgm": 0,
     "porto": "string",
     "posicao": "string",
     "viagem": "string"
