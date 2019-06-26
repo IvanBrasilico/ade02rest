@@ -22,7 +22,15 @@ def getfile():
         IDEvento = request.form.get('IDEvento')
         tipoevento = request.form.get('tipoevento')
         nomearquivo = request.form.get('nomearquivo')
-        aclass = getattr(orm, tipoevento)
+        if not tipoevento:
+            raise Exception('Parâmetro tipoevento é obrigatório.')
+        try:
+            aclass = getattr(orm, tipoevento)
+        except AttributeError:
+            raise AttributeError('tipoevento "%s" não existente' % tipoevento)
+        except TypeError:
+            raise AttributeError('tipoevento "%s": erro ao processar parâmetro' %
+                                 tipoevento)
         evento = db_session.query(aclass).filter(
             aclass.IDEvento == IDEvento
         ).one_or_none()

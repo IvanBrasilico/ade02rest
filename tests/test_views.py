@@ -215,3 +215,16 @@ class ViewTestCase(BaseTestCase):
         assert r.is_json is True
         assert len(r.json) == 10
         self.compara_eventos(self.pesagens[0], r.json[0])
+
+    def test_get_file_errors(self):
+        data = {'IDEvento': '42',
+                'tipoevento': 'InspecaonaoInvasiva'}
+        r = self.client.get('get_file', data=data, headers=self.headers)
+        assert r.status_code == 404
+        assert r.is_json is True
+        data = {'tipoevento': 'Festa'}
+        r = self.client.get('get_file', data=data, headers=self.headers)
+        assert r.status_code == 400
+        assert r.is_json is True
+
+
